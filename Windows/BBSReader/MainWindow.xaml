@@ -1,0 +1,27 @@
+﻿<Window x:Class="ForumFetcher.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:ForumFetcher"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <Button x:Name="button" Content="Button" Width="75" Grid.Row="0" Click="button_Click"/>
+        <ListView x:Name="listView" Grid.Row="1" ItemsSource="{Binding}">
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
+                    <GridViewColumn Header="Author" Width="50" DisplayMemberBinding="{Binding Path=Author}"/>
+                    <GridViewColumn Header="Time" Width="100" DisplayMemberBinding="{Binding Path=Time}"/>
+                    <GridViewColumn Header="Url" Width="200" DisplayMemberBinding="{Binding Path=Url}"/>
+                </GridView>
+            </ListView.View>
+        </ListView>
+
+    </Grid>
+</Window>
