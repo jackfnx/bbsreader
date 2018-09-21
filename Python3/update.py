@@ -31,13 +31,15 @@ if len(sys.argv) < 3:
     sys.stderr.write('%r\n' % bbsdef)
     sys.exit(0)
     
-# bbsId = int(sys.argv[1])
-# boardId = int(sys.argv[2])
-bbsId = 0
-boardId = 0
+bbsId = int(sys.argv[1])
+boardId = int(sys.argv[2])
+# bbsId = 0
+# boardId = 0
 
-_, base, start_page, boardIds = bbsdef[bbsId]
+bbsname, base, start_path, boardIds = bbsdef[bbsId]
 curr_board = boardIds[boardId]
+
+print('Updating [%s] <board: %d>.' % (bbsname, curr_board))
 
 ### 如果存在json，load数据
 if os.path.exists(meta_data_path):
@@ -68,7 +70,8 @@ elif now - last_timestamp < 60*60*24*10: # 没超过10天，查看5页
     pages = 5
 else:
     pages = 30
-    
+tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_timestamp))
+print('last update at [%s], this update will load <%d> panges' % (tmstr, pages))
 
 
 # In[103]:
@@ -126,7 +129,7 @@ def MakeThread(threadId, title, author, postTime, link):
 
 ### 读取版面
 def bbsdoc(html):
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, 'html5lib')
     objs = soup.select('tbody[id^=stickthread_]')
     objs += soup.select('tbody[id^=normalthread_]')
     threads = []
@@ -141,7 +144,7 @@ def bbsdoc(html):
 
 ### 读取文章
 def bbscon(html):
-    soup = BeautifulSoup(html)
+    soup = BeautifulSoup(html, 'html5lib')
     postobj = soup.select('div[id^=postmessage_] div[id^=postmessage_]')[0]
     [x.decompose() for x in postobj.select('strong')]
     [x.decompose() for x in postobj.select('table')]
