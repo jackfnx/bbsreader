@@ -6,5 +6,7 @@
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
         Title="ReaderWindow" Height="450" Width="800" ShowActivated="False">
-    <TextBox x:Name="content" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16" />
+    <ScrollViewer x:Name="Scroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible">
+        <TextBox x:Name="Content" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16" />
+    </ScrollViewer>
 </Window>
