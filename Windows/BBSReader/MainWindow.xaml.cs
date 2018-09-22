@@ -8,23 +8,36 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 
-namespace ForumFetcher
+namespace BBSReader
 {
     /// <summary>
     /// MainWindow.xaml 的交互逻辑
     /// </summary>
     public partial class MainWindow : Window
     {
+        const string LOCAL_PATH = "E:/turboc/sis001/";
+
         public MainWindow()
         {
             InitializeComponent();
 
+            readerWindow = new ReaderWindow();
+
             threads = new ObservableCollection<object>();
             listView.DataContext = threads;
 
-            savePath = "E:/turboc/sis001/";
-            loadThreads();
+            loadMetaData();
             setCurrentKeyword(null);
+        }
+
+        private void loadMetaData()
+        {
+            string metaPath = LOCAL_PATH + "meta.json";
+            using (StreamReader sr = new StreamReader(metaPath, Encoding.UTF8))
+            {
+                string json = sr.ReadToEnd();
+                metaData = JsonConvert.DeserializeObject<MetaData>(json);
+            }
         }
 
         private void setCurrentKeyword(string keyword)
@@ -34,33 +47,23 @@ namespace ForumFetcher
             threads.Clear();
             if (keyword == null)
             {
-                List<string> tags = new List<string>(saveData.tags.Keys);
+                List<string> tags = new List<string>(metaData.tags.Keys);
                 tags.Sort((x, y) => {
-                    if (saveData.favorites.Contains(x) && !saveData.favorites.Contains(y))
+                    if (metaData.favorites.Contains(x) && !metaData.favorites.Contains(y))
                     {
                         return -1;
                     }
-                    else if (!saveData.favorites.Contains(x) && saveData.favorites.Contains(y))
+                    else if (!metaData.favorites.Contains(x) && metaData.favorites.Contains(y))
                     {
                         return 1;
                     }
                     return string.Compare(x, y);
                 });
-                tags.ForEach(x => threads.Add(new { Title = x, Author = "-", Time = "", Url = "", ThreadId = "", Favorite = saveData.favorites.Contains(x) }));
+                tags.ForEach(x => threads.Add(new { Title = x, Author = "-", Time = "", Url = "", ThreadId = "", Favorite = metaData.favorites.Contains(x) }));
             }
             else
             {
-                saveData.tags[keyword].ForEach(x => threads.Add(new { Title = x.title, Author = x.author, Time = x.postTime, Url = x.link, ThreadId = x.threadId, Favorite = false }));
-            }
-        }
-
-        private void loadThreads()
-        {
-            string metaPath = savePath + "meta.json";
-            using (StreamReader sr = new StreamReader(metaPath, Encoding.UTF8))
-            {
-                string json = sr.ReadToEnd();
-                saveData = JsonConvert.DeserializeObject<SAVE_DATA>(json);
+                metaData.tags[keyword].ForEach(x => threads.Add(new { Title = x.title, Author = x.author, Time = x.postTime, Url = x.link, ThreadId = x.threadId, Favorite = false }));
             }
         }
 
@@ -79,21 +82,32 @@ namespace ForumFetcher
             }
             else
             {
-                string fPath = savePath + item.ThreadId + ".txt";
+                string fPath = LOCAL_PATH + item.ThreadId + ".txt";
                 using (StreamReader sr = new StreamReader(fPath, Encoding.UTF8))
                 {
                     string text = sr.ReadToEnd();
-                    Console.WriteLine(text);
+                    readerWindow.content.Text = text;
+                    if (!readerWindow.IsVisible)
+                    {
+                        readerWindow.Show();
+                    }
                 }
             }
         }
 
+        protected override void OnClosed(EventArgs e)
+        {
+            readerWindow.Stay = false;
+            readerWindow.Close();
+            base.OnClosed(e);
+        }
+        
+        private ReaderWindow readerWindow;
         public ObservableCollection<object> threads;
-        private string savePath;
-        private SAVE_DATA saveData;
+        private MetaData metaData;
         private string currentKeyword;
 
-        public struct SAVE_DATA
+        public struct MetaData
         {
             [JsonProperty("timestamp")]
             public long timestamp;
