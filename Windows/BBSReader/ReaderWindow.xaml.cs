@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.Windows;
+using System.Windows.Input;
 
 namespace BBSReader
 {
@@ -27,5 +28,14 @@ namespace BBSReader
         }
 
         public bool Stay = true;
+        
+        private void Scroll_KeyUp(object sender, KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Space)
+            {
+                Scroll.PageDown();
+                e.Handled = true;
+            }
+        }
     }
 }
