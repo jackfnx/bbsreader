@@ -23,14 +23,14 @@ namespace BBSReader
 
             readerWindow = new ReaderWindow();
 
-            threads = new ObservableCollection<object>();
-            listView.DataContext = threads;
+            listData = new ObservableCollection<object>();
+            listView.DataContext = listData;
 
-            loadMetaData();
-            setCurrentKeyword(null);
+            LoadMetaData();
+            SetCurrentKeyword(null);
         }
 
-        private void loadMetaData()
+        private void LoadMetaData()
         {
             string metaPath = LOCAL_PATH + "meta.json";
             using (StreamReader sr = new StreamReader(metaPath, Encoding.UTF8))
@@ -40,14 +40,25 @@ namespace BBSReader
             }
         }
 
-        private void setCurrentKeyword(string keyword)
+        private void SaveMetaData()
+        {
+            string metaPath = LOCAL_PATH + "meta.json";
+            using (StreamWriter sw = new StreamWriter(metaPath, false, new UTF8Encoding(false)))
+            {
+                string json = JsonConvert.SerializeObject(metaData);
+                sw.Write(json);
+            }
+        }
+
+        private void SetCurrentKeyword(string keyword)
         {
             currentKeyword = keyword;
 
-            threads.Clear();
+            listData.Clear();
             if (keyword == null)
             {
                 List<string> tags = new List<string>(metaData.tags.Keys);
+
                 tags.Sort((x, y) => {
                     if (metaData.favorites.Contains(x) && !metaData.favorites.Contains(y))
                     {
@@ -59,17 +70,32 @@ namespace BBSReader
                     }
                     return string.Compare(x, y);
                 });
-                tags.ForEach(x => threads.Add(new { Title = x, Author = "-", Time = "", Url = "", ThreadId = "", Favorite = metaData.favorites.Contains(x) }));
+
+                tags.ForEach(x => {
+                    BBSThread example = metaData.threads[metaData.tags[x][0]];
+                    listData.Add(new
+                    {
+                        Title = x,
+                        Author = example.author,
+                        Time = ConvertTimestampToDateString(example.postTime),
+                        Url = "",
+                        ThreadId = "",
+                        Favorite = metaData.favorites.Contains(x)
+                    });
+                });
             }
             else
             {
-                metaData.tags[keyword].ForEach(x => threads.Add(new { Title = x.title, Author = x.author, Time = x.postTime, Url = x.link, ThreadId = x.threadId, Favorite = false }));
+                metaData.tags[keyword].ForEach(x => {
+                    BBSThread t = metaData.threads[x];
+                    listData.Add(new { Title = t.title, Author = t.author, Time = ConvertTimestampToDateString(t.postTime), Url = t.link, ThreadId = t.threadId, Favorite = false });
+                });
             }
         }
 
-        private void button_Click(object sender, RoutedEventArgs e)
+        private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            setCurrentKeyword(null);
+            SetCurrentKeyword(null);
         }
 
         private void HandleDoubleClick(object sender, MouseButtonEventArgs e)
@@ -78,18 +104,21 @@ namespace BBSReader
             dynamic item = lvi.Content;
             if (currentKeyword == null)
             {
-                setCurrentKeyword(item.Title);
+                SetCurrentKeyword(item.Title);
             }
             else
             {
                 string fPath = LOCAL_PATH + item.ThreadId + ".txt";
-                using (StreamReader sr = new StreamReader(fPath, Encoding.UTF8))
+                if (File.Exists(fPath))
                 {
-                    string text = sr.ReadToEnd();
-                    readerWindow.content.Text = text;
-                    if (!readerWindow.IsVisible)
+                    using (StreamReader sr = new StreamReader(fPath, new UTF8Encoding(false)))
                     {
-                        readerWindow.Show();
+                        string text = sr.ReadToEnd();
+                        readerWindow.content.Text = text;
+                        if (!readerWindow.IsVisible)
+                        {
+                            readerWindow.Show();
+                        }
                     }
                 }
             }
@@ -103,7 +132,7 @@ namespace BBSReader
         }
         
         private ReaderWindow readerWindow;
-        public ObservableCollection<object> threads;
+        public ObservableCollection<object> listData;
         private MetaData metaData;
         private string currentKeyword;
 
@@ -114,7 +143,7 @@ namespace BBSReader
             [JsonProperty("threads")]
             public List<BBSThread> threads;
             [JsonProperty("tags")]
-            public Dictionary<string, List<BBSThread>> tags;
+            public Dictionary<string, List<int>> tags;
             [JsonProperty("favorites")]
             public List<string> favorites;
             [JsonProperty("blacklist")]
@@ -130,9 +159,53 @@ namespace BBSReader
             [JsonProperty("author")]
             public string author;
             [JsonProperty("postTime")]
-            public string postTime;
+            public long postTime;
             [JsonProperty("link")]
             public string link;
+        }
+
+        private void AddFavoritesContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string title = item.Title;
+            metaData.favorites.Add(title);
+            SaveMetaData();
+            SetCurrentKeyword(null);
+        }
+
+        private void RemoveFavoritesContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string title = item.Title;
+            metaData.favorites.Remove(title);
+            SaveMetaData();
+            SetCurrentKeyword(null);
+        }
+
+        private void BlackContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string title = item.Title;
+            metaData.blacklist.Add(title);
+            metaData.tags.Remove(title);
+            SaveMetaData();
+            SetCurrentKeyword(null);
+        }
+
+        private string ConvertTimestampToDateString(long timestamp)
+        {
+            DateTime zero = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
+            TimeSpan span = new TimeSpan(timestamp * 10000000);
+            DateTime t = zero.Add(span);
+            return t.ToString("yyyy-MM-dd");
+        }
+
+        private void ReloadButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

@@ -11,6 +11,7 @@ import json
 import re
 from urllib import request
 from bs4 import BeautifulSoup
+from datetime import datetime
 
 
 # In[101]:
@@ -27,23 +28,28 @@ bbsdef = [
 ]
 
 ### 参数
-if len(sys.argv) < 3:
-    sys.stderr.write('%r\n' % bbsdef)
-    sys.exit(0)
+# if len(sys.argv) < 3:
+#     sys.stderr.write('%s\n' % '\n'.join([str(x) for x in bbsdef]))
+#     sys.exit(0)
     
-bbsId = int(sys.argv[1])
-boardId = int(sys.argv[2])
-# bbsId = 0
-# boardId = 0
+# bbsId = int(sys.argv[1])
+# boardId = int(sys.argv[2])
+bbsId = 0
+boardId = 0
+pages = int(sys.argv[1]) if len(sys.argv) > 1 else None
 
 bbsname, base, start_path, boardIds = bbsdef[bbsId]
 curr_board = boardIds[boardId]
 
 print('Updating [%s] <board: %d>.' % (bbsname, curr_board))
 
+
+def dateStringToTimestamp(datestr):
+    return time.mktime(datetime.strptime(datestr, '%Y-%m-%d').timetuple())
+
 ### 如果存在json，load数据
 if os.path.exists(meta_data_path):
-    with open(meta_data_path) as f:
+    with open(meta_data_path, encoding='utf-8') as f:
         load_data = json.load(f)
     last_timestamp = load_data['timestamp']
     last_threads = load_data['threads']
@@ -58,20 +64,22 @@ else:
     favorites = ['琼明神女录', '册母为后', '绿帽武林之淫乱后宫', '龙珠肏', '锦绣江山传']
     blacklist = []
 
-
 # In[102]:
 
 
 ### 根据上次更新时间，确定这次读取几页
-now = time.time()
-if last_timestamp == 0:
-    pages = 100
-elif now - last_timestamp < 60*60*24*10: # 没超过10天，查看5页
-    pages = 5
+if pages is None:
+    now = time.time()
+    if last_timestamp == 0:
+        pages = 100
+    elif now - last_timestamp < 60*60*24*10: # 没超过10天，查看5页
+        pages = 5
+    else:
+        pages = 30
+    tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_timestamp))
+    print('] last update at [%s], this update will load <%d> panges' % (tmstr, pages))
 else:
-    pages = 30
-tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_timestamp))
-print('last update at [%s], this update will load <%d> panges' % (tmstr, pages))
+    print('] manual set, update <%d> pages.' % (pages))
 
 
 # In[103]:
@@ -138,7 +146,8 @@ def bbsdoc(html):
         link = t.select('th span[id^=thread_] a')[0]['href']
         threadId = link.split('-')[1]
         author = t.select('td.author cite a')[0].text
-        postTime = t.select('td.author em')[0].text
+        pts = t.select('td.author em')[0].text
+        postTime = dateStringToTimestamp(pts)
         threads.append(MakeThread(threadId, title, author, postTime, link))
     return threads
 
@@ -162,8 +171,8 @@ crawler = Crawler(10)
 
 ### 读取新数据
 latest_threads = []
-for i in range(1, pages):
-    url = base + (start_path % (curr_board, i))
+for i in range(0, pages):
+    url = base + (start_path % (curr_board, (i+1)))
     latest_threads += bbsdoc(crawler.getUrl(url))
 
 
@@ -173,50 +182,55 @@ for i in range(1, pages):
 ### 合并新旧数据
 def merge(lasts, latest):
     threads = lasts[:]
-    append_threads = []
     
     lastIds = [x['threadId'] for x in lasts]
     for t in latest:
         if not t['threadId'] in lastIds:
             threads.append(t)
-            append_threads.append(t)
-    return threads, append_threads
+    return threads
 
-threads, append_threads = merge(last_threads, latest_threads)
+threads = merge(last_threads, latest_threads)
 
 
 # In[108]:
 
 
+tags = {}
 ### 扫描新增数据，提取关键字
-for t in append_threads:
-    threadId = t['threadId']
+for i in range(len(threads)):
+    t = threads[i]
     title = t['title']
     keywords = re.findall('【(.*?)】', title)
     for keyword in keywords:
-        if not keyword.isdigit():
+        if not keyword.isdigit() and not keyword in blacklist:
             if not keyword in tags:
                 tags[keyword] = []
-            tags[keyword].append(t)
+            tags[keyword].append(i)
+
+### 主题下，按照时间排序
+for keyword in tags:
+    tags[keyword].sort(key=lambda x: threads[x]['postTime'], reverse=True)
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据
-for fav in favorites:
-    if fav in tags:
-        for t in tags[fav]:
+for tag in favorites:
+    if tag in tags:
+        for i in tags[tag]:
+            t = threads[i]
             txtpath = os.path.join(save_path, t['threadId'] + '.txt')
             if not os.path.exists(txtpath):
                 url = base + t['link']
                 chapter = bbscon(crawler.getUrl(url))
                 with open(txtpath, 'w', encoding='utf-8') as f:
                     f.write(chapter)
-        print('keyword [%s] saved.' % fav)
+        print('keyword [%s] saved.' % tag)
+
 
 
 # In[109]:
 
 
 ### 保存data
-with open(meta_data_path, 'w') as f:
+with open(meta_data_path, 'w', encoding='utf-8') as f:
     save_data = {
         'timestamp': time.time(),
         'threads': threads,

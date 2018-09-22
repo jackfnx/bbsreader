@@ -7,8 +7,33 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="450" Width="800">
     <Window.Resources>
-        <Style x:Key="lvi_DC" TargetType="{x:Type ListViewItem}">
+        <Style x:Key="DisableOnBeFavorite" TargetType="{x:Type MenuItem}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=Favorite}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DisableOnNotBeFavorite" TargetType="{x:Type MenuItem}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=Favorite}" Value="False">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <ContextMenu x:Key="KeywordOperationsContextMenu" Background="WhiteSmoke">
+            <MenuItem Header="Add to Favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
+            <MenuItem Header="Remove From Favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
+            <MenuItem Header="Black List" Name="BlackContextMenu" Click="BlackContextMenu_Click"/>
+        </ContextMenu>
+        <Style x:Key="lv" TargetType="{x:Type ListViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />
+            <Setter Property="ContextMenu" Value="{StaticResource KeywordOperationsContextMenu}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=Favorite}" Value="True">
+                    <Setter Property="Background" Value="LightYellow" />
+                </DataTrigger>
+            </Style.Triggers>
         </Style>
     </Window.Resources>
     <Grid>
@@ -16,12 +41,14 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button x:Name="button" Content="&lt; BACK" Width="75" Grid.Row="0" Click="button_Click"/>
-        <ListView x:Name="listView" Grid.Row="1" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lvi_DC}">
+        <Button x:Name="BackButton" Content="&lt; BACK" Width="75" Grid.Row="0" HorizontalAlignment="Left" Click="BackButton_Click"/>
+        <ListView x:Name="listView" Grid.Row="1" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
+            <ListView.Resources>
+            </ListView.Resources>
             <ListView.View>
                 <GridView>
                     <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
-                    <GridViewColumn Header="Author" Width="50" DisplayMemberBinding="{Binding Path=Author}"/>
+                    <GridViewColumn Header="Author" Width="100" DisplayMemberBinding="{Binding Path=Author}"/>
                     <GridViewColumn Header="Time" Width="100" DisplayMemberBinding="{Binding Path=Time}"/>
                     <GridViewColumn Header="Url" Width="200" DisplayMemberBinding="{Binding Path=Url}"/>
                 </GridView>
