@@ -5,8 +5,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
-        Title="ReaderWindow" Height="450" Width="800" ShowActivated="False">
+        Title="ReaderWindow" Height="450" Width="800" ShowActivated="False" Background="Black" Foreground="LightGray">
     <ScrollViewer x:Name="Scroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible" KeyUp="Scroll_KeyUp">
-        <TextBox x:Name="Content" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16" IsReadOnly="True" />
+        <TextBox x:Name="Content" HorizontalAlignment="Left" Margin="0,0,0,0" TextWrapping="Wrap" VerticalAlignment="Top" FontSize="16" IsReadOnly="True" Background="Transparent" Foreground="LightGray"/>
     </ScrollViewer>
 </Window>
