@@ -114,7 +114,7 @@ namespace BBSReader
                     using (StreamReader sr = new StreamReader(fPath, new UTF8Encoding(false)))
                     {
                         string text = sr.ReadToEnd();
-                        readerWindow.Content.Text = text;
+                        readerWindow.ContentText.Text = text;
                         readerWindow.Scroll.ScrollToHome();
                         if (!readerWindow.IsVisible)
                         {
