@@ -204,7 +204,7 @@ namespace BBSReader
             return t.ToString("yyyy-MM-dd");
         }
 
-        private void ReloadButton_Click(object sender, RoutedEventArgs e)
+        private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
 
         }

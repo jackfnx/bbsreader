@@ -41,7 +41,10 @@
             <RowDefinition Height="auto"/>
             <RowDefinition Height="*"/>
         </Grid.RowDefinitions>
-        <Button x:Name="BackButton" Content="&lt; BACK" Width="75" Grid.Row="0" HorizontalAlignment="Left" Click="BackButton_Click"/>
+        <StackPanel Grid.Row="0" Orientation="Horizontal">
+            <Button x:Name="BackButton" Content="&lt; BACK" Width="75" Margin="1,1,10,1" HorizontalAlignment="Left" Click="BackButton_Click"/>
+            <Button x:Name="DownloadButton" Content="Download" Width="75" Margin="1,1,10,1" HorizontalAlignment="Left" Click="DownloadButton_Click"/>
+        </StackPanel>
         <ListView x:Name="listView" Grid.Row="1" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
             <ListView.Resources>
             </ListView.Resources>
