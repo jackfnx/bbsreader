@@ -77,7 +77,7 @@ namespace BBSReader
                     {
                         Title = x,
                         Author = example.author,
-                        Time = ConvertTimestampToDateString(example.postTime),
+                        Time = example.postTime,
                         Url = "",
                         ThreadId = "",
                         Favorite = metaData.favorites.Contains(x)
@@ -88,7 +88,7 @@ namespace BBSReader
             {
                 metaData.tags[keyword].ForEach(x => {
                     BBSThread t = metaData.threads[x];
-                    listData.Add(new { Title = t.title, Author = t.author, Time = ConvertTimestampToDateString(t.postTime), Url = t.link, ThreadId = t.threadId, Favorite = false });
+                    listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Favorite = false });
                 });
             }
         }
@@ -160,7 +160,7 @@ namespace BBSReader
             [JsonProperty("author")]
             public string author;
             [JsonProperty("postTime")]
-            public long postTime;
+            public string postTime;
             [JsonProperty("link")]
             public string link;
         }
@@ -194,14 +194,6 @@ namespace BBSReader
             metaData.tags.Remove(title);
             SaveMetaData();
             SetCurrentKeyword(null);
-        }
-
-        private string ConvertTimestampToDateString(long timestamp)
-        {
-            DateTime zero = TimeZone.CurrentTimeZone.ToLocalTime(new DateTime(1970, 1, 1));
-            TimeSpan span = new TimeSpan(timestamp * 10000000);
-            DateTime t = zero.Add(span);
-            return t.ToString("yyyy-MM-dd");
         }
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)

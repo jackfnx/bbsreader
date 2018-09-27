@@ -11,7 +11,6 @@ import json
 import re
 from urllib import request
 from bs4 import BeautifulSoup
-from datetime import datetime
 
 
 # In[101]:
@@ -43,9 +42,6 @@ curr_board = boardIds[boardId]
 
 print('Updating [%s] <board: %d>.' % (bbsname, curr_board))
 
-
-def dateStringToTimestamp(datestr):
-    return time.mktime(datetime.strptime(datestr, '%Y-%m-%d').timetuple())
 
 ### 如果存在json，load数据
 if os.path.exists(meta_data_path):
@@ -146,8 +142,7 @@ def bbsdoc(html):
         link = t.select('th span[id^=thread_] a')[0]['href']
         threadId = link.split('-')[1]
         author = t.select('td.author cite a')[0].text
-        pts = t.select('td.author em')[0].text
-        postTime = dateStringToTimestamp(pts)
+        postTime = t.select('td.author em')[0].text
         threads.append(MakeThread(threadId, title, author, postTime, link))
     return threads
 
@@ -209,7 +204,7 @@ for i in range(len(threads)):
 
 ### 主题下，按照时间排序
 for keyword in tags:
-    tags[keyword].sort(key=lambda x: threads[x]['postTime'], reverse=True)
+    tags[keyword].sort(key=lambda x: int(threads[x]['threadId']), reverse=True)
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据
 for tag in favorites:
