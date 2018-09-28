@@ -11,6 +11,7 @@ import json
 import re
 from urllib import request
 from bs4 import BeautifulSoup
+import argparse
 
 
 # In[101]:
@@ -22,20 +23,35 @@ meta_data_path = os.path.join(save_path, 'meta.json')
 
 ### BBS列表
 bbsdef = [
-    ['第一会所', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', [383,]],
+    ['第一会所', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', [383,322]],
     ['色中色', 'http://www.sexinsex.net/forum/', 'forum-%d-%d.html', [383,]],
 ]
 
 ### 参数
+parser = argparse.ArgumentParser()
+parser.add_argument('pages', nargs='?', type=int, help='manual set download pages number')
+parser.add_argument('-l', '--list', action='store_true', help='support BBS list')
+parser.add_argument('--bbsid', type=int, default=0, help='manual set <BBS ID>')
+parser.add_argument('--boardid', type=int, default=0, help='manual set <BOARD ID>')
+args = parser.parse_args()
+
+pages = args.pages
+bbsId = args.bbsid
+boardId = args.boardid
+
+if args.list:
+    print('%s\n' % '\n'.join([str(x) for x in bbsdef]))
+    sys.exit(0)
+
 # if len(sys.argv) < 3:
 #     sys.stderr.write('%s\n' % '\n'.join([str(x) for x in bbsdef]))
 #     sys.exit(0)
     
 # bbsId = int(sys.argv[1])
 # boardId = int(sys.argv[2])
-bbsId = 0
-boardId = 0
-pages = int(sys.argv[1]) if len(sys.argv) > 1 else None
+# bbsId = 0
+# boardId = 0
+# pages = int(sys.argv[1]) if len(sys.argv) > 1 else None
 
 bbsname, base, start_path, boardIds = bbsdef[bbsId]
 curr_board = boardIds[boardId]
@@ -57,7 +73,7 @@ else:
     last_timestamp = 0
     last_threads = []
     tags = {}
-    favorites = ['琼明神女录', '册母为后', '绿帽武林之淫乱后宫', '龙珠肏', '锦绣江山传']
+    favorites = ['琼明神女录', '册母为后', '绿帽武林之淫乱后宫', '龙珠肏', '锦绣江山传', '淫堕的女武神']
     blacklist = []
 
 # In[102]:
