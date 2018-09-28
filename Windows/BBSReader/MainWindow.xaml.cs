@@ -68,7 +68,9 @@ namespace BBSReader
                     {
                         return 1;
                     }
-                    return string.Compare(x, y);
+                    BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
+                    BBSThread exampleY = metaData.threads[metaData.tags[y][0]];
+                    return int.Parse(exampleY.threadId) - int.Parse(exampleX.threadId);
                 });
 
                 tags.ForEach(x => {
