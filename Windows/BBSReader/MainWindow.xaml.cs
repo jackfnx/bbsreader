@@ -27,7 +27,9 @@ namespace BBSReader
             listView.DataContext = listData;
 
             LoadMetaData();
-            SetCurrentKeyword(null);
+            currentKeyword = null;
+            searchingKeyword = null;
+            ResetList();
         }
 
         private void LoadMetaData()
@@ -50,14 +52,17 @@ namespace BBSReader
             }
         }
 
-        private void SetCurrentKeyword(string keyword)
+        private void ResetList()
         {
-            currentKeyword = keyword;
-
             listData.Clear();
-            if (keyword == null)
+            if (currentKeyword == null)
             {
                 List<string> tags = new List<string>(metaData.tags.Keys);
+
+                if (searchingKeyword != null)
+                {
+                    tags.RemoveAll(x => { return !x.Contains(searchingKeyword); });
+                }
 
                 tags.Sort((x, y) => {
                     if (metaData.favorites.Contains(x) && !metaData.favorites.Contains(y))
@@ -88,7 +93,7 @@ namespace BBSReader
             }
             else
             {
-                metaData.tags[keyword].ForEach(x => {
+                metaData.tags[currentKeyword].ForEach(x => {
                     BBSThread t = metaData.threads[x];
                     listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Favorite = false });
                 });
@@ -97,7 +102,8 @@ namespace BBSReader
 
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
-            SetCurrentKeyword(null);
+            currentKeyword = null;
+            ResetList();
         }
 
         private void HandleDoubleClick(object sender, MouseButtonEventArgs e)
@@ -106,7 +112,8 @@ namespace BBSReader
             dynamic item = lvi.Content;
             if (currentKeyword == null)
             {
-                SetCurrentKeyword(item.Title);
+                currentKeyword = item.Title;
+                ResetList();
             }
             else
             {
@@ -138,6 +145,7 @@ namespace BBSReader
         public ObservableCollection<object> listData;
         private MetaData metaData;
         private string currentKeyword;
+        private string searchingKeyword;
 
         public struct MetaData
         {
@@ -174,7 +182,8 @@ namespace BBSReader
             string title = item.Title;
             metaData.favorites.Add(title);
             SaveMetaData();
-            SetCurrentKeyword(null);
+            currentKeyword = null;
+            ResetList();
         }
 
         private void RemoveFavoritesContextMenu_Click(object sender, RoutedEventArgs e)
@@ -184,7 +193,8 @@ namespace BBSReader
             string title = item.Title;
             metaData.favorites.Remove(title);
             SaveMetaData();
-            SetCurrentKeyword(null);
+            currentKeyword = null;
+            ResetList();
         }
 
         private void BlackContextMenu_Click(object sender, RoutedEventArgs e)
@@ -195,12 +205,27 @@ namespace BBSReader
             metaData.blacklist.Add(title);
             metaData.tags.Remove(title);
             SaveMetaData();
-            SetCurrentKeyword(null);
+            currentKeyword = null;
+            ResetList();
         }
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
 
+        }
+
+        private void KeywordButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
+                searchingKeyword = null;
+            else
+                searchingKeyword = SearchTextBox.Text;
+            ResetList();
         }
     }
 }
