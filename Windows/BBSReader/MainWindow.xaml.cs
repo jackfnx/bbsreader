@@ -15,7 +15,7 @@ namespace BBSReader
     /// </summary>
     public partial class MainWindow : Window
     {
-        const string LOCAL_PATH = "E:/turboc/sis001/";
+        const string LOCAL_PATH = "E:/BBSReader.Cache/sis001/";
 
         public MainWindow()
         {

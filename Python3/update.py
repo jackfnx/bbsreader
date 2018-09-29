@@ -1,9 +1,5 @@
 #!/usr/bin/env python
 # coding: utf-8
-
-# In[100]:
-
-
 import os
 import sys
 import time
@@ -13,18 +9,12 @@ from urllib import request
 from bs4 import BeautifulSoup
 import argparse
 
-
-# In[101]:
-
-
-save_path = 'E:/turboc/sis001'
-
-meta_data_path = os.path.join(save_path, 'meta.json')
+save_root_path = 'E:/BBSReader.Cache'
 
 ### BBS列表
 bbsdef = [
-    ['第一会所', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', [383,322]],
-    ['色中色', 'http://www.sexinsex.net/forum/', 'forum-%d-%d.html', [383,]],
+    ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', [383,322]],
+    ['色中色', 'sexinsex', 'http://www.sexinsex.net/forum/', 'forum-%d-%d.html', [383,]],
 ]
 
 ### 参数
@@ -53,11 +43,16 @@ if args.list:
 # boardId = 0
 # pages = int(sys.argv[1]) if len(sys.argv) > 1 else None
 
-bbsname, base, start_path, boardIds = bbsdef[bbsId]
+bbsname, folder, base, start_path, boardIds = bbsdef[bbsId]
 curr_board = boardIds[boardId]
 
 print('Updating [%s] <board: %d>.' % (bbsname, curr_board))
 
+save_path = os.path.join(save_root_path, folder)
+if not os.path.isdir(save_path):
+    os.makedirs(save_path)
+
+meta_data_path = os.path.join(save_path, 'meta.json')
 
 ### 如果存在json，load数据
 if os.path.exists(meta_data_path):
