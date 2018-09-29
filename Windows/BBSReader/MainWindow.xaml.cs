@@ -61,7 +61,12 @@ namespace BBSReader
 
                 if (searchingKeyword != null)
                 {
-                    tags.RemoveAll(x => { return !x.Contains(searchingKeyword); });
+                    tags.RemoveAll(x => {
+                        if (x.Contains(searchingKeyword))
+                            return false;
+                        BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
+                        return !exampleX.author.Contains(searchingKeyword);
+                    });
                 }
 
                 tags.Sort((x, y) => {
