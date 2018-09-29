@@ -164,6 +164,8 @@ namespace BBSReader
             public List<string> favorites;
             [JsonProperty("blacklist")]
             public List<string> blacklist;
+            [JsonProperty("followings")]
+            public Dictionary<string, string> followings;
         }
 
         public struct BBSThread
@@ -219,11 +221,6 @@ namespace BBSReader
 
         }
 
-        private void KeywordButton_Click(object sender, RoutedEventArgs e)
-        {
-
-        }
-
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
             if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
@@ -231,6 +228,26 @@ namespace BBSReader
             else
                 searchingKeyword = SearchTextBox.Text;
             ResetList();
+        }
+
+        private void FollowContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string title = item.Title;
+            string author = item.Author;
+
+            var dialog = new FollowDialog();
+            dialog.Owner = this;
+            dialog.Keyword = title;
+            dialog.Author = author;
+            var dr = dialog.ShowDialog() ?? false;
+            if (dr)
+            {
+                string keyword = dialog.Keyword;
+                metaData.followings[author] = keyword;
+                SaveMetaData();
+            }
         }
     }
 }

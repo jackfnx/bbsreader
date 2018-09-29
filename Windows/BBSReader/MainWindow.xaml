@@ -22,9 +22,10 @@
             </Style.Triggers>
         </Style>
         <ContextMenu x:Key="KeywordOperationsContextMenu" Background="WhiteSmoke">
-            <MenuItem Header="Add to Favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
-            <MenuItem Header="Remove From Favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
-            <MenuItem Header="Black List" Name="BlackContextMenu" Click="BlackContextMenu_Click"/>
+            <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
+            <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
+            <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click"/>
+            <MenuItem Header="follow author" Name="FollowContextMenu" Click="FollowContextMenu_Click" />
         </ContextMenu>
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />
@@ -40,7 +41,6 @@
         <DockPanel DockPanel.Dock="Top">
             <Button x:Name="BackButton" Content=" &lt; BACK " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="BackButton_Click"/>
             <Button x:Name="DownloadButton" Content=" Download " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="DownloadButton_Click"/>
-            <Button x:Name="KeywordButton" Content=" Super Keyword " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="KeywordButton_Click"/>
             <TextBox x:Name="SearchTextBox" Margin="1,5,10,5" HorizontalAlignment="Stretch" TextChanged="SearchTextBox_TextChanged"/>
         </DockPanel>
         <ListView x:Name="listView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">

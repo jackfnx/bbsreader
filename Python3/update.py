@@ -202,7 +202,7 @@ threads = merge(last_threads, latest_threads)
 
 
 tags = {}
-### 扫描新增数据，提取关键字
+### 扫描数据，提取关键字
 for i in range(len(threads)):
     t = threads[i]
     title = t['title']
