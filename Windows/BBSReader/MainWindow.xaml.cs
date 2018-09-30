@@ -69,6 +69,8 @@ namespace BBSReader
             listData.Clear();
             if (currentKeyword == null && currentAnthology == null)
             {
+                BackButton.IsEnabled = false;
+
                 List<string> tags = new List<string>(metaData.tags.Keys);
                 List<string> anthologies = new List<string>(metaData.anthologies.Keys);
 
@@ -80,7 +82,7 @@ namespace BBSReader
                         BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
                         return !exampleX.author.Contains(searchingKeyword);
                     });
-                    anthologies.RemoveAll(x => x.Contains(searchingKeyword));
+                    anthologies.RemoveAll(x => !x.Contains(searchingKeyword));
                 }
 
                 var items = new List<ListItem>();
@@ -142,6 +144,8 @@ namespace BBSReader
             }
             else
             {
+                BackButton.IsEnabled = true;
+
                 List<int> list;
                 if (currentKeyword != null)
                 {
@@ -157,7 +161,10 @@ namespace BBSReader
                 }
                 list.ForEach(x => {
                     BBSThread t = metaData.threads[x];
-                    listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
+                    if (searchingKeyword == null || t.title.Contains(searchingKeyword))
+                    {
+                        listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
+                    }
                 });
             }
         }
@@ -166,6 +173,7 @@ namespace BBSReader
         {
             currentKeyword = null;
             currentAnthology = null;
+            SearchBox.Clear();
             ResetList();
         }
 
@@ -291,10 +299,10 @@ namespace BBSReader
 
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(SearchTextBox.Text))
+            if (string.IsNullOrWhiteSpace(SearchBox.Text))
                 searchingKeyword = null;
             else
-                searchingKeyword = SearchTextBox.Text;
+                searchingKeyword = SearchBox.Text;
             ResetList();
         }
 

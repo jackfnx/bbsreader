@@ -59,7 +59,7 @@
         <DockPanel DockPanel.Dock="Top">
             <Button x:Name="BackButton" Content=" &lt; BACK " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="BackButton_Click"/>
             <Button x:Name="DownloadButton" Content=" Download " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="DownloadButton_Click"/>
-            <TextBox x:Name="SearchTextBox" Margin="1,5,10,5" HorizontalAlignment="Stretch" TextChanged="SearchTextBox_TextChanged"/>
+            <TextBox x:Name="SearchBox" Margin="1,5,10,5" HorizontalAlignment="Stretch" TextChanged="SearchTextBox_TextChanged"/>
         </DockPanel>
         <ListView x:Name="listView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
             <ListView.Resources>
