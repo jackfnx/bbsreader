@@ -33,16 +33,6 @@ if args.list:
     print('%s\n' % '\n'.join([str(x) for x in bbsdef]))
     sys.exit(0)
 
-# if len(sys.argv) < 3:
-#     sys.stderr.write('%s\n' % '\n'.join([str(x) for x in bbsdef]))
-#     sys.exit(0)
-    
-# bbsId = int(sys.argv[1])
-# boardId = int(sys.argv[2])
-# bbsId = 0
-# boardId = 0
-# pages = int(sys.argv[1]) if len(sys.argv) > 1 else None
-
 bbsname, folder, base, start_path, boardIds = bbsdef[bbsId]
 curr_board = boardIds[boardId]
 
@@ -61,17 +51,19 @@ if os.path.exists(meta_data_path):
     last_timestamp = load_data['timestamp']
     last_threads = load_data['threads']
     tags = load_data['tags']
+    anthologies = load_data['anthologies']
     favorites = load_data['favorites']
     blacklist = load_data['blacklist']
+    followings = load_data['followings']
 ### 如果不存在json，初始化空数据
 else:
     last_timestamp = 0
     last_threads = []
     tags = {}
+    anthologies = {}
     favorites = ['琼明神女录', '册母为后', '绿帽武林之淫乱后宫', '龙珠肏', '锦绣江山传', '淫堕的女武神']
     blacklist = []
-
-# In[102]:
+    followings = {}
 
 
 ### 根据上次更新时间，确定这次读取几页
@@ -88,8 +80,6 @@ if pages is None:
 else:
     print('] manual set, update <%d> pages.' % (pages))
 
-
-# In[103]:
 
 
 ### 获取html的爬虫类
@@ -128,7 +118,8 @@ class Crawler:
         return html
 
 
-# In[104]:
+
+crawler = Crawler(10)
 
 
 ### Thread对象
@@ -166,13 +157,6 @@ def bbscon(html):
     return postobj.text
 
 
-# In[105]:
-
-
-crawler = Crawler(10)
-
-
-# In[106]:
 
 
 ### 读取新数据
@@ -181,8 +165,6 @@ for i in range(0, pages):
     url = base + (start_path % (curr_board, (i+1)))
     latest_threads += bbsdoc(crawler.getUrl(url))
 
-
-# In[107]:
 
 
 ### 合并新旧数据
@@ -198,41 +180,63 @@ def merge(lasts, latest):
 threads = merge(last_threads, latest_threads)
 
 
-# In[108]:
-
 
 tags = {}
 ### 扫描数据，提取关键字
 for i in range(len(threads)):
     t = threads[i]
     title = t['title']
+    author = t['author']
     keywords = re.findall('【(.*?)】', title)
     for keyword in keywords:
         if not keyword.isdigit() and not keyword in blacklist:
+
             if not keyword in tags:
                 tags[keyword] = []
             tags[keyword].append(i)
+
+    if author in followings:
+        koi = followings[author]
+        if koi == '*' or koi in title:
+            key = author + ':' + koi
+            if not key in anthologies:
+                anthologies[key] = []
+            anthologies[key].append(i)
+
 
 ### 主题下，按照时间排序
 for keyword in tags:
     tags[keyword].sort(key=lambda x: int(threads[x]['threadId']), reverse=True)
 
+for key in anthologies:
+    anthologies[key] = list(set(anthologies[key]))
+    anthologies[key].sort(key=lambda x: int(threads[x]['threadId']), reverse=True)
+
 ### 根据收藏夹，扫描所有文章，是否存在本地数据
+def download_article(t):
+    txtpath = os.path.join(save_path, t['threadId'] + '.txt')
+    if not os.path.exists(txtpath):
+        url = base + t['link']
+        chapter = bbscon(crawler.getUrl(url))
+        with open(txtpath, 'w', encoding='utf-8') as f:
+            f.write(chapter)
+
 for tag in favorites:
     if tag in tags:
         for i in tags[tag]:
             t = threads[i]
-            txtpath = os.path.join(save_path, t['threadId'] + '.txt')
-            if not os.path.exists(txtpath):
-                url = base + t['link']
-                chapter = bbscon(crawler.getUrl(url))
-                with open(txtpath, 'w', encoding='utf-8') as f:
-                    f.write(chapter)
+            download_article(t)
         print('keyword [%s] saved.' % tag)
 
+for author in followings:
+    koi = followings[author]
+    key = author + ':' + koi
+    if key in anthologies:
+        for i in anthologies[key]:
+            t = threads[i]
+            download_article(t)
+        print('anthology [%s] saved.' % key)
 
-
-# In[109]:
 
 
 ### 保存data
@@ -241,19 +245,13 @@ with open(meta_data_path, 'w', encoding='utf-8') as f:
         'timestamp': time.time(),
         'threads': threads,
         'tags': tags,
+        'anthologies': anthologies,
         'favorites': favorites,
         'blacklist': blacklist,
+        'followings': followings,
     }
     json.dump(save_data, f)
 
-
-# In[ ]:
-
-
-
-
-
-# In[ ]:
 
 
 

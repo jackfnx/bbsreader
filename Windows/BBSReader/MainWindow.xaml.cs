@@ -52,12 +52,25 @@ namespace BBSReader
             }
         }
 
+        private struct ListItem
+        {
+            internal string Title;
+            internal string Author;
+            internal string Time;
+            internal string Url;
+            internal string ThreadId;
+            internal bool Favorite;
+            internal bool IsAnthology;
+            internal string AnthologyKey;
+        }
+
         private void ResetList()
         {
             listData.Clear();
-            if (currentKeyword == null)
+            if (currentKeyword == null && currentAnthology == null)
             {
                 List<string> tags = new List<string>(metaData.tags.Keys);
+                List<string> anthologies = new List<string>(metaData.anthologies.Keys);
 
                 if (searchingKeyword != null)
                 {
@@ -67,40 +80,84 @@ namespace BBSReader
                         BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
                         return !exampleX.author.Contains(searchingKeyword);
                     });
+                    anthologies.RemoveAll(x => x.Contains(searchingKeyword));
                 }
 
-                tags.Sort((x, y) => {
-                    if (metaData.favorites.Contains(x) && !metaData.favorites.Contains(y))
+                var items = new List<ListItem>();
+
+                tags.ForEach(x =>
+                {
+                    var item = new ListItem();
+                    item.Title = x;
+
+                    BBSThread example = metaData.threads[metaData.tags[x][0]];
+                    item.Author = example.author;
+                    item.Time = example.postTime;
+                    item.Url = example.link;
+                    item.ThreadId = example.threadId;
+                    item.Favorite = metaData.favorites.Contains(x);
+                    item.IsAnthology = false;
+                    item.AnthologyKey = "";
+
+                    items.Add(item);
+                });
+
+                anthologies.ForEach(x =>
+                {
+                    int i = x.IndexOf(':');
+                    string author = x.Substring(0, i);
+                    string keyword = x.Substring(i + 1);
+
+                    var item = new ListItem();
+                    item.Title = keyword == "*" ? ("<" + author + ">'s collection.") : keyword;
+
+                    BBSThread example = metaData.threads[metaData.anthologies[x][0]];
+                    item.Author = example.author;
+                    item.Time = example.postTime;
+                    item.Url = example.link;
+                    item.ThreadId = example.threadId;
+                    item.Favorite = true;
+                    item.IsAnthology = true;
+                    item.AnthologyKey = x;
+
+                    items.Add(item);
+                });
+
+                items.Sort((x, y) => {
+                    if (x.Favorite && !y.Favorite)
                     {
                         return -1;
                     }
-                    else if (!metaData.favorites.Contains(x) && metaData.favorites.Contains(y))
+                    else if (!x.Favorite && y.Favorite)
                     {
                         return 1;
                     }
-                    BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
-                    BBSThread exampleY = metaData.threads[metaData.tags[y][0]];
-                    return int.Parse(exampleY.threadId) - int.Parse(exampleX.threadId);
+                    return int.Parse(y.ThreadId) - int.Parse(x.ThreadId);
                 });
 
-                tags.ForEach(x => {
-                    BBSThread example = metaData.threads[metaData.tags[x][0]];
-                    listData.Add(new
-                    {
-                        Title = x,
-                        Author = example.author,
-                        Time = example.postTime,
-                        Url = "",
-                        ThreadId = "",
-                        Favorite = metaData.favorites.Contains(x)
-                    });
+                items.ForEach(x =>
+                {
+                    listData.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Favorite, x.IsAnthology, x.AnthologyKey });
                 });
             }
             else
             {
-                metaData.tags[currentKeyword].ForEach(x => {
+                List<int> list;
+                if (currentKeyword != null)
+                {
+                    list = metaData.tags[currentKeyword];
+                }
+                else if (currentAnthology != null)
+                {
+                    list = metaData.anthologies[currentAnthology];
+                }
+                else
+                {
+                    return;
+                }
+                list.ForEach(x => {
                     BBSThread t = metaData.threads[x];
-                    listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Favorite = false });
+                    listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
                 });
             }
         }
@@ -108,6 +165,7 @@ namespace BBSReader
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             currentKeyword = null;
+            currentAnthology = null;
             ResetList();
         }
 
@@ -115,9 +173,16 @@ namespace BBSReader
         {
             ListViewItem lvi = sender as ListViewItem;
             dynamic item = lvi.Content;
-            if (currentKeyword == null)
+            if (currentKeyword == null && currentAnthology == null)
             {
-                currentKeyword = item.Title;
+                if (item.IsAnthology)
+                {
+                    currentAnthology = item.AnthologyKey;
+                }
+                else
+                {
+                    currentKeyword = item.Title;
+                }
                 ResetList();
             }
             else
@@ -150,6 +215,7 @@ namespace BBSReader
         public ObservableCollection<object> listData;
         private MetaData metaData;
         private string currentKeyword;
+        private string currentAnthology;
         private string searchingKeyword;
 
         public struct MetaData
@@ -160,6 +226,8 @@ namespace BBSReader
             public List<BBSThread> threads;
             [JsonProperty("tags")]
             public Dictionary<string, List<int>> tags;
+            [JsonProperty("anthologies")]
+            public Dictionary<string, List<int>> anthologies;
             [JsonProperty("favorites")]
             public List<string> favorites;
             [JsonProperty("blacklist")]
@@ -247,7 +315,20 @@ namespace BBSReader
                 string keyword = dialog.Keyword;
                 metaData.followings[author] = keyword;
                 SaveMetaData();
+                ResetList();
             }
+        }
+
+        private void UnfollowContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string author = item.Author;
+            string anthologyKey = item.AnthologyKey;
+            metaData.followings.Remove(author);
+            metaData.anthologies.Remove(anthologyKey);
+            SaveMetaData();
+            ResetList();
         }
     }
 }

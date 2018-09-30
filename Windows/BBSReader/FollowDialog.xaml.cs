@@ -33,7 +33,7 @@ namespace BBSReader
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Keyword = string.IsNullOrWhiteSpace(KeywordTextBox.Text) || KeywordTextBox.Text == "*" ? "" : KeywordTextBox.Text;
+            this.Keyword = string.IsNullOrWhiteSpace(KeywordTextBox.Text) ? "*" : KeywordTextBox.Text;
             this.DialogResult = true;
         }
 

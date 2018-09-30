@@ -21,11 +21,26 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="DisableOnFollowing" TargetType="{x:Type MenuItem}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=IsAnthology}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DisableOnUnfollowing" TargetType="{x:Type MenuItem}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=IsAnthology}" Value="False">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <ContextMenu x:Key="KeywordOperationsContextMenu" Background="WhiteSmoke">
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
             <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click"/>
-            <MenuItem Header="follow author" Name="FollowContextMenu" Click="FollowContextMenu_Click" />
+            <MenuItem Header="follow author" Name="FollowContextMenu" Click="FollowContextMenu_Click" Style="{StaticResource DisableOnFollowing}"/>
+            <MenuItem Header="unfollow author" Name="UnfollowContextMenu" Click="UnfollowContextMenu_Click" Style="{StaticResource DisableOnUnfollowing}"/>
         </ContextMenu>
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />
@@ -33,6 +48,9 @@
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=Favorite}" Value="True">
                     <Setter Property="Background" Value="LightYellow" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=IsAnthology}" Value="True">
+                    <Setter Property="Background" Value="DarkSalmon" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
