@@ -114,7 +114,7 @@ namespace BBSReader
                     string keyword = x.Substring(i + 1);
 
                     var item = new ListItem();
-                    item.Title = keyword == "*" ? ("<" + author + ">'s collection.") : keyword;
+                    item.Title = keyword == "*" ? ("【" + author + "】的作品集") : keyword;
 
                     BBSThread example = metaData.threads[metaData.anthologies[x][0]];
                     item.Author = example.author;
