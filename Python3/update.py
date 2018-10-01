@@ -22,7 +22,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('pages', nargs='?', type=int, help='manual set download pages number')
 parser.add_argument('-l', '--list', action='store_true', help='support BBS list')
 parser.add_argument('--bbsid', type=int, default=0, help='manual set <BBS ID>')
-parser.add_argument('--boardid', type=int, default=0, help='manual set <BOARD ID>')
+parser.add_argument('--boardid', type=int, default=None, help='manual set <BOARD ID>')
 args = parser.parse_args()
 
 pages = args.pages
@@ -34,9 +34,6 @@ if args.list:
     sys.exit(0)
 
 bbsname, folder, base, start_path, boardIds = bbsdef[bbsId]
-curr_board = boardIds[boardId]
-
-print('Updating [%s] <board: %d>.' % (bbsname, curr_board))
 
 save_path = os.path.join(save_root_path, folder)
 if not os.path.isdir(save_path):
@@ -158,13 +155,24 @@ def bbscon(html):
 
 
 
-
 ### 读取新数据
-latest_threads = []
-for i in range(0, pages):
-    url = base + (start_path % (curr_board, (i+1)))
-    latest_threads += bbsdoc(crawler.getUrl(url))
+def update_threads(boardId, threads):
+    print('Updating [%s] <board: %d>.' % (bbsname, boardId))
+    for i in range(0, pages):
+        url = base + (start_path % (boardId, (i+1)))
+        try:
+            threads += bbsdoc(crawler.getUrl(url))
+        except Exception as e:
+            print(e.message)
 
+
+latest_threads = []
+if boardId is None:
+    for curr_board in boardIds:
+        update_threads(curr_board, latest_threads)
+else:
+    curr_board = boardIds[boardId]
+    update_threads(curr_board, latest_threads)
 
 
 ### 合并新旧数据
@@ -217,9 +225,12 @@ def download_article(t):
     txtpath = os.path.join(save_path, t['threadId'] + '.txt')
     if not os.path.exists(txtpath):
         url = base + t['link']
-        chapter = bbscon(crawler.getUrl(url))
-        with open(txtpath, 'w', encoding='utf-8') as f:
-            f.write(chapter)
+        try:
+            chapter = bbscon(crawler.getUrl(url))
+            with open(txtpath, 'w', encoding='utf-8') as f:
+                f.write(chapter)
+        except Exception as e:
+            print(e.message)
 
 for tag in favorites:
     if tag in tags:
