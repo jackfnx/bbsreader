@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -76,6 +77,8 @@ namespace BBSReader
 
                 if (searchingKeyword != null)
                 {
+                    BackButton.IsEnabled = true;
+
                     tags.RemoveAll(x => {
                         if (x.Contains(searchingKeyword))
                             return false;
@@ -337,6 +340,15 @@ namespace BBSReader
             metaData.anthologies.Remove(anthologyKey);
             SaveMetaData();
             ResetList();
+        }
+
+        private void ViewUrlContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string link = item.Url;
+
+            Process.Start("http://www.sis001.com/forum/" + link);
         }
     }
 }

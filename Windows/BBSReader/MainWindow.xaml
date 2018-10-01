@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
+        Title="MainWindow" Height="600" Width="1024">
     <Window.Resources>
         <Style x:Key="DisableOnBeFavorite" TargetType="{x:Type MenuItem}">
             <Style.Triggers>
@@ -36,6 +36,7 @@
             </Style.Triggers>
         </Style>
         <ContextMenu x:Key="KeywordOperationsContextMenu" Background="WhiteSmoke">
+            <MenuItem Header="view in browser" Name="ViewUrlContextMenu" Click="ViewUrlContextMenu_Click" />
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
             <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click"/>
