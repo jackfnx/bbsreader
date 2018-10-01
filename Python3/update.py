@@ -113,7 +113,7 @@ class Crawler:
         req = request.Request(url, headers=head)
         response = request.urlopen(req)
 
-        html = response.read().decode('gbk')
+        html = response.read().decode('gbk', 'ignore')
         print('Get [%s] OK' % url)
         return html
 
