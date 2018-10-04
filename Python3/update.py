@@ -14,7 +14,7 @@ save_root_path = 'E:/BBSReader.Cache'
 ### BBS列表
 bbsdef = [
     ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', [383,322]],
-    ['色中色', 'sexinsex', 'http://www.sexinsex.net/forum/', 'forum-%d-%d.html', [383,]],
+    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', [383,]],
 ]
 
 ### 参数
@@ -73,7 +73,7 @@ if pages is None:
     else:
         pages = 30
     tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_timestamp))
-    print('] last update at [%s], this update will load <%d> panges' % (tmstr, pages))
+    print('] last update at [%s], this update will load <%d> pages' % (tmstr, pages))
 else:
     print('] manual set, update <%d> pages.' % (pages))
 
@@ -92,7 +92,7 @@ class Crawler:
         request.install_opener(opener)
 
         self.delay = delay
-        self.last_accessed = time.time()
+        self.last_accessed = 0
 
     def getUrl(self, url):
 
@@ -163,7 +163,7 @@ def update_threads(boardId, threads):
         try:
             threads += bbsdoc(crawler.getUrl(url))
         except Exception as e:
-            print(e.message)
+            print('Get [%s]: %s' % (url, str(e)))
 
 
 latest_threads = []
@@ -230,7 +230,7 @@ def download_article(t):
             with open(txtpath, 'w', encoding='utf-8') as f:
                 f.write(chapter)
         except Exception as e:
-            print(e.message)
+            print('Get [%s]: %s' % (url, str(e)))
 
 for tag in favorites:
     if tag in tags:
