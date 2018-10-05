@@ -17,9 +17,9 @@ namespace BBSReader
     public partial class MainWindow : Window
     {
         const string LOCAL_PATH = "C:/Users/hpjing/Dropbox/BBSReader.Cache/";
-        static readonly Dictionary<string, string> SITE_NAME = new Dictionary<string, string> {
-            { "sis001", "第一会所" },
-            { "sexinsex", "色中色" }
+        static readonly Dictionary<string, BBSDef> SITE_DEF = new Dictionary<string, BBSDef> {
+            { "sis001", new BBSDef { siteId="sis001", siteName="第一会所", siteHost="http://www.sis001.com/forum/" } },
+            { "sexinsex", new BBSDef { siteId="sexinsex", siteName="色中色", siteHost="http://www.sexinsex.net/bbs/" } }
         };
 
         public MainWindow()
@@ -64,6 +64,7 @@ namespace BBSReader
             internal string Time;
             internal string Url;
             internal string Source;
+            internal string SiteId;
             internal string ThreadId;
             internal bool Favorite;
             internal bool IsAnthology;
@@ -105,6 +106,7 @@ namespace BBSReader
                     item.Time = example.postTime;
                     item.Url = example.link;
                     item.Source = "";
+                    item.SiteId = example.siteId;
                     item.ThreadId = example.threadId;
                     item.Favorite = metaData.favorites.Contains(x);
                     item.IsAnthology = false;
@@ -127,6 +129,7 @@ namespace BBSReader
                     item.Time = example.postTime;
                     item.Url = example.link;
                     item.Source = "";
+                    item.SiteId = example.siteId;
                     item.ThreadId = example.threadId;
                     item.Favorite = true;
                     item.IsAnthology = true;
@@ -149,7 +152,7 @@ namespace BBSReader
 
                 items.ForEach(x =>
                 {
-                    listData.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.Favorite, x.IsAnthology, x.AnthologyKey });
+                    listData.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.IsAnthology, x.AnthologyKey });
                 });
             }
             else
@@ -173,7 +176,7 @@ namespace BBSReader
                     BBSThread t = metaData.threads[x];
                     if (searchingKeyword == null || t.title.Contains(searchingKeyword))
                     {
-                        listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Source = SITE_NAME[t.siteId], Favorite = false, IsAnthology = false, AnthologyKey = "" });
+                        listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Source = SITE_DEF[t.siteId].siteName, SiteId = t.siteId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
                     }
                 });
             }
@@ -205,7 +208,7 @@ namespace BBSReader
             }
             else
             {
-                string fPath = LOCAL_PATH + item.siteId + "/" + item.ThreadId + ".txt";
+                string fPath = LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
                 if (File.Exists(fPath))
                 {
                     using (StreamReader sr = new StreamReader(fPath, new UTF8Encoding(false)))
@@ -268,6 +271,13 @@ namespace BBSReader
             public string postTime;
             [JsonProperty("link")]
             public string link;
+        }
+
+        public struct BBSDef
+        {
+            public string siteId;
+            public string siteName;
+            public string siteHost;
         }
 
         private void AddFavoritesContextMenu_Click(object sender, RoutedEventArgs e)
@@ -355,9 +365,10 @@ namespace BBSReader
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
+            string siteId = item.SiteId;
             string link = item.Url;
 
-            Process.Start("http://www.sis001.com/forum/" + link);
+            Process.Start(SITE_DEF[siteId].siteHost + link);
         }
     }
 }

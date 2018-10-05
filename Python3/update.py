@@ -16,8 +16,9 @@ save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
 ### BBS列表
 bbsdef = [
     ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, [383,322]],
-    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), [383,]],
+    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), [383,359]],
 ]
+
 
 ### 参数
 parser = argparse.ArgumentParser()
@@ -34,12 +35,6 @@ boardId = args.boardid
 if args.list:
     print('%s\n' % '\n'.join([str(x) for x in bbsdef]))
     sys.exit(0)
-
-bbsname, siteId, base, start_path, login, boardIds = bbsdef[bbsId]
-
-save_path = os.path.join(save_root_path, siteId)
-if not os.path.isdir(save_path):
-    os.makedirs(save_path)
 
 meta_data_path = os.path.join(save_root_path, 'meta.json')
 
@@ -83,6 +78,30 @@ else:
 
 ### 获取html的爬虫类
 class Crawler:
+
+    @classmethod
+    def getCrawler(cls, bbsId):
+        if not hasattr(cls, 'crawlers'):
+            cls.crawlers = {}
+
+        if isinstance(bbsId, int):
+            bbsinfo = bbsdef[bbsId]
+        elif isinstance(bbsId, str) or isinstance(bbsId, unicode):
+            for s in bbsdef:
+                if s[1] == bbsId:
+                    bbsinfo = s
+                    break
+        if not bbsinfo:
+            raise 'There is UNKNOWN bbsinfo.'
+
+        bbskey = bbsinfo[1]
+        if not bbskey in cls.crawlers:
+            login = bbsinfo[4]
+            obj = cls(1, login)
+            obj.bbsname, obj.bbskey, obj.base, obj.index_page, _, obj.boardIds = bbsinfo
+            cls.crawlers[bbskey] = obj
+        return cls.crawlers[bbskey]
+
     
     def __init__(self, delay, login):
         
@@ -111,6 +130,7 @@ class Crawler:
                 time.sleep(sleep_secs) 
         self.last_accessed = time.time()
         
+        url = self.base + url
         response = self.session.get(url, headers=self.head, proxies=self.proxy)
 
         html = response.content.decode('gbk', 'ignore')
@@ -118,8 +138,7 @@ class Crawler:
         return html
 
 
-
-crawler = Crawler(1, login)
+crawler = Crawler.getCrawler(bbsId)
 
 
 ### Thread对象
@@ -161,9 +180,9 @@ def bbscon(html):
 
 ### 读取新数据
 def update_threads(boardId, threads):
-    print('Updating [%s] <board: %d>.' % (bbsname, boardId))
+    print('Updating [%s] <board: %d>.' % (crawler.bbsname, boardId))
     for i in range(0, pages):
-        url = base + (start_path % (boardId, (i+1)))
+        url = crawler.index_page % (boardId, (i+1))
         try:
             threads += bbsdoc(crawler.getUrl(url))
         except Exception as e:
@@ -172,10 +191,10 @@ def update_threads(boardId, threads):
 
 latest_threads = []
 if boardId is None:
-    for curr_board in boardIds:
+    for curr_board in crawler.boardIds:
         update_threads(curr_board, latest_threads)
 else:
-    curr_board = boardIds[boardId]
+    curr_board = crawler.boardIds[boardId]
     update_threads(curr_board, latest_threads)
 
 
@@ -227,15 +246,20 @@ for key in anthologies:
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据
 def download_article(t):
+    crawler = Crawler.getCrawler(t['siteId'])
+
+    save_path = os.path.join(save_root_path, t['siteId'])
+
     txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
     if not os.path.exists(txtpath):
-        url = base + t['link']
+        if not os.path.isdir(save_path):
+            os.makedirs(save_path)
         try:
-            chapter = bbscon(crawler.getUrl(url))
+            chapter = bbscon(crawler.getUrl(t['link']))
             with open(txtpath, 'w', encoding='utf-8') as f:
                 f.write(chapter)
         except Exception as e:
-            print('Get [%s]: %s' % (url, str(e)))
+            print('Get [%s]: %s' % (t['link'], str(e)))
 
 for tag in favorites:
     if tag in tags:
