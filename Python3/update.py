@@ -9,12 +9,14 @@ import requests
 from bs4 import BeautifulSoup
 import argparse
 
+from login_sexinsex import SexInSex_Login
+
 save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
 
 ### BBS列表
 bbsdef = [
-    ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', [383,322]],
-    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', [383,]],
+    ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, [383,322]],
+    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), [383,]],
 ]
 
 ### 参数
@@ -33,7 +35,7 @@ if args.list:
     print('%s\n' % '\n'.join([str(x) for x in bbsdef]))
     sys.exit(0)
 
-bbsname, folder, base, start_path, boardIds = bbsdef[bbsId]
+bbsname, folder, base, start_path, login, boardIds = bbsdef[bbsId]
 
 save_path = os.path.join(save_root_path, folder)
 if not os.path.isdir(save_path):
@@ -82,7 +84,7 @@ else:
 ### 获取html的爬虫类
 class Crawler:
     
-    def __init__(self, delay):
+    def __init__(self, delay, login):
         
         self.head = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.94 Safari/537.36'
@@ -96,6 +98,10 @@ class Crawler:
         self.delay = delay
         self.last_accessed = 0
 
+        self.session = requests.Session()
+        if login:
+        	login.login(self.session, self.head, self.proxy)
+
     def getUrl(self, url):
 
         if self.delay > 0:
@@ -105,7 +111,7 @@ class Crawler:
                 time.sleep(sleep_secs) 
         self.last_accessed = time.time()
         
-        response = requests.get(url, headers=self.head, proxies=self.proxy)
+        response = self.session.get(url, headers=self.head, proxies=self.proxy)
 
         html = response.content.decode('gbk', 'ignore')
         print('Get [%s] OK' % url)
@@ -113,7 +119,7 @@ class Crawler:
 
 
 
-crawler = Crawler(1)
+crawler = Crawler(1, login)
 
 
 ### Thread对象
