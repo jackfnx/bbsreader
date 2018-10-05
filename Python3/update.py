@@ -94,13 +94,13 @@ class Crawler:
         if not bbsinfo:
             raise 'There is UNKNOWN bbsinfo.'
 
-        bbskey = bbsinfo[1]
-        if not bbskey in cls.crawlers:
+        siteId = bbsinfo[1]
+        if not siteId in cls.crawlers:
             login = bbsinfo[4]
             obj = cls(1, login)
-            obj.bbsname, obj.bbskey, obj.base, obj.index_page, _, obj.boardIds = bbsinfo
-            cls.crawlers[bbskey] = obj
-        return cls.crawlers[bbskey]
+            obj.bbsname, obj.siteId, obj.base, obj.index_page, _, obj.boardIds = bbsinfo
+            cls.crawlers[siteId] = obj
+        return cls.crawlers[siteId]
 
     
     def __init__(self, delay, login):
@@ -142,7 +142,7 @@ crawler = Crawler.getCrawler(bbsId)
 
 
 ### Thread对象
-def MakeThread(threadId, title, author, postTime, link):
+def MakeThread(siteId, threadId, title, author, postTime, link):
     dic = {
         'siteId': siteId,
         'threadId': threadId,
@@ -154,7 +154,7 @@ def MakeThread(threadId, title, author, postTime, link):
     return dic
 
 ### 读取版面
-def bbsdoc(html):
+def bbsdoc(html, siteId):
     soup = BeautifulSoup(html, 'html5lib')
     objs = soup.select('tbody[id^=stickthread_]')
     objs += soup.select('tbody[id^=normalthread_]')
@@ -165,7 +165,7 @@ def bbsdoc(html):
         threadId = link.split('-')[1]
         author = t.select('td.author cite a')[0].text
         postTime = t.select('td.author em')[0].text
-        threads.append(MakeThread(threadId, title, author, postTime, link))
+        threads.append(MakeThread(siteId, threadId, title, author, postTime, link))
     return threads
 
 ### 读取文章
@@ -184,7 +184,7 @@ def update_threads(boardId, threads):
     for i in range(0, pages):
         url = crawler.index_page % (boardId, (i+1))
         try:
-            threads += bbsdoc(crawler.getUrl(url))
+            threads += bbsdoc(crawler.getUrl(url), crawler.siteId)
         except Exception as e:
             print('Get [%s]: %s' % (url, str(e)))
 
