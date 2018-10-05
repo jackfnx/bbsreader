@@ -16,7 +16,11 @@ namespace BBSReader
     /// </summary>
     public partial class MainWindow : Window
     {
-        const string LOCAL_PATH = "C:/Users/hpjing/Dropbox/BBSReader.Cache/sis001/";
+        const string LOCAL_PATH = "C:/Users/hpjing/Dropbox/BBSReader.Cache/";
+        static readonly Dictionary<string, string> SITE_NAME = new Dictionary<string, string> {
+            { "sis001", "第一会所" },
+            { "sexinsex", "色中色" }
+        };
 
         public MainWindow()
         {
@@ -59,6 +63,7 @@ namespace BBSReader
             internal string Author;
             internal string Time;
             internal string Url;
+            internal string Source;
             internal string ThreadId;
             internal bool Favorite;
             internal bool IsAnthology;
@@ -99,6 +104,7 @@ namespace BBSReader
                     item.Author = example.author;
                     item.Time = example.postTime;
                     item.Url = example.link;
+                    item.Source = "";
                     item.ThreadId = example.threadId;
                     item.Favorite = metaData.favorites.Contains(x);
                     item.IsAnthology = false;
@@ -120,6 +126,7 @@ namespace BBSReader
                     item.Author = example.author;
                     item.Time = example.postTime;
                     item.Url = example.link;
+                    item.Source = "";
                     item.ThreadId = example.threadId;
                     item.Favorite = true;
                     item.IsAnthology = true;
@@ -142,7 +149,7 @@ namespace BBSReader
 
                 items.ForEach(x =>
                 {
-                    listData.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Favorite, x.IsAnthology, x.AnthologyKey });
+                    listData.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.Favorite, x.IsAnthology, x.AnthologyKey });
                 });
             }
             else
@@ -166,7 +173,7 @@ namespace BBSReader
                     BBSThread t = metaData.threads[x];
                     if (searchingKeyword == null || t.title.Contains(searchingKeyword))
                     {
-                        listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
+                        listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Source = SITE_NAME[t.siteId], Favorite = false, IsAnthology = false, AnthologyKey = "" });
                     }
                 });
             }
@@ -198,7 +205,7 @@ namespace BBSReader
             }
             else
             {
-                string fPath = LOCAL_PATH + item.ThreadId + ".txt";
+                string fPath = LOCAL_PATH + item.siteId + "/" + item.ThreadId + ".txt";
                 if (File.Exists(fPath))
                 {
                     using (StreamReader sr = new StreamReader(fPath, new UTF8Encoding(false)))
@@ -249,6 +256,8 @@ namespace BBSReader
 
         public struct BBSThread
         {
+            [JsonProperty("siteId")]
+            public string siteId;
             [JsonProperty("threadId")]
             public string threadId;
             [JsonProperty("title")]

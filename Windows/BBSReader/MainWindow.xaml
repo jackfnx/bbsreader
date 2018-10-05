@@ -71,6 +71,7 @@
                     <GridViewColumn Header="Author" Width="100" DisplayMemberBinding="{Binding Path=Author}"/>
                     <GridViewColumn Header="Time" Width="100" DisplayMemberBinding="{Binding Path=Time}"/>
                     <GridViewColumn Header="Url" Width="200" DisplayMemberBinding="{Binding Path=Url}"/>
+                    <GridViewColumn Header="Source" Width="80" DisplayMemberBinding="{Binding Path=Source}"/>
                 </GridView>
             </ListView.View>
         </ListView>

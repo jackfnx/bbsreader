@@ -35,13 +35,13 @@ if args.list:
     print('%s\n' % '\n'.join([str(x) for x in bbsdef]))
     sys.exit(0)
 
-bbsname, folder, base, start_path, login, boardIds = bbsdef[bbsId]
+bbsname, siteId, base, start_path, login, boardIds = bbsdef[bbsId]
 
-save_path = os.path.join(save_root_path, folder)
+save_path = os.path.join(save_root_path, siteId)
 if not os.path.isdir(save_path):
     os.makedirs(save_path)
 
-meta_data_path = os.path.join(save_path, 'meta.json')
+meta_data_path = os.path.join(save_root_path, 'meta.json')
 
 ### 如果存在json，load数据
 if os.path.exists(meta_data_path):
@@ -60,7 +60,7 @@ else:
     last_threads = []
     tags = {}
     anthologies = {}
-    favorites = ['琼明神女录', '册母为后', '绿帽武林之淫乱后宫', '龙珠肏', '锦绣江山传', '淫堕的女武神']
+    favorites = ['琼明神女录', '淫堕的女武神']
     blacklist = []
     followings = {}
 
@@ -125,6 +125,7 @@ crawler = Crawler(1, login)
 ### Thread对象
 def MakeThread(threadId, title, author, postTime, link):
     dic = {
+        'siteId': siteId,
         'threadId': threadId,
         'title': title,
         'author': author,
@@ -182,9 +183,9 @@ else:
 def merge(lasts, latest):
     threads = lasts[:]
     
-    lastIds = [x['threadId'] for x in lasts]
+    lastIds = [(x['siteId'], x['threadId']) for x in lasts]
     for t in latest:
-        if not t['threadId'] in lastIds:
+        if not (t['siteId'], t['threadId']) in lastIds:
             threads.append(t)
     return threads
 
@@ -193,6 +194,7 @@ threads = merge(last_threads, latest_threads)
 
 
 tags = {}
+anthologies = {}
 ### 扫描数据，提取关键字
 for i in range(len(threads)):
     t = threads[i]
@@ -225,7 +227,7 @@ for key in anthologies:
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据
 def download_article(t):
-    txtpath = os.path.join(save_path, t['threadId'] + '.txt')
+    txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
     if not os.path.exists(txtpath):
         url = base + t['link']
         try:
