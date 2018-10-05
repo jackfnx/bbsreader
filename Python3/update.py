@@ -9,7 +9,7 @@ from urllib import request
 from bs4 import BeautifulSoup
 import argparse
 
-save_root_path = 'E:/BBSReader.Cache'
+save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
 
 ### BBS列表
 bbsdef = [
