@@ -5,7 +5,7 @@ import sys
 import time
 import json
 import re
-from urllib import request
+import requests
 from bs4 import BeautifulSoup
 import argparse
 
@@ -84,12 +84,14 @@ class Crawler:
     
     def __init__(self, delay):
         
-        proxy_handler = request.ProxyHandler({
-            'http':'http://127.0.0.1:8080',
-            'https':'https://127.0.0.1.8080'
-        })
-        opener = request.build_opener(proxy_handler)
-        request.install_opener(opener)
+        self.head = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.94 Safari/537.36'
+        }
+
+        self.proxy = {
+        	"http": "http://127.0.0.1:8080",
+        	"https": "https://127.0.0.1:8080"
+        }
 
         self.delay = delay
         self.last_accessed = 0
@@ -103,20 +105,15 @@ class Crawler:
                 time.sleep(sleep_secs) 
         self.last_accessed = time.time()
         
-        head = {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.94 Safari/537.36'
-        }
+        response = requests.get(url, headers=self.head, proxies=self.proxy)
 
-        req = request.Request(url, headers=head)
-        response = request.urlopen(req)
-
-        html = response.read().decode('gbk', 'ignore')
+        html = response.content.decode('gbk', 'ignore')
         print('Get [%s] OK' % url)
         return html
 
 
 
-crawler = Crawler(10)
+crawler = Crawler(1)
 
 
 ### Thread对象
