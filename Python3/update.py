@@ -243,11 +243,11 @@ def getPostTime(x):
     return secs
 
 for keyword in tags:
-    tags[keyword].sort(key=lambda x: getPostTime(x), reverse=True)
+    tags[keyword].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
 
 for key in anthologies:
     anthologies[key] = list(set(anthologies[key]))
-    anthologies[key].sort(key=lambda x: getPostTime(x), reverse=True)
+    anthologies[key].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据
 def download_article(t):

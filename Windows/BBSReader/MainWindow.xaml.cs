@@ -203,7 +203,8 @@ namespace BBSReader
         {
             currentKeyword = null;
             currentAnthology = null;
-            SearchBox.Clear();
+            if (TopicList.IsVisible)
+                SearchBox.Clear();
             ResetList(!TopicList.IsVisible);
         }
 
