@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Text;
 using System.Windows;
@@ -147,7 +148,9 @@ namespace BBSReader
                     {
                         return 1;
                     }
-                    return int.Parse(y.ThreadId) - int.Parse(x.ThreadId);
+                    DateTime xdate = DateTime.ParseExact(x.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
+                    DateTime ydate = DateTime.ParseExact(y.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
+                    return DateTime.Compare(ydate, xdate);
                 });
 
                 items.ForEach(x =>

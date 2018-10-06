@@ -26,4 +26,4 @@ class SexInSex_Login:
         }
 
         resp = session.post(loginurl, data=loginparams, headers=head, proxies=proxy)
-        print('LOGIN: %s' % (resp))
+        print('[色中色] 登陆: %s' % (resp))

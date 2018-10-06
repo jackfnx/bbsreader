@@ -237,12 +237,17 @@ for i in range(len(threads)):
 
 
 ### 主题下，按照时间排序
+def getPostTime(x):
+    timestr = threads[x]['postTime']
+    secs = time.mktime(time.strptime(timestr, '%Y-%m-%d'))
+    return secs
+
 for keyword in tags:
-    tags[keyword].sort(key=lambda x: int(threads[x]['threadId']), reverse=True)
+    tags[keyword].sort(key=lambda x: getPostTime(x), reverse=True)
 
 for key in anthologies:
     anthologies[key] = list(set(anthologies[key]))
-    anthologies[key].sort(key=lambda x: int(threads[x]['threadId']), reverse=True)
+    anthologies[key].sort(key=lambda x: getPostTime(x), reverse=True)
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据
 def download_article(t):
