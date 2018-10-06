@@ -49,6 +49,7 @@ if os.path.exists(meta_data_path):
     favorites = load_data['favorites']
     blacklist = load_data['blacklist']
     followings = load_data['followings']
+    groups = load_data['groups']
 ### 如果不存在json，初始化空数据
 else:
     last_timestamp = 0
@@ -58,6 +59,7 @@ else:
     favorites = ['琼明神女录', '淫堕的女武神']
     blacklist = []
     followings = {}
+    groups = []
 
 
 ### 根据上次更新时间，确定这次读取几页
@@ -212,9 +214,9 @@ threads = merge(last_threads, latest_threads)
 
 
 
+### 扫描数据，提取关键字
 tags = {}
 anthologies = {}
-### 扫描数据，提取关键字
 for i in range(len(threads)):
     t = threads[i]
     title = t['title']
@@ -222,7 +224,6 @@ for i in range(len(threads)):
     keywords = re.findall('【(.*?)】', title)
     for keyword in keywords:
         if not keyword.isdigit() and not keyword in blacklist:
-
             if not keyword in tags:
                 tags[keyword] = []
             tags[keyword].append(i)
@@ -249,7 +250,8 @@ for key in anthologies:
     anthologies[key] = list(set(anthologies[key]))
     anthologies[key].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
 
-### 根据收藏夹，扫描所有文章，是否存在本地数据
+
+### 根据收藏夹，扫描所有文章，是否存在本地数据，如果不存在则下载
 def download_article(t):
     crawler = Crawler.getCrawler(t['siteId'])
 
@@ -273,14 +275,11 @@ for tag in favorites:
             download_article(t)
         print('keyword [%s] saved.' % tag)
 
-for author in followings:
-    koi = followings[author]
-    key = author + ':' + koi
-    if key in anthologies:
-        for i in anthologies[key]:
-            t = threads[i]
-            download_article(t)
-        print('anthology [%s] saved.' % key)
+for key in anthologies:
+    for i in anthologies[key]:
+        t = threads[i]
+        download_article(t)
+    print('anthology [%s] saved.' % key)
 
 
 
@@ -294,6 +293,7 @@ with open(meta_data_path, 'w', encoding='utf-8') as f:
         'favorites': favorites,
         'blacklist': blacklist,
         'followings': followings,
+        'groups': groups,
     }
     json.dump(save_data, f)
 
