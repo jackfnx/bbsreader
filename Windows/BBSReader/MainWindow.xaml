@@ -62,18 +62,33 @@
             <Button x:Name="DownloadButton" Content=" Download " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="DownloadButton_Click"/>
             <TextBox x:Name="SearchBox" Margin="1,5,10,5" HorizontalAlignment="Stretch" TextChanged="SearchTextBox_TextChanged"/>
         </DockPanel>
-        <ListView x:Name="listView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
-            <ListView.Resources>
-            </ListView.Resources>
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
-                    <GridViewColumn Header="Author" Width="100" DisplayMemberBinding="{Binding Path=Author}"/>
-                    <GridViewColumn Header="Time" Width="100" DisplayMemberBinding="{Binding Path=Time}"/>
-                    <GridViewColumn Header="Url" Width="200" DisplayMemberBinding="{Binding Path=Url}"/>
-                    <GridViewColumn Header="Source" Width="80" DisplayMemberBinding="{Binding Path=Source}"/>
-                </GridView>
-            </ListView.View>
-        </ListView>
+        <Grid>
+            <ListView x:Name="TopicList" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
+                <ListView.Resources>
+                </ListView.Resources>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
+                        <GridViewColumn Header="Author" Width="100" DisplayMemberBinding="{Binding Path=Author}"/>
+                        <GridViewColumn Header="Time" Width="100" DisplayMemberBinding="{Binding Path=Time}"/>
+                        <GridViewColumn Header="Url" Width="200" DisplayMemberBinding="{Binding Path=Url}"/>
+                        <GridViewColumn Header="Source" Width="80" DisplayMemberBinding="{Binding Path=Source}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+            <ListView x:Name="ArticleList" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0" Visibility="Hidden">
+                <ListView.Resources>
+                </ListView.Resources>
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
+                        <GridViewColumn Header="Author" Width="100" DisplayMemberBinding="{Binding Path=Author}"/>
+                        <GridViewColumn Header="Time" Width="100" DisplayMemberBinding="{Binding Path=Time}"/>
+                        <GridViewColumn Header="Url" Width="200" DisplayMemberBinding="{Binding Path=Url}"/>
+                        <GridViewColumn Header="Source" Width="80" DisplayMemberBinding="{Binding Path=Source}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+        </Grid>
     </DockPanel>
 </Window>

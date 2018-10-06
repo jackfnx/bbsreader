@@ -29,8 +29,11 @@ namespace BBSReader
 
             readerWindow = new ReaderWindow();
 
-            listData = new ObservableCollection<object>();
-            listView.DataContext = listData;
+            topics = new ObservableCollection<object>();
+            TopicList.DataContext = topics;
+
+            articles = new ObservableCollection<object>();
+            ArticleList.DataContext = articles;
 
             LoadMetaData();
             currentKeyword = null;
@@ -72,96 +75,100 @@ namespace BBSReader
             internal string AnthologyKey;
         }
 
-        private void ResetList()
+        private void ResetList(bool simpleBack=false)
         {
-            listData.Clear();
             if (currentKeyword == null && currentAnthology == null)
             {
-                BackButton.IsEnabled = false;
-
-                List<string> tags = new List<string>(metaData.tags.Keys);
-                List<string> anthologies = new List<string>(metaData.anthologies.Keys);
-
-                if (searchingKeyword != null)
+                bool backButtonEnabled = false;
+                if (!simpleBack)
                 {
-                    BackButton.IsEnabled = true;
+                    List<string> tags = new List<string>(metaData.tags.Keys);
+                    List<string> anthologies = new List<string>(metaData.anthologies.Keys);
 
-                    tags.RemoveAll(x => {
-                        if (x.Contains(searchingKeyword))
-                            return false;
-                        BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
-                        return !exampleX.author.Contains(searchingKeyword);
+                    if (searchingKeyword != null)
+                    {
+                        backButtonEnabled = true;
+
+                        tags.RemoveAll(x => {
+                            if (x.Contains(searchingKeyword))
+                                return false;
+                            BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
+                            return !exampleX.author.Contains(searchingKeyword);
+                        });
+                        anthologies.RemoveAll(x => !x.Contains(searchingKeyword));
+                    }
+
+                    var items = new List<ListItem>();
+
+                    tags.ForEach(x =>
+                    {
+                        var item = new ListItem();
+                        item.Title = x;
+
+                        BBSThread example = metaData.threads[metaData.tags[x][0]];
+                        item.Author = example.author;
+                        item.Time = example.postTime;
+                        item.Url = example.link;
+                        item.Source = "";
+                        item.SiteId = example.siteId;
+                        item.ThreadId = example.threadId;
+                        item.Favorite = metaData.favorites.Contains(x);
+                        item.IsAnthology = false;
+                        item.AnthologyKey = "";
+
+                        items.Add(item);
                     });
-                    anthologies.RemoveAll(x => !x.Contains(searchingKeyword));
+
+                    anthologies.ForEach(x =>
+                    {
+                        int i = x.IndexOf(':');
+                        string author = x.Substring(0, i);
+                        string keyword = x.Substring(i + 1);
+
+                        var item = new ListItem();
+                        item.Title = keyword == "*" ? ("【" + author + "】的作品集") : keyword;
+
+                        BBSThread example = metaData.threads[metaData.anthologies[x][0]];
+                        item.Author = example.author;
+                        item.Time = example.postTime;
+                        item.Url = example.link;
+                        item.Source = "";
+                        item.SiteId = example.siteId;
+                        item.ThreadId = example.threadId;
+                        item.Favorite = true;
+                        item.IsAnthology = true;
+                        item.AnthologyKey = x;
+
+                        items.Add(item);
+                    });
+
+                    items.Sort((x, y) => {
+                        if (x.Favorite && !y.Favorite)
+                        {
+                            return -1;
+                        }
+                        else if (!x.Favorite && y.Favorite)
+                        {
+                            return 1;
+                        }
+                        DateTime xdate = DateTime.ParseExact(x.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
+                        DateTime ydate = DateTime.ParseExact(y.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
+                        return DateTime.Compare(ydate, xdate);
+                    });
+
+                    topics.Clear();
+                    items.ForEach(x =>
+                    {
+                        topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.IsAnthology, x.AnthologyKey });
+                    });
                 }
 
-                var items = new List<ListItem>();
-
-                tags.ForEach(x =>
-                {
-                    var item = new ListItem();
-                    item.Title = x;
-
-                    BBSThread example = metaData.threads[metaData.tags[x][0]];
-                    item.Author = example.author;
-                    item.Time = example.postTime;
-                    item.Url = example.link;
-                    item.Source = "";
-                    item.SiteId = example.siteId;
-                    item.ThreadId = example.threadId;
-                    item.Favorite = metaData.favorites.Contains(x);
-                    item.IsAnthology = false;
-                    item.AnthologyKey = "";
-
-                    items.Add(item);
-                });
-
-                anthologies.ForEach(x =>
-                {
-                    int i = x.IndexOf(':');
-                    string author = x.Substring(0, i);
-                    string keyword = x.Substring(i + 1);
-
-                    var item = new ListItem();
-                    item.Title = keyword == "*" ? ("【" + author + "】的作品集") : keyword;
-
-                    BBSThread example = metaData.threads[metaData.anthologies[x][0]];
-                    item.Author = example.author;
-                    item.Time = example.postTime;
-                    item.Url = example.link;
-                    item.Source = "";
-                    item.SiteId = example.siteId;
-                    item.ThreadId = example.threadId;
-                    item.Favorite = true;
-                    item.IsAnthology = true;
-                    item.AnthologyKey = x;
-
-                    items.Add(item);
-                });
-
-                items.Sort((x, y) => {
-                    if (x.Favorite && !y.Favorite)
-                    {
-                        return -1;
-                    }
-                    else if (!x.Favorite && y.Favorite)
-                    {
-                        return 1;
-                    }
-                    DateTime xdate = DateTime.ParseExact(x.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
-                    DateTime ydate = DateTime.ParseExact(y.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
-                    return DateTime.Compare(ydate, xdate);
-                });
-
-                items.ForEach(x =>
-                {
-                    listData.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.IsAnthology, x.AnthologyKey });
-                });
+                TopicList.Visibility = Visibility.Visible;
+                ArticleList.Visibility = Visibility.Hidden;
+                BackButton.IsEnabled = backButtonEnabled;
             }
             else
             {
-                BackButton.IsEnabled = true;
-
                 List<int> list;
                 if (currentKeyword != null)
                 {
@@ -175,13 +182,20 @@ namespace BBSReader
                 {
                     return;
                 }
+
+                articles.Clear();
                 list.ForEach(x => {
                     BBSThread t = metaData.threads[x];
                     if (searchingKeyword == null || t.title.Contains(searchingKeyword))
                     {
-                        listData.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Source = SITE_DEF[t.siteId].siteName, SiteId = t.siteId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
+                        articles.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Source = SITE_DEF[t.siteId].siteName, SiteId = t.siteId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
                     }
                 });
+
+                TopicList.Visibility = Visibility.Hidden;
+                ArticleList.Visibility = Visibility.Visible;
+
+                BackButton.IsEnabled = true;
             }
         }
 
@@ -190,7 +204,7 @@ namespace BBSReader
             currentKeyword = null;
             currentAnthology = null;
             SearchBox.Clear();
-            ResetList();
+            ResetList(!TopicList.IsVisible);
         }
 
         private void HandleDoubleClick(object sender, MouseButtonEventArgs e)
@@ -236,7 +250,8 @@ namespace BBSReader
         }
         
         private ReaderWindow readerWindow;
-        public ObservableCollection<object> listData;
+        public ObservableCollection<object> topics;
+        public ObservableCollection<object> articles;
         private MetaData metaData;
         private string currentKeyword;
         private string currentAnthology;
