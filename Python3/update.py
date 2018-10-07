@@ -49,7 +49,8 @@ if os.path.exists(meta_data_path):
     favorites = load_data['favorites']
     blacklist = load_data['blacklist']
     followings = load_data['followings']
-    groups = load_data['groups']
+    tag_groups = load_data['tag_groups']
+    anthology_groups = load_data['anthology_groups']
 ### 如果不存在json，初始化空数据
 else:
     last_timestamp = 0
@@ -59,7 +60,8 @@ else:
     favorites = ['琼明神女录', '淫堕的女武神']
     blacklist = []
     followings = {}
-    groups = []
+    tag_groups = {}
+    anthology_groups = {}
 
 
 ### 根据上次更新时间，确定这次读取几页
@@ -293,7 +295,8 @@ with open(meta_data_path, 'w', encoding='utf-8') as f:
         'favorites': favorites,
         'blacklist': blacklist,
         'followings': followings,
-        'groups': groups,
+        'tag_groups': tag_groups,
+        'anthology_groups': anthology_groups,
     }
     json.dump(save_data, f)
 

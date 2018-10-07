@@ -22,7 +22,6 @@ if os.path.exists(meta_data_path):
     favorites = load_data['favorites']
     blacklist = load_data['blacklist']
     followings = load_data['followings']
-    # groups = load_data['groups']
     tag_groups = load_data['tag_groups']
     anthology_groups = load_data['anthology_groups']
 ### 如果不存在json
