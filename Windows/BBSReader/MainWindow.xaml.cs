@@ -274,6 +274,10 @@ namespace BBSReader
             public List<string> blacklist;
             [JsonProperty("followings")]
             public Dictionary<string, string> followings;
+            [JsonProperty("tag_groups")]
+            public Dictionary<string, List<List<int>>> tagGroups;
+            [JsonProperty("anthology_groups")]
+            public Dictionary<string, List<List<int>>> anthologyGroups;
         }
 
         public struct BBSThread

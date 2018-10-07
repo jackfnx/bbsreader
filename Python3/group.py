@@ -22,17 +22,21 @@ if os.path.exists(meta_data_path):
     favorites = load_data['favorites']
     blacklist = load_data['blacklist']
     followings = load_data['followings']
+    # groups = load_data['groups']
+    tag_groups = load_data['tag_groups']
+    anthology_groups = load_data['anthology_groups']
 ### 如果不存在json
 else:
     sys.stderr.write('NO meta data.\n')
     sys.exit(0)
 
-def do_grouping(ids):
-    groups = []
 
-    def in_group(i):
-        g = [x for x in groups if len([y for y in x if y==i]) > 0]
-        return len(g) > 0
+def in_group(i, groups):
+    g = [x for x in groups if len([y for y in x if y==i]) > 0]
+    return len(g) > 0
+
+
+def do_grouping(ids, groups):
 
     texts = []
     for i in ids:
@@ -46,7 +50,7 @@ def do_grouping(ids):
         texts.append(text)
 
     for i in range(len(ids)):
-        if in_group(ids[i]):
+        if in_group(ids[i], groups):
             continue
         t1 = threads[ids[i]]
         curr_group = [ids[i]]
@@ -64,16 +68,17 @@ def do_grouping(ids):
                 lenr = len(text1) * 1.0 / len(text2) if len(text1) >= len(text2) else len(text2) * 1.0 / len(text1)
                 if lenr > 1.5:
                     continue
-                ### 比较内容相似度
-                r = fuzz.ratio(text1, text2)
-                print('%s <%s> vs %s <%s>: %d' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], r))
-                # print(curr_group_site_ids)
-                # print(t1['siteId'], t2['siteId'])
-                if r > 90:
+                ### 比较标题相似度
+                tr = fuzz.ratio(t1['title'], t2['title'])
+                if tr < 90:
+                    continue
+                ## 比较内容相似度
+                cr = fuzz.ratio(text1, text2)
+                print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
+                if cr > 70:
+                    # print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
                     curr_group.append(ids[j])
                     curr_group_site_ids.append(t2['siteId'])
-                else:
-                    print('[DIFF]: length: %d vs %d, ratio: %.04f.' % (len(text1), len(text2), lenr))
             ### 如果有空文，比较标题（严格相等才合并）
             else:
                 if t1['title'] == t2['title']:
@@ -81,19 +86,18 @@ def do_grouping(ids):
                     curr_group_site_ids.append(t2['siteId'])
         if len(curr_group) > 1:
             groups.append(curr_group)
-    return groups
 
-groups = []
+
 for tag in favorites:
     if tag in tags:
         t_00 = time.time()
-        groups += do_grouping(tags[tag])
+        do_grouping(tags[tag], tag_groups[tag])
         t_01 = time.time()
         print('keyword [%s]: grouped. (%.2fs)' % (tag, t_01-t_00))
 
 for key in anthologies:
     t_00 = time.time()
-    groups += do_grouping(anthologies[key])
+    do_grouping(anthologies[key], anthology_groups[key])
     t_01 = time.time()
     print('anthology [%s]: grouped. (%.2fs)' % (key, t_01-t_00))
 
@@ -109,9 +113,11 @@ with open(meta_data_path, 'w', encoding='utf-8') as f:
         'favorites': favorites,
         'blacklist': blacklist,
         'followings': followings,
-        'groups': groups,
+        'tag_groups': tag_groups,
+        'anthology_groups': anthology_groups,
     }
     json.dump(save_data, f)
+
 
 t1 = time.time()
 print('total time: %.2fs' % (t1 - t0))
