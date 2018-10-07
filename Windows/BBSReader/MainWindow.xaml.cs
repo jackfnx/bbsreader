@@ -73,6 +73,8 @@ namespace BBSReader
             internal bool Favorite;
             internal bool IsAnthology;
             internal string AnthologyKey;
+            internal bool IsFolder;
+            internal bool Downloaded;
         }
 
         private void ResetList(bool simpleBack=false)
@@ -115,6 +117,8 @@ namespace BBSReader
                         item.Favorite = metaData.favorites.Contains(x);
                         item.IsAnthology = false;
                         item.AnthologyKey = "";
+                        item.IsFolder = true;
+                        item.Downloaded = false;
 
                         items.Add(item);
                     });
@@ -138,6 +142,8 @@ namespace BBSReader
                         item.Favorite = true;
                         item.IsAnthology = true;
                         item.AnthologyKey = x;
+                        item.IsFolder = true;
+                        item.Downloaded = false;
 
                         items.Add(item);
                     });
@@ -159,7 +165,7 @@ namespace BBSReader
                     topics.Clear();
                     items.ForEach(x =>
                     {
-                        topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.IsAnthology, x.AnthologyKey });
+                        topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.IsAnthology, x.AnthologyKey, x.IsFolder, x.Downloaded });
                     });
                 }
 
@@ -188,7 +194,22 @@ namespace BBSReader
                     BBSThread t = metaData.threads[x];
                     if (searchingKeyword == null || t.title.Contains(searchingKeyword))
                     {
-                        articles.Add(new { Title = t.title, Author = t.author, Time = t.postTime, Url = t.link, ThreadId = t.threadId, Source = SITE_DEF[t.siteId].siteName, SiteId = t.siteId, Favorite = false, IsAnthology = false, AnthologyKey = "" });
+                        string siteName = SITE_DEF[t.siteId].siteName;
+                        string fPath = LOCAL_PATH + t.siteId + "/" + t.threadId + ".txt";
+                        bool downloaded = File.Exists(fPath);
+                        articles.Add(new {
+                            Title = t.title,
+                            Author = t.author,
+                            Time = t.postTime,
+                            Url = t.link,
+                            ThreadId = t.threadId,
+                            Source = siteName,
+                            SiteId = t.siteId,
+                            Favorite = false,
+                            IsAnthology = false,
+                            AnthologyKey = "",
+                            IsFolder = false,
+                            Downloaded = downloaded});
                     }
                 });
 
@@ -392,6 +413,18 @@ namespace BBSReader
             string link = item.Url;
 
             Process.Start(SITE_DEF[siteId].siteHost + link);
+        }
+
+        private void DeleteTxtContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string siteId = item.SiteId;
+            string threadId = item.ThreadId;
+
+            string fPath = LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
+            File.Delete(fPath);
+            ResetList();
         }
     }
 }
