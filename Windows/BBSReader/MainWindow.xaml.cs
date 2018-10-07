@@ -360,7 +360,14 @@ namespace BBSReader
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
-
+            DownloadWindow win = new DownloadWindow();
+            if (win.ShowDialog() ?? false)
+            {
+                LoadMetaData();
+                currentKeyword = null;
+                searchingKeyword = null;
+                ResetList();
+            }
         }
 
         private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
