@@ -218,7 +218,7 @@ threads = merge(last_threads, latest_threads)
 
 ### 扫描数据，提取关键字
 tags = {}
-anthologies = {}
+anthologies = [0] * len(followings)
 for i in range(len(threads)):
     t = threads[i]
     title = t['title']
@@ -230,13 +230,15 @@ for i in range(len(threads)):
                 tags[keyword] = []
             tags[keyword].append(i)
 
-    if author in followings:
-        koi = followings[author]
-        if koi == '*' or koi in title:
-            key = author + ':' + koi
-            if not key in anthologies:
-                anthologies[key] = []
-            anthologies[key].append(i)
+    for j in range(len(followings)):
+        superkeyword = followings[j]
+        keyword = superkeyword['keyword']
+        authors = superkeyword['author']
+        if keyword == '*' or keyword in title:
+            if authors[0] == '*' or author in authors:
+                if not isinstance(anthologies[j], list):
+                    anthologies[j] = []
+                anthologies[j].append(i)
 
 
 ### 主题下，按照时间排序
@@ -248,9 +250,9 @@ def getPostTime(x):
 for keyword in tags:
     tags[keyword].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
 
-for key in anthologies:
-    anthologies[key] = list(set(anthologies[key]))
-    anthologies[key].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
+for i in range(len(anthologies)):
+    anthologies[i] = list(set(anthologies[i]))
+    anthologies[i].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
 
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据，如果不存在则下载
@@ -277,15 +279,17 @@ for tag in favorites:
             download_article(t)
         print('keyword [%s] saved.' % tag)
 
-for key in anthologies:
-    for i in anthologies[key]:
-        t = threads[i]
+for i in range(len(followings)):
+    superkeyword = followings[i]
+    anthology = anthologies[i]
+    key = superkeyword['author'][0] + ":" + superkeyword['keyword']
+    for j in anthology:
+        t = threads[j]
         download_article(t)
     print('anthology [%s] saved.' % key)
 
 
-
-### 保存data
+## 保存data
 with open(meta_data_path, 'w', encoding='utf-8') as f:
     save_data = {
         'timestamp': time.time(),

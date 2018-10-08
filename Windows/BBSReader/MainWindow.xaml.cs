@@ -5,6 +5,7 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
@@ -37,6 +38,7 @@ namespace BBSReader
 
             LoadMetaData();
             currentKeyword = null;
+            currentAnthology = -1;
             searchingKeyword = null;
             ResetList();
         }
@@ -72,20 +74,20 @@ namespace BBSReader
             internal string ThreadId;
             internal bool Favorite;
             internal bool IsAnthology;
-            internal string AnthologyKey;
+            internal int AnthologyKey;
             internal bool IsFolder;
             internal bool Downloaded;
         }
 
         private void ResetList(bool simpleBack=false)
         {
-            if (currentKeyword == null && currentAnthology == null)
+            if (currentKeyword == null && currentAnthology == -1)
             {
                 bool backButtonEnabled = false;
                 if (!simpleBack)
                 {
                     List<string> tags = new List<string>(metaData.tags.Keys);
-                    List<string> anthologies = new List<string>(metaData.anthologies.Keys);
+                    List<int> anthologyIds = new List<int>(Enumerable.Range(0, metaData.anthologies.Count));
 
                     if (searchingKeyword != null)
                     {
@@ -97,7 +99,17 @@ namespace BBSReader
                             BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
                             return !exampleX.author.Contains(searchingKeyword);
                         });
-                        anthologies.RemoveAll(x => !x.Contains(searchingKeyword));
+                        anthologyIds.RemoveAll(x =>
+                        {
+                            if (metaData.followings[x].keyword.Contains(searchingKeyword))
+                                return false;
+                            foreach (string author in metaData.followings[x].authors)
+                            {
+                                if (author.Contains(searchingKeyword))
+                                    return false;
+                            }
+                            return true;
+                        });
                     }
 
                     var items = new List<ListItem>();
@@ -116,24 +128,30 @@ namespace BBSReader
                         item.ThreadId = example.threadId;
                         item.Favorite = metaData.favorites.Contains(x);
                         item.IsAnthology = false;
-                        item.AnthologyKey = "";
+                        item.AnthologyKey = -1;
                         item.IsFolder = true;
                         item.Downloaded = false;
 
                         items.Add(item);
                     });
 
-                    anthologies.ForEach(x =>
+                    anthologyIds.ForEach(x =>
                     {
-                        int i = x.IndexOf(':');
-                        string author = x.Substring(0, i);
-                        string keyword = x.Substring(i + 1);
+                        SuperKeyword superKeyword = metaData.followings[x];
+                        string author = superKeyword.authors[0];
+                        string keyword = superKeyword.keyword;
 
                         var item = new ListItem();
-                        item.Title = keyword == "*" ? ("【" + author + "】的作品集") : keyword;
+
+                        if (keyword == "*")
+                            item.Title = ("【" + author + "】的作品集");
+                        else if (author == "*")
+                            item.Title = ("专题：【" + keyword + "】");
+                        else
+                            item.Title = keyword;
+                        item.Author = author;
 
                         BBSThread example = metaData.threads[metaData.anthologies[x][0]];
-                        item.Author = example.author;
                         item.Time = example.postTime;
                         item.Url = example.link;
                         item.Source = "";
@@ -159,7 +177,11 @@ namespace BBSReader
                         }
                         DateTime xdate = DateTime.ParseExact(x.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
                         DateTime ydate = DateTime.ParseExact(y.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
-                        return DateTime.Compare(ydate, xdate);
+                        int dc = DateTime.Compare(ydate, xdate);
+                        if (dc != 0)
+                            return dc;
+                        else
+                            return int.Parse(y.ThreadId) - int.Parse(x.ThreadId);
                     });
 
                     topics.Clear();
@@ -180,7 +202,7 @@ namespace BBSReader
                 {
                     list = metaData.tags[currentKeyword];
                 }
-                else if (currentAnthology != null)
+                else if (currentAnthology != -1)
                 {
                     list = metaData.anthologies[currentAnthology];
                 }
@@ -223,7 +245,7 @@ namespace BBSReader
         private void BackButton_Click(object sender, RoutedEventArgs e)
         {
             currentKeyword = null;
-            currentAnthology = null;
+            currentAnthology = -1;
             if (TopicList.IsVisible)
                 SearchBox.Clear();
             ResetList(!TopicList.IsVisible);
@@ -233,7 +255,7 @@ namespace BBSReader
         {
             ListViewItem lvi = sender as ListViewItem;
             dynamic item = lvi.Content;
-            if (currentKeyword == null && currentAnthology == null)
+            if (currentKeyword == null && currentAnthology == -1)
             {
                 if (item.IsAnthology)
                 {
@@ -276,7 +298,7 @@ namespace BBSReader
         public ObservableCollection<object> articles;
         private MetaData metaData;
         private string currentKeyword;
-        private string currentAnthology;
+        private int currentAnthology;
         private string searchingKeyword;
 
         public struct MetaData
@@ -288,13 +310,13 @@ namespace BBSReader
             [JsonProperty("tags")]
             public Dictionary<string, List<int>> tags;
             [JsonProperty("anthologies")]
-            public Dictionary<string, List<int>> anthologies;
+            public List<List<int>> anthologies;
             [JsonProperty("favorites")]
             public List<string> favorites;
             [JsonProperty("blacklist")]
             public List<string> blacklist;
             [JsonProperty("followings")]
-            public Dictionary<string, string> followings;
+            public List<SuperKeyword> followings;
             [JsonProperty("tag_groups")]
             public Dictionary<string, List<List<int>>> tagGroups;
             [JsonProperty("anthology_groups")]
@@ -315,6 +337,14 @@ namespace BBSReader
             public string postTime;
             [JsonProperty("link")]
             public string link;
+        }
+
+        public struct SuperKeyword
+        {
+            [JsonProperty("keyword")]
+            public string keyword;
+            [JsonProperty("author")]
+            public List<string> authors;
         }
 
         public struct BBSDef
@@ -360,8 +390,8 @@ namespace BBSReader
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
-            DownloadWindow win = new DownloadWindow();
-            if (win.ShowDialog() ?? false)
+            DownloadDialog dialog = new DownloadDialog();
+            if (dialog.ShowDialog() ?? false)
             {
                 LoadMetaData();
                 currentKeyword = null;
@@ -379,35 +409,39 @@ namespace BBSReader
             ResetList();
         }
 
-        private void FollowContextMenu_Click(object sender, RoutedEventArgs e)
+        private void SetAdvancedKeywordContextMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
             string title = item.Title;
             string author = item.Author;
 
-            var dialog = new FollowDialog();
+            var dialog = new AdvancedKeywordDialog();
             dialog.Owner = this;
             dialog.Keyword = title;
-            dialog.Author = author;
+            dialog.DefaultAuthor = author;
             var dr = dialog.ShowDialog() ?? false;
             if (dr)
             {
-                string keyword = dialog.Keyword;
-                metaData.followings[author] = keyword;
+                SuperKeyword superKeyword = new SuperKeyword();
+                superKeyword.keyword = dialog.Keyword;
+                superKeyword.authors = new List<string>(dialog.AuthorList);
+                if (!metaData.followings.Contains(superKeyword))
+                {
+                    metaData.followings.Add(superKeyword);
+                }
                 SaveMetaData();
                 ResetList();
             }
         }
 
-        private void UnfollowContextMenu_Click(object sender, RoutedEventArgs e)
+        private void CancelAdvancedKeywordContextMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
-            string author = item.Author;
-            string anthologyKey = item.AnthologyKey;
-            metaData.followings.Remove(author);
-            metaData.anthologies.Remove(anthologyKey);
+            int anthologyKey = item.AnthologyKey;
+            metaData.followings.RemoveAt(anthologyKey);
+            metaData.anthologies.RemoveAt(anthologyKey);
             SaveMetaData();
             ResetList();
         }

@@ -55,8 +55,8 @@
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
             <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
-            <MenuItem Header="follow author" Name="FollowContextMenu" Click="FollowContextMenu_Click" Style="{StaticResource DisableOnFollowing}"/>
-            <MenuItem Header="unfollow author" Name="UnfollowContextMenu" Click="UnfollowContextMenu_Click" Style="{StaticResource DisableOnUnfollowing}"/>
+            <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnFollowing}"/>
+            <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnUnfollowing}"/>
         </ContextMenu>
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />

@@ -1,4 +1,4 @@
-﻿<Window x:Class="BBSReader.DownloadWindow"
+﻿<Window x:Class="BBSReader.DownloadDialog"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -15,8 +15,8 @@
             <Label Content="Pages" DockPanel.Dock="Left" Margin="1,1,1,1" />
             <ComboBox Width="80" Margin="1,1,1,1" />
             <Button Name="StartButton" Content="Start" Width="80" DockPanel.Dock="Left" Click="StartButton_Click"/>
-            <Label/>
+            <Grid/>
         </DockPanel>
-        <TextBox Name="ConsoleText" />
+        <TextBox Name="ConsoleText" IsReadOnly="True" />
     </DockPanel>
 </Window>
