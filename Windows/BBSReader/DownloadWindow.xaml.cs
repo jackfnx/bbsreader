@@ -64,6 +64,7 @@ namespace BBSReader
         private void OutputLine(string line)
         {
             ConsoleText.Text += line + "\n";
+            ConsoleText.ScrollToEnd();
         }
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
