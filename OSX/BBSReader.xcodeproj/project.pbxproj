@@ -8,6 +8,9 @@
 
 /* Begin PBXBuildFile section */
 		512BED92216C66A300E09AD2 /* ContentViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BED91216C66A300E09AD2 /* ContentViewController.swift */; };
+		512BEDA0216C9C0D00E09AD2 /* ReadViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BED9F216C9C0D00E09AD2 /* ReadViewController.swift */; };
+		512BEDA3216CB63300E09AD2 /* BoardViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BEDA1216CB63300E09AD2 /* BoardViewController.swift */; };
+		512BEDA6216CC3EE00E09AD2 /* MetaData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BEDA5216CC3EE00E09AD2 /* MetaData.swift */; };
 		51F21EA12150F64000042193 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51F21EA02150F64000042193 /* AppDelegate.swift */; };
 		51F21EA32150F64000042193 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51F21EA22150F64000042193 /* MainViewController.swift */; };
 		51F21EA52150F64200042193 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51F21EA42150F64200042193 /* Assets.xcassets */; };
@@ -16,6 +19,9 @@
 
 /* Begin PBXFileReference section */
 		512BED91216C66A300E09AD2 /* ContentViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentViewController.swift; sourceTree = "<group>"; };
+		512BED9F216C9C0D00E09AD2 /* ReadViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadViewController.swift; sourceTree = "<group>"; };
+		512BEDA1216CB63300E09AD2 /* BoardViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BoardViewController.swift; sourceTree = "<group>"; };
+		512BEDA5216CC3EE00E09AD2 /* MetaData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaData.swift; sourceTree = "<group>"; };
 		51F21E9D2150F64000042193 /* BBSReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBSReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		51F21EA02150F64000042193 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		51F21EA22150F64000042193 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -57,11 +63,14 @@
 			children = (
 				51F21EA02150F64000042193 /* AppDelegate.swift */,
 				51F21EA22150F64000042193 /* MainViewController.swift */,
+				512BEDA1216CB63300E09AD2 /* BoardViewController.swift */,
 				512BED91216C66A300E09AD2 /* ContentViewController.swift */,
+				512BED9F216C9C0D00E09AD2 /* ReadViewController.swift */,
 				51F21EA42150F64200042193 /* Assets.xcassets */,
 				51F21EA62150F64200042193 /* Main.storyboard */,
 				51F21EA92150F64200042193 /* Info.plist */,
 				51F21EAA2150F64200042193 /* BBSReader.entitlements */,
+				512BEDA5216CC3EE00E09AD2 /* MetaData.swift */,
 			);
 			path = BBSReader;
 			sourceTree = "<group>";
@@ -143,7 +152,10 @@
 			files = (
 				51F21EA32150F64000042193 /* MainViewController.swift in Sources */,
 				512BED92216C66A300E09AD2 /* ContentViewController.swift in Sources */,
+				512BEDA6216CC3EE00E09AD2 /* MetaData.swift in Sources */,
+				512BEDA0216C9C0D00E09AD2 /* ReadViewController.swift in Sources */,
 				51F21EA12150F64000042193 /* AppDelegate.swift in Sources */,
+				512BEDA3216CB63300E09AD2 /* BoardViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
