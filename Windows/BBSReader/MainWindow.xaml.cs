@@ -148,7 +148,7 @@ namespace BBSReader
                         else if (author == "*")
                             item.Title = ("专题：【" + keyword + "】");
                         else
-                            item.Title = keyword;
+                            item.Title = ("【" + keyword + "】系列");
                         item.Author = author;
 
                         BBSThread example = metaData.threads[metaData.anthologies[x][0]];
