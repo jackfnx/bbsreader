@@ -8,25 +8,24 @@
 
 import Cocoa
 
-extension String.Encoding {
-    static let gb18030_2000 = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-}
-
 class DocViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        tableView.delegate = self
-        tableView.dataSource = self
+        self.tableView.delegate = self
+        self.tableView.dataSource = self
         
-        tableView.doubleAction = #selector(performDoubleClick)
+        self.tableView.doubleAction = #selector(performDoubleClick)
         
         self.nextResponder = self.parent
     }
     
     override func viewWillAppear() {
         super.viewWillAppear()
-        tableView.reloadData()
+        if (self.updateFlag) {
+            self.tableView.reloadData()
+            self.updateFlag = false
+        }
     }
     
     override func viewDidAppear() {
@@ -39,39 +38,40 @@ class DocViewController: NSViewController {
     }
     
     func forward() {
-        let rootPath = "/Users/jinghp/Dropbox/BBSReader.Cache"
-        
-        let row = tableView.selectedRow
-        let item = Items[row]
-        
-        let path = rootPath + "/" + item.Source + "/" + item.ThreadId + ".txt"
-        
-        if let textData = (NSData.init(contentsOfFile: path ) as Data?) {
-            if let str = String(data:textData, encoding:String.Encoding.utf8) {
-                let mainVC = self.parent as! MainViewController
-                mainVC.readText(str)
-            }
+        let row = self.tableView.selectedRow
+        if (row >= 0 && row < self.items.count) {
+            let conItem = self.items[row]
+            
+            let mainVC = self.parent as! MainViewController
+            mainVC.gotoCon(conItem)
         }
     }
     
-    lazy var Items:[ListItem] = []
+    private lazy var items:[ListItem] = []
+    private var updateFlag = false
+    
+    func importData(_ items: [ListItem]) {
+        self.items = items
+        self.updateFlag = true
+    }
+    
     @IBOutlet weak var tableView: NSTableView!
 }
 
 extension DocViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return Items.count
+        return self.items.count
     }
 }
 
 extension DocViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
-        if row >= Items.count {
+        if row >= self.items.count {
             return nil
         }
         
-        let curr = Items[row]
+        let curr = self.items[row]
         
         var cellIdentifier: String = ""
         var cellValue: String = ""

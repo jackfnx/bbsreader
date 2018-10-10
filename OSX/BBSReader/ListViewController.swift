@@ -14,11 +14,11 @@ class ListViewController: NSViewController {
         super.viewDidLoad()
 
         // Do any additional setup after loading the view.
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.reloadData()
+        self.tableView.delegate = self
+        self.tableView.dataSource = self
+        self.tableView.reloadData()
         
-        tableView.doubleAction = #selector(performDoubleClick)
+        self.tableView.doubleAction = #selector(performDoubleClick)
         
         self.nextResponder = self.parent
     }
@@ -33,45 +33,36 @@ class ListViewController: NSViewController {
     }
     
     func forward() {
-        let row = tableView.selectedRow
-        let item = Items[row]
-        var contents = [Int]()
-        if (item.AnthologyId < 0) {
-            contents = Meta.shared.meta.tags[item.Tag] ?? contents
-        } else {
-            contents = Meta.shared.meta.anthologies[item.AnthologyId] 
+        let row = self.tableView.selectedRow
+        if (row >= 0 && row < self.items.count) {
+            let docItem = self.items[row]
+            let mainVC = self.parent as! MainViewController
+            mainVC.gotoDoc(docItem)
         }
-        
-        var subList = [ListItem]()
-        for tid in contents {
-            let t = Meta.shared.meta.threads[tid]
-            let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: t.title, Author: t.author, Time: t.postTime, Link: t.link, Tag: "", AnthologyId: -1)
-            subList.append(item)
-        }
-        
-        let mainVC = self.parent as! MainViewController
-        mainVC.showContent(subList)
     }
     
-    lazy var Items:[ListItem] = []
+    private lazy var items:[ListItem] = []
+    func importData(_ items: [ListItem]) {
+        self.items = items
+    }
     
     @IBOutlet weak var tableView: NSTableView!
 }
 
 extension ListViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return Items.count 
+        return self.items.count
     }
 }
 
 extension ListViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
-        if row >= Items.count {
+        if row >= self.items.count {
             return nil
         }
         
-        let curr = Items[row]
+        let curr = self.items[row]
         
         var cellIdentifier: String = ""
         var cellValue: String = ""

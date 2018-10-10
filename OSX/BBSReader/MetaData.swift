@@ -37,12 +37,13 @@ struct SuperKeyword : Codable {
 final class Meta {
     
     private init() {
-        let jsonPath = "/Users/jinghp/Dropbox/BBSReader.Cache/meta.json"
+        let jsonPath = Meta.ROOT_PATH + "/meta.json"
         let jsonData = NSData.init(contentsOfFile: jsonPath)
         let jsonDecoder = JSONDecoder()
         self.meta = try! jsonDecoder.decode(MetaData.self, from: jsonData! as Data)
     }
     
+    static let ROOT_PATH = "/Users/jinghp/Dropbox/BBSReader.Cache"
     static let shared = Meta()
     
     var meta : MetaData

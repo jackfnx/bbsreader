@@ -8,6 +8,10 @@
 
 import Cocoa
 
+//extension String.Encoding {
+//    static let gb18030_2000 = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
+//}
+
 struct ListItem {
     var Source: String
     var ThreadId: String
@@ -33,11 +37,11 @@ class MainViewController: NSViewController {
         self.addChild(docVC)
         self.addChild(conVC)
         
-        listVC.Items = reload()
+        listVC.importData(loadMetaData())
         self.containerView.addSubview(children[0].view)
     }
     
-    func reload() -> [ListItem]{
+    func loadMetaData() -> [ListItem] {
         var items = [ListItem]()
         for tag in Meta.shared.meta.tags {
             if (Meta.shared.meta.favorites.contains(tag.key) ) {
@@ -92,6 +96,35 @@ class MainViewController: NSViewController {
         return items
     }
     
+    func loadDocData(_ docItem: ListItem) -> [ListItem] {
+        var tids = [Int]()
+        if (docItem.AnthologyId < 0) {
+            tids = Meta.shared.meta.tags[docItem.Tag] ?? tids
+        } else {
+            tids = Meta.shared.meta.anthologies[docItem.AnthologyId]
+        }
+        
+        var items = [ListItem]()
+        for tid in tids {
+            let t = Meta.shared.meta.threads[tid]
+            let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: t.title, Author: t.author, Time: t.postTime, Link: t.link, Tag: "", AnthologyId: -1)
+            items.append(item)
+        }
+        
+        return items
+    }
+    
+    func loadTextData(_ conItem: ListItem) -> String {
+        let path = Meta.ROOT_PATH + "/" + conItem.Source + "/" + conItem.ThreadId + ".txt"
+        
+        if let textData = (NSData.init(contentsOfFile: path ) as Data?) {
+            if let str = String(data:textData, encoding:String.Encoding.utf8) {
+                return str
+            }
+        }
+        return ""
+    }
+    
     enum AppStatus {
         case MAIN
         case CONTENT
@@ -100,7 +133,7 @@ class MainViewController: NSViewController {
     
     enum AppStatusChanges {
         case FORWARD
-        case BACKWORD
+        case BACKWARD
         case NONE
     }
     
@@ -114,8 +147,8 @@ class MainViewController: NSViewController {
         var changes: AppStatusChanges = .NONE
         
         if (event.characters == LEFT || event.characters == "e" || event.characters == "E" || event.characters == "q" || event.characters == "Q") {
-            changes = .BACKWORD
-        } else if (event.characters == RIGHT || event.characters == RETURN) {
+            changes = .BACKWARD
+        } else if (event.characters == RIGHT || event.characters == RETURN || event.characters == "r" || event.characters == "R") {
             changes = .FORWARD
         }
         
@@ -129,40 +162,40 @@ class MainViewController: NSViewController {
             if (changes == .FORWARD) {
                 let docVC = self.children[1] as! DocViewController
                 docVC.forward()
-            } else if (changes == .BACKWORD) {
-                self.showContentOver()
+            } else if (changes == .BACKWARD) {
+                self.backFromDoc()
             }
         case .READ:
-            if (changes == .BACKWORD) {
-                self.readTextOver()
+            if (changes == .BACKWARD) {
+                self.backFromCon()
             }
         }
     }
     
-    func showContent(_ content: [ListItem]) {
+    func gotoDoc(_ docItem: ListItem) {
         let listVC = self.children[0]
         let docVC = self.children[1] as! DocViewController
-        docVC.Items = content
+        docVC.importData(loadDocData(docItem))
         self.transition(from: listVC, to: docVC, options: .slideLeft, completionHandler: nil)
         appStatus = .CONTENT
     }
     
-    func readText(_ text: String) {
+    func gotoCon(_ conItem: ListItem) {
         let docVC = self.children[1]
         let conVC = self.children[2] as! ConViewController
-        conVC.Text = text
+        conVC.importData(loadTextData(conItem))
         self.transition(from: docVC, to: conVC, options: .slideLeft, completionHandler: nil)
         appStatus = .READ
     }
     
-    func readTextOver() {
+    func backFromCon() {
         let docVC = self.children[1]
         let conVC = self.children[2]
         self.transition(from: conVC, to: docVC, options: .slideRight, completionHandler: nil)
         appStatus = .CONTENT
     }
     
-    func showContentOver() {
+    func backFromDoc() {
         let listVC = self.children[0]
         let docVC = self.children[1]
         self.transition(from: docVC, to: listVC, options: .slideRight, completionHandler: nil)
