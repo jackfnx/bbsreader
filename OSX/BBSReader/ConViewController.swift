@@ -8,7 +8,7 @@
 
 import Cocoa
 
-class ReadViewController: NSViewController {
+class ConViewController: NSViewController {
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -20,6 +20,7 @@ class ReadViewController: NSViewController {
     
     override func viewWillAppear() {
         textView.string = Text
+        scrollView.contentView.scroll(to: NSPoint(x: 0, y: 0))
     }
     
     override func viewDidAppear() {
@@ -29,5 +30,6 @@ class ReadViewController: NSViewController {
     
     lazy var Text: String = ""
     
+    @IBOutlet var scrollView: NSScrollView!
     @IBOutlet var textView: NSTextView!
 }

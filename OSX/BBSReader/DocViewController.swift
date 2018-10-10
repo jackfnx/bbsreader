@@ -1,5 +1,5 @@
 //
-//  BoardViewController.swift
+//  ContentViewController.swift
 //  BBSReader
 //
 //  Created by jinghp on 2018/10/9.
@@ -8,19 +8,25 @@
 
 import Cocoa
 
-class BoardViewController: NSViewController {
+extension String.Encoding {
+    static let gb18030_2000 = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
+}
 
+class DocViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
-
-        // Do any additional setup after loading the view.
+        
         tableView.delegate = self
         tableView.dataSource = self
-        tableView.reloadData()
         
         tableView.doubleAction = #selector(performDoubleClick)
         
         self.nextResponder = self.parent
+    }
+    
+    override func viewWillAppear() {
+        super.viewWillAppear()
+        tableView.reloadData()
     }
     
     override func viewDidAppear() {
@@ -33,38 +39,32 @@ class BoardViewController: NSViewController {
     }
     
     func forward() {
+        let rootPath = "/Users/jinghp/Dropbox/BBSReader.Cache"
+        
         let row = tableView.selectedRow
         let item = Items[row]
-        var contents = [Int]()
-        if (item.AnthologyId < 0) {
-            contents = Meta.shared.meta.tags[item.Tag] ?? contents
-        } else {
-            contents = Meta.shared.meta.anthologies[item.AnthologyId] 
-        }
         
-        var subList = [ListItem]()
-        for tid in contents {
-            let t = Meta.shared.meta.threads[tid]
-            let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: t.title, Author: t.author, Time: t.postTime, Link: t.link, Tag: "", AnthologyId: -1)
-            subList.append(item)
-        }
+        let path = rootPath + "/" + item.Source + "/" + item.ThreadId + ".txt"
         
-        let mainVC = self.parent as! MainViewController
-        mainVC.showContent(subList)
+        if let textData = (NSData.init(contentsOfFile: path ) as Data?) {
+            if let str = String(data:textData, encoding:String.Encoding.utf8) {
+                let mainVC = self.parent as! MainViewController
+                mainVC.readText(str)
+            }
+        }
     }
     
     lazy var Items:[ListItem] = []
-    
     @IBOutlet weak var tableView: NSTableView!
 }
 
-extension BoardViewController: NSTableViewDataSource {
+extension DocViewController: NSTableViewDataSource {
     func numberOfRows(in tableView: NSTableView) -> Int {
-        return Items.count 
+        return Items.count
     }
 }
 
-extension BoardViewController: NSTableViewDelegate {
+extension DocViewController: NSTableViewDelegate {
     func tableView(_ tableView: NSTableView, viewFor tableColumn: NSTableColumn?, row: Int) -> NSView? {
         
         if row >= Items.count {
@@ -102,3 +102,4 @@ extension BoardViewController: NSTableViewDelegate {
         }
     }
 }
+

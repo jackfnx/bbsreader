@@ -25,15 +25,15 @@ class MainViewController: NSViewController {
         super.viewDidLoad()
         
         let mainStoryboard = NSStoryboard(name: "Main", bundle: nil)
-        let boardVC = mainStoryboard.instantiateController(withIdentifier: "BoardViewController") as! BoardViewController
-        let contentVC = mainStoryboard.instantiateController(withIdentifier: "ContentViewController") as! ContentViewController
-        let readVC = mainStoryboard.instantiateController(withIdentifier: "ReadViewController") as! ReadViewController
+        let listVC = mainStoryboard.instantiateController(withIdentifier: "ListViewController") as! ListViewController
+        let docVC = mainStoryboard.instantiateController(withIdentifier: "DocViewController") as! DocViewController
+        let conVC = mainStoryboard.instantiateController(withIdentifier: "ConViewController") as! ConViewController
         
-        self.addChild(boardVC)
-        self.addChild(contentVC)
-        self.addChild(readVC)
+        self.addChild(listVC)
+        self.addChild(docVC)
+        self.addChild(conVC)
         
-        boardVC.Items = reload()
+        listVC.Items = reload()
         self.containerView.addSubview(children[0].view)
     }
     
@@ -122,13 +122,13 @@ class MainViewController: NSViewController {
         switch appStatus {
         case .MAIN:
             if (changes == .FORWARD) {
-                let boardVC = self.children[0] as! BoardViewController
-                boardVC.forward()
+                let listVC = self.children[0] as! ListViewController
+                listVC.forward()
             }
         case .CONTENT:
             if (changes == .FORWARD) {
-                let contentVC = self.children[0] as! ContentViewController
-                contentVC.forward()
+                let docVC = self.children[1] as! DocViewController
+                docVC.forward()
             } else if (changes == .BACKWORD) {
                 self.showContentOver()
             }
@@ -140,35 +140,34 @@ class MainViewController: NSViewController {
     }
     
     func showContent(_ content: [ListItem]) {
-        let boardVC = self.children[0]
-        let contentVC = self.children[1] as! ContentViewController
-        contentVC.Items = content
-        self.transition(from: boardVC, to: contentVC, options: .slideLeft, completionHandler: nil)
+        let listVC = self.children[0]
+        let docVC = self.children[1] as! DocViewController
+        docVC.Items = content
+        self.transition(from: listVC, to: docVC, options: .slideLeft, completionHandler: nil)
         appStatus = .CONTENT
     }
     
     func readText(_ text: String) {
-        let contentVC = self.children[1]
-        let readVC = self.children[2] as! ReadViewController
-        readVC.Text = text
-        self.transition(from: contentVC, to: readVC, options: .slideLeft, completionHandler: nil)
+        let docVC = self.children[1]
+        let conVC = self.children[2] as! ConViewController
+        conVC.Text = text
+        self.transition(from: docVC, to: conVC, options: .slideLeft, completionHandler: nil)
         appStatus = .READ
     }
     
     func readTextOver() {
-        let contentVC = self.children[1]
-        let readVC = self.children[2]
-        self.transition(from: readVC, to: contentVC, options: .slideRight, completionHandler: nil)
+        let docVC = self.children[1]
+        let conVC = self.children[2]
+        self.transition(from: conVC, to: docVC, options: .slideRight, completionHandler: nil)
         appStatus = .CONTENT
     }
     
     func showContentOver() {
-        let boardVC = self.children[0]
-        let contentVC = self.children[1]
-        self.transition(from: contentVC, to: boardVC, options: .slideRight, completionHandler: nil)
+        let listVC = self.children[0]
+        let docVC = self.children[1]
+        self.transition(from: docVC, to: listVC, options: .slideRight, completionHandler: nil)
         appStatus = .MAIN
     }
-    
     
     @IBOutlet var containerView: NSView!
 }
