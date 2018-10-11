@@ -503,16 +503,19 @@ namespace BBSReader
             if (!item.IsFolder)
             {
                 dynamic topic = topics[currentId];
-                int favoriteId = topic.FavoriteId;
-                int index = articles.IndexOf(item) + 1;
-                var sk = metaData.superKeywords[favoriteId];
-                int i = sk.tids.Count - index - 1;
-                if (i <= sk.read)
+                if (topic.Favorite)
                 {
-                    sk.read = i;
-                    metaData.superKeywords[favoriteId] = sk;
-                    SaveMetaData();
-                    ResetList();
+                    int favoriteId = topic.FavoriteId;
+                    int index = articles.IndexOf(item) + 1;
+                    var sk = metaData.superKeywords[favoriteId];
+                    int i = sk.tids.Count - index - 1;
+                    if (i <= sk.read)
+                    {
+                        sk.read = i;
+                        metaData.superKeywords[favoriteId] = sk;
+                        SaveMetaData();
+                        ResetList();
+                    }
                 }
             }
         }
