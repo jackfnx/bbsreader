@@ -45,23 +45,15 @@ if os.path.exists(meta_data_path):
     last_timestamp = load_data['timestamp']
     last_threads = load_data['threads']
     tags = load_data['tags']
-    anthologies = load_data['anthologies']
-    favorites = load_data['favorites']
+    superkeywords = load_data['superkeywords']
     blacklist = load_data['blacklist']
-    followings = load_data['followings']
-    tag_groups = load_data['tag_groups']
-    anthology_groups = load_data['anthology_groups']
 ### 如果不存在json，初始化空数据
 else:
     last_timestamp = 0
     last_threads = []
     tags = {}
-    anthologies = {}
-    favorites = ['琼明神女录', '淫堕的女武神']
+    superkeywords = []
     blacklist = []
-    followings = {}
-    tag_groups = {}
-    anthology_groups = {}
 
 
 ### 根据上次更新时间，确定这次读取几页
@@ -215,30 +207,35 @@ def merge(lasts, latest):
 threads = merge(last_threads, latest_threads)
 
 
+### 扫描数据，重新提取关键字
+favorites = [x['keyword'] for x in superkeywords if x['simple']]
 
-### 扫描数据，提取关键字
+for superkeyword in superkeywords:
+    superkeyword['tids'] = []
+    superkeyword['groups'] = []
+
 tags = {}
-anthologies = [0] * len(followings)
 for i in range(len(threads)):
     t = threads[i]
     title = t['title']
     author = t['author']
     keywords = re.findall('【(.*?)】', title)
     for keyword in keywords:
-        if not keyword.isdigit() and not keyword in blacklist:
+        if not keyword.isdigit() and not keyword in blacklist and not keyword in favorites:
             if not keyword in tags:
                 tags[keyword] = []
             tags[keyword].append(i)
 
-    for j in range(len(followings)):
-        superkeyword = followings[j]
+    for superkeyword in superkeywords:
         keyword = superkeyword['keyword']
         authors = superkeyword['author']
-        if keyword == '*' or keyword in title:
-            if authors[0] == '*' or author in authors:
-                if not isinstance(anthologies[j], list):
-                    anthologies[j] = []
-                anthologies[j].append(i)
+        if superkeyword['simple']:
+            if keyword in keywords:
+                superkeyword['tids'].append(i)
+        else:
+            if keyword == '*' or keyword in title:
+                if authors[0] == '*' or author in authors:
+                    superkeyword['tids'].append(i)
 
 
 ### 主题下，按照时间排序
@@ -250,9 +247,11 @@ def getPostTime(x):
 for keyword in tags:
     tags[keyword].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
 
-for i in range(len(anthologies)):
-    anthologies[i] = list(set(anthologies[i]))
-    anthologies[i].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
+for superkeyword in superkeywords:
+    tids = superkeyword['tids']
+    tids = list(set(tids))
+    tids.sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
+    superkeyword['tids'] = tids
 
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据，如果不存在则下载
@@ -272,35 +271,28 @@ def download_article(t):
         except Exception as e:
             print('Get [%s]: %s' % (t['link'], str(e)))
 
-for tag in favorites:
-    if tag in tags:
-        for i in tags[tag]:
-            t = threads[i]
-            download_article(t)
-        print('keyword [%s] saved.' % tag)
+def keytext(superkeyword):
+    if superkeyword['simple']:
+        return superkeyword['keyword']
+    else:
+        return superkeyword['author'][0] + ":" + superkeyword['keyword']
 
-for i in range(len(followings)):
-    superkeyword = followings[i]
-    anthology = anthologies[i]
-    key = superkeyword['author'][0] + ":" + superkeyword['keyword']
-    for j in anthology:
-        t = threads[j]
+for superkeyword in superkeywords:
+    for i in superkeyword['tids']:
+        t = threads[i]
         download_article(t)
-    print('anthology [%s] saved.' % key)
+    print('superkeyword [%s] saved.' % keytext(superkeyword))
 
 
-## 保存data
+
+### 保存data
 with open(meta_data_path, 'w', encoding='utf-8') as f:
     save_data = {
         'timestamp': time.time(),
         'threads': threads,
         'tags': tags,
-        'anthologies': anthologies,
-        'favorites': favorites,
-        'blacklist': blacklist,
-        'followings': followings,
-        'tag_groups': tag_groups,
-        'anthology_groups': anthology_groups,
+        'superkeywords': superkeywords,
+        'blacklist': blacklist
     }
     json.dump(save_data, f)
 

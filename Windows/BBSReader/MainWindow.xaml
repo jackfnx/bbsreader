@@ -35,28 +35,36 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnFollowing" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+        <Style x:Key="DisableOnNotSimple" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Path=IsAnthology}" Value="True">
+                <DataTrigger Binding="{Binding Path=Simple}" Value="False">
                     <Setter Property="IsEnabled" Value="False" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnUnfollowing" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+        <Style x:Key="DisableOnSimple" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Path=IsAnthology}" Value="False">
+                <DataTrigger Binding="{Binding Path=Simple}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DisableOnUnread" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnBeFolder}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=Read}" Value="False">
                     <Setter Property="IsEnabled" Value="False" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
         <ContextMenu x:Key="KeywordOperationsContextMenu" Background="WhiteSmoke">
+            <MenuItem Header="Unread" Name="UnreadContextMenu" Click="UnreadContextMenu_Click" Style="{StaticResource DisableOnUnread}" />
             <MenuItem Header="view in browser" Name="ViewUrlContextMenu" Click="ViewUrlContextMenu_Click" />
             <MenuItem Header="delete downloaded .txt" Name="DeleteTxtContextMenu" Click="DeleteTxtContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
             <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
-            <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnFollowing}"/>
-            <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnUnfollowing}"/>
+            <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnNotSimple}"/>
+            <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnSimple}"/>
         </ContextMenu>
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />
@@ -65,7 +73,7 @@
                 <DataTrigger Binding="{Binding Path=Favorite}" Value="True">
                     <Setter Property="Background" Value="LightYellow" />
                 </DataTrigger>
-                <DataTrigger Binding="{Binding Path=IsAnthology}" Value="True">
+                <DataTrigger Binding="{Binding Path=Simple}" Value="False">
                     <Setter Property="Background" Value="DarkSalmon" />
                 </DataTrigger>
                 <MultiDataTrigger>
@@ -75,6 +83,9 @@
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Background" Value="LightGray" />
                 </MultiDataTrigger>
+                <DataTrigger Binding="{Binding Path=Read}" Value="False">
+                    <Setter Property="FontWeight" Value="Bold"/>
+                </DataTrigger>
             </Style.Triggers>
         </Style>
     </Window.Resources>
