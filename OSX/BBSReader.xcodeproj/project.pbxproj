@@ -11,6 +11,7 @@
 		512BEDA0216C9C0D00E09AD2 /* ConViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BED9F216C9C0D00E09AD2 /* ConViewController.swift */; };
 		512BEDA3216CB63300E09AD2 /* ListViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BEDA1216CB63300E09AD2 /* ListViewController.swift */; };
 		512BEDA6216CC3EE00E09AD2 /* MetaData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BEDA5216CC3EE00E09AD2 /* MetaData.swift */; };
+		512BEDAA21705B2500E09AD2 /* ReaderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 512BEDA921705B2400E09AD2 /* ReaderView.swift */; };
 		51F21EA12150F64000042193 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51F21EA02150F64000042193 /* AppDelegate.swift */; };
 		51F21EA32150F64000042193 /* MainViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 51F21EA22150F64000042193 /* MainViewController.swift */; };
 		51F21EA52150F64200042193 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 51F21EA42150F64200042193 /* Assets.xcassets */; };
@@ -22,6 +23,7 @@
 		512BED9F216C9C0D00E09AD2 /* ConViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ConViewController.swift; sourceTree = "<group>"; };
 		512BEDA1216CB63300E09AD2 /* ListViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ListViewController.swift; sourceTree = "<group>"; };
 		512BEDA5216CC3EE00E09AD2 /* MetaData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MetaData.swift; sourceTree = "<group>"; };
+		512BEDA921705B2400E09AD2 /* ReaderView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReaderView.swift; sourceTree = "<group>"; };
 		51F21E9D2150F64000042193 /* BBSReader.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BBSReader.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		51F21EA02150F64000042193 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		51F21EA22150F64000042193 /* MainViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainViewController.swift; sourceTree = "<group>"; };
@@ -71,6 +73,7 @@
 				51F21EA92150F64200042193 /* Info.plist */,
 				51F21EAA2150F64200042193 /* BBSReader.entitlements */,
 				512BEDA5216CC3EE00E09AD2 /* MetaData.swift */,
+				512BEDA921705B2400E09AD2 /* ReaderView.swift */,
 			);
 			path = BBSReader;
 			sourceTree = "<group>";
@@ -153,6 +156,7 @@
 				51F21EA32150F64000042193 /* MainViewController.swift in Sources */,
 				512BED92216C66A300E09AD2 /* DocViewController.swift in Sources */,
 				512BEDA6216CC3EE00E09AD2 /* MetaData.swift in Sources */,
+				512BEDAA21705B2500E09AD2 /* ReaderView.swift in Sources */,
 				512BEDA0216C9C0D00E09AD2 /* ConViewController.swift in Sources */,
 				51F21EA12150F64000042193 /* AppDelegate.swift in Sources */,
 				512BEDA3216CB63300E09AD2 /* ListViewController.swift in Sources */,

@@ -12,12 +12,8 @@ struct MetaData : Codable {
     var timestamp: Float
     let threads: [BBSThread]
     let tags: [String: [Int]]
-    let anthologies: [[Int]]
-    let favorites: [String]
+    let superkeywords: [SuperKeyword]
     let blacklist: [String]
-    let followings: [SuperKeyword]
-    let tag_groups: [String: [[Int]]]
-    let anthology_groups: [String: [[Int]]]
 }
 
 struct BBSThread : Codable {
@@ -30,8 +26,12 @@ struct BBSThread : Codable {
 }
 
 struct SuperKeyword : Codable {
+    var simple: Bool
     var keyword: String
     let author: [String]
+    let tids: [Int]
+    var read: Int
+    let groups: [[Int]]
 }
 
 final class Meta {

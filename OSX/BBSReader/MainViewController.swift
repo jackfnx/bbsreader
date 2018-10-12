@@ -19,8 +19,7 @@ struct ListItem {
     var Author: String
     var Time: String
     var Link: String
-    var Tag: String
-    var AnthologyId: Int
+    var FavoriteId: Int
 }
 
 class MainViewController: NSViewController {
@@ -43,35 +42,29 @@ class MainViewController: NSViewController {
     
     func loadMetaData() -> [ListItem] {
         var items = [ListItem]()
-        for tag in Meta.shared.meta.tags {
-            if (Meta.shared.meta.favorites.contains(tag.key) ) {
-                let tid = tag.value[0]
-                let t = Meta.shared.meta.threads[tid]
-                let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: tag.key, Author: t.author, Time: t.postTime, Link: t.link, Tag: tag.key, AnthologyId: -1)
-                items.append(item)
-            }
-        }
-        let anthologyIds = [Int](0...((Meta.shared.meta.followings.count) - 1))
-        for x in anthologyIds {
-            let superKeyword = Meta.shared.meta.followings[x]
+        for x in 0 ..< Meta.shared.meta.superkeywords.count {
+            let superKeyword = Meta.shared.meta.superkeywords[x]
             let author = superKeyword.author[0]
             let keyword = superKeyword.keyword
             
             var title : String
-            if (keyword == "*") {
+            if (superKeyword.simple) {
+                title = keyword
+            }
+            else if (keyword == "*") {
                 title = ("【" + author + "】的作品集")
             }
             else if (author == "*") {
                 title = ("专题：【" + keyword + "】")
             }
             else {
-                title = keyword
+                title = ("【" + keyword + "】系列")
             }
             
-            let tid = Meta.shared.meta.anthologies[x][0]
+            let tid = superKeyword.tids[0]
             let t = Meta.shared.meta.threads[tid]
             
-            let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: title, Author: author, Time: t.postTime, Link: t.link, Tag: "", AnthologyId: x)
+            let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: title, Author: author, Time: t.postTime, Link: t.link, FavoriteId: x)
             items.append(item)
         }
         
@@ -97,17 +90,12 @@ class MainViewController: NSViewController {
     }
     
     func loadDocData(_ docItem: ListItem) -> [ListItem] {
-        var tids = [Int]()
-        if (docItem.AnthologyId < 0) {
-            tids = Meta.shared.meta.tags[docItem.Tag] ?? tids
-        } else {
-            tids = Meta.shared.meta.anthologies[docItem.AnthologyId]
-        }
+        let tids = Meta.shared.meta.superkeywords[docItem.FavoriteId].tids
         
         var items = [ListItem]()
         for tid in tids {
             let t = Meta.shared.meta.threads[tid]
-            let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: t.title, Author: t.author, Time: t.postTime, Link: t.link, Tag: "", AnthologyId: -1)
+            let item = ListItem(Source: t.siteId, ThreadId: t.threadId, Title: t.title, Author: t.author, Time: t.postTime, Link: t.link, FavoriteId: -1)
             items.append(item)
         }
         
