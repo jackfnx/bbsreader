@@ -69,6 +69,7 @@
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />
             <Setter Property="ContextMenu" Value="{StaticResource KeywordOperationsContextMenu}" />
+            <Setter Property="ToolTip" Value="{Binding Path=Tooltip}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=Favorite}" Value="True">
                     <Setter Property="Background" Value="LightYellow" />
