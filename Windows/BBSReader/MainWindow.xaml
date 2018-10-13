@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="1024">
+        Title="MainWindow" Height="600" Width="1024" KeyUp="Window_KeyUp" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
     <Window.Resources>
         <Style x:Key="DisableOnBeFolder" TargetType="{x:Type MenuItem}">
             <Style.Triggers>
@@ -96,9 +96,7 @@
             <TextBox x:Name="SearchBox" Margin="1,5,10,5" HorizontalAlignment="Stretch" TextChanged="SearchTextBox_TextChanged"/>
         </DockPanel>
         <Grid>
-            <ListView x:Name="TopicList" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
-                <ListView.Resources>
-                </ListView.Resources>
+            <ListView x:Name="TopicListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
@@ -109,9 +107,7 @@
                     </GridView>
                 </ListView.View>
             </ListView>
-            <ListView x:Name="ArticleList" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0" Visibility="Hidden">
-                <ListView.Resources>
-                </ListView.Resources>
+            <ListView x:Name="ArticleListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0" Visibility="Hidden">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
@@ -122,6 +118,11 @@
                     </GridView>
                 </ListView.View>
             </ListView>
+            <Grid x:Name="ReaderView" Visibility="Hidden">
+                <ScrollViewer x:Name="ReaderScroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible" Background="Black" Foreground="LightGray">
+                    <TextBox x:Name="ReaderText" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" FontSize="16" IsReadOnly="True" Background="Transparent" Foreground="LightGray"/>
+                </ScrollViewer>
+            </Grid>
         </Grid>
     </DockPanel>
 </Window>
