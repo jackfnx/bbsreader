@@ -92,6 +92,8 @@ namespace BBSReader
             public int read;
             [JsonProperty("groups")]
             public List<List<string>> groups;
+            [JsonIgnore]
+            public List<int> groupedTids;
         }
 
         private struct ListItem
@@ -140,6 +142,7 @@ namespace BBSReader
             {
                 string json = sr.ReadToEnd();
                 metaData = JsonConvert.DeserializeObject<MetaData>(json);
+                GroupingSuperKeyword();
             }
         }
 
@@ -150,6 +153,63 @@ namespace BBSReader
             {
                 string json = JsonConvert.SerializeObject(metaData);
                 sw.Write(json);
+            }
+        }
+
+        private List<T> in_group<T>(T tid, List<List<T>> groups)
+        {
+            foreach (var group in groups)
+            {
+                if (group.Contains(tid))
+                    return group;
+            }
+            return null;
+        }
+
+        private void GroupingSuperKeyword()
+        {
+            for (int i = 0; i < metaData.superKeywords.Count(); i++)
+            {
+                var sk = metaData.superKeywords[i];
+                var tids = sk.tids;
+                var groups = sk.groups;
+                List<string> keys = new List<string>();
+                foreach (int tid in tids)
+                {
+                    var t = metaData.threads[tid];
+                    string key = t.siteId + "/" + t.threadId;
+                    keys.Add(key);
+                }
+                List<List<int>> id_groups = new List<List<int>>();
+                for (int j = 0; j < tids.Count; j++)
+                {
+                    int tid = tids[j];
+                    string key = keys[j];
+                    if (in_group(tid, id_groups) != null)
+                        continue;
+                    List<int> id_group = new List<int> { tid };
+                    List<string> key_group = in_group(key, groups);
+                    if (key_group != null)
+                    {
+                        foreach (var anotherKey in key_group)
+                        {
+                            if (anotherKey != key)
+                            {
+                                int k = keys.IndexOf(anotherKey);
+                                id_group.Add(tids[k]);
+                            }
+                        }
+                    }
+                    id_groups.Add(id_group);
+                }
+                sk.groupedTids = new List<int>();
+                var siteIds = new List<string>(SITE_DEF.Keys);
+                foreach (var id_group in id_groups)
+                {
+                    id_group.Sort((x, y) => siteIds.IndexOf(metaData.threads[x].siteId) - siteIds.IndexOf(metaData.threads[y].siteId));
+                    sk.groupedTids.Add(id_group[0]);
+                }
+                metaData.superKeywords[i] = sk;
             }
         }
 
@@ -248,7 +308,7 @@ namespace BBSReader
                     item.Title = ("【" + keyword + "】系列");
                 item.Author = author;
 
-                BBSThread example = metaData.threads[x.tids[0]];
+                BBSThread example = metaData.threads[x.groupedTids[0]];
                 item.Time = example.postTime;
                 item.Url = example.link;
                 item.Source = "";
@@ -259,7 +319,7 @@ namespace BBSReader
                 item.FavoriteId = metaData.superKeywords.IndexOf(x);
                 item.IsFolder = true;
                 item.Downloaded = false;
-                item.Read = x.tids.Count <= x.read + 1;
+                item.Read = x.groupedTids.Count <= x.read + 1;
 
                 items.Add(item);
             });
@@ -293,7 +353,7 @@ namespace BBSReader
         private void ReloadArticles()
         {
             dynamic item = topics[currentId];
-            List<int> list = item.Favorite ? metaData.superKeywords[item.FavoriteId].tids : metaData.tags[item.Title];
+            List<int> list = item.Favorite ? metaData.superKeywords[item.FavoriteId].groupedTids : metaData.tags[item.Title];
             int read = item.Favorite ? metaData.superKeywords[item.FavoriteId].read : list.Count;
 
             articles.Clear();
@@ -396,7 +456,7 @@ namespace BBSReader
                 int favoriteId = topic.FavoriteId;
                 int index = articles.IndexOf(item);
                 var sk = metaData.superKeywords[favoriteId];
-                int i = sk.tids.Count - index - 1;
+                int i = sk.groupedTids.Count - index - 1;
                 if (i > sk.read)
                 {
                     sk.read = i;
@@ -530,6 +590,7 @@ namespace BBSReader
                 superKeyword.tids = tids;
                 superKeyword.read = -1;
                 superKeyword.groups = new List<List<string>>();
+                superKeyword.groupedTids = new List<int>();
                 metaData.superKeywords.Add(superKeyword);
                 SaveMetaData();
                 currentId = -1;
@@ -612,6 +673,7 @@ namespace BBSReader
                 superKeyword.tids = new List<int>();
                 superKeyword.read = -1;
                 superKeyword.groups = new List<List<string>>();
+                superKeyword.groupedTids = new List<int>();
                 if (!metaData.superKeywords.Contains(superKeyword))
                 {
                     metaData.superKeywords.Add(superKeyword);
@@ -673,7 +735,7 @@ namespace BBSReader
                     int favoriteId = topic.FavoriteId;
                     int index = articles.IndexOf(item) + 1;
                     var sk = metaData.superKeywords[favoriteId];
-                    int i = sk.tids.Count - index - 1;
+                    int i = sk.groupedTids.Count - index - 1;
                     if (i <= sk.read)
                     {
                         sk.read = i;
