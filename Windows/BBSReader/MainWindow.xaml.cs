@@ -333,6 +333,7 @@ namespace BBSReader
                 item.IsFolder = true;
                 item.Downloaded = false;
                 item.Read = x.groupedTids.Count <= x.read + 1;
+                item.Tooltip = null;
 
                 items.Add(item);
             });
@@ -377,7 +378,7 @@ namespace BBSReader
             else
             {
                 string title = item.Title;
-                list = metaData.tags[title].ConvertAll(x => new Group { exampleId = x, tooltips = "" });
+                list = metaData.tags[title].ConvertAll(x => new Group { exampleId = x, tooltips = "Not Download." });
                 read = list.Count;
             }
 
@@ -501,9 +502,9 @@ namespace BBSReader
                 if (currentState == AppState.READER)
                 {
                     ReaderScroll.PageDown();
-                    ReaderScroll.LineUp();
-                    ReaderScroll.LineUp();
-                    e.Handled = true;
+                    //ReaderScroll.LineUp();
+                    //ReaderScroll.LineUp();
+                    ReaderScroll.Focus();
                 }
                 else if (currentState == AppState.ARTICLES)
                 {
@@ -553,6 +554,40 @@ namespace BBSReader
             else if (e.Key == Key.Left || e.Key == Key.E || e.Key == Key.Q)
             {
                 Backward();
+            }
+            else if (e.Key == Key.J)
+            {
+                if (currentState == AppState.READER)
+                {
+                    int i = ArticleListView.SelectedIndex;
+                    if (i > 0)
+                    {
+                        ArticleListView.SelectedIndex = i - 1;
+                        dynamic prevItem = ArticleListView.SelectedItem;
+                        ForwardAtArticles(prevItem);
+                    }
+                    else
+                    {
+
+                    }
+                }
+            }
+            else if (e.Key == Key.K)
+            {
+                if (currentState == AppState.READER)
+                {
+                    int i = ArticleListView.SelectedIndex;
+                    if (i + 1 < ArticleListView.Items.Count)
+                    {
+                        ArticleListView.SelectedIndex = i + 1;
+                        dynamic nextItem = ArticleListView.SelectedItem;
+                        ForwardAtArticles(nextItem);
+                    }
+                    else
+                    {
+
+                    }
+                }
             }
         }
 

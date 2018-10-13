@@ -117,7 +117,8 @@
                         <Condition Binding="{Binding Path=IsFolder}" Value="False" />
                         <Condition Binding="{Binding Path=Downloaded}" Value="False" />
                     </MultiDataTrigger.Conditions>
-                    <Setter Property="Control.Background" Value="LightGray" />
+                    <Setter Property="Control.Background" Value="{StaticResource MaterialDesignPaper}" />
+                    <Setter Property="Control.Foreground" Value="LightGray" />
                 </MultiDataTrigger>
                 <DataTrigger Binding="{Binding Path=Read}" Value="False">
                     <Setter Property="Control.FontWeight" Value="Bold" />
@@ -157,7 +158,7 @@
                 </ListView.View>
             </ListView>
             <Grid x:Name="ReaderView" Visibility="Hidden">
-                <ScrollViewer x:Name="ReaderScroll" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Visible" Background="Black" Foreground="LightGray">
+                <ScrollViewer x:Name="ReaderScroll">
                     <TextBox x:Name="ReaderText" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" FontSize="16" IsReadOnly="True" Background="Transparent" Foreground="LightGray"/>
                 </ScrollViewer>
             </Grid>
