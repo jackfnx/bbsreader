@@ -615,7 +615,7 @@ namespace BBSReader
                 superKeyword.tids = tids;
                 superKeyword.read = -1;
                 superKeyword.groups = new List<List<string>>();
-                superKeyword.groupedTids = new List<Group>();
+                superKeyword.groupedTids = tids.ConvertAll(x => new Group { exampleId = x, tooltips = "" });
                 metaData.superKeywords.Add(superKeyword);
                 SaveMetaData();
                 currentId = -1;
