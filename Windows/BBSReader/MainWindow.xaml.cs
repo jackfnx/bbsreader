@@ -512,7 +512,8 @@ namespace BBSReader
                     {
                         ArticleListView.SelectedIndex = 0;
                     }
-                    //Keyboard.Focus(ArticleListView.SelectedItem as ListViewItem);
+                    ListViewItem item = ArticleListView.ItemContainerGenerator.ContainerFromIndex(ArticleListView.SelectedIndex) as ListViewItem;
+                    item.Focus();
                 }
                 else if (currentState == AppState.TOPICS)
                 {
@@ -521,7 +522,8 @@ namespace BBSReader
                     {
                         TopicListView.SelectedIndex = 0;
                     }
-                    //Keyboard.Focus(TopicListView.SelectedItem as ListViewItem);
+                    ListViewItem item = TopicListView.ItemContainerGenerator.ContainerFromIndex(TopicListView.SelectedIndex) as ListViewItem;
+                    item.Focus();
                 }
             }
             else if (e.Key == Key.Right || e.Key == Key.Enter || e.Key == Key.R)
@@ -533,7 +535,9 @@ namespace BBSReader
                         TopicListView.SelectedIndex = 0;
                     item = TopicListView.SelectedItem;
                     if (item != null)
+                    {
                         ForwardAtTopics(item);
+                    }
                 }
                 else if (currentState == AppState.ARTICLES)
                 {
@@ -541,51 +545,15 @@ namespace BBSReader
                     if (item == null)
                         item = ArticleListView.SelectedItem;
                     if (item != null)
+                    {
                         ForwardAtArticles(item);
+                    }
                 }
             }
             else if (e.Key == Key.Left || e.Key == Key.E || e.Key == Key.Q)
             {
                 Backward();
             }
-            //else if (e.Key == Key.Up)
-            //{
-            //    if (currentState == AppState.TOPICS)
-            //    {
-            //        int i = TopicListView.SelectedIndex;
-            //        if ((i + 1) < TopicListView.Items.Count)
-            //        {
-            //            TopicListView.SelectedIndex = i + 1;
-            //        }
-            //    }
-            //    else if (currentState == AppState.ARTICLES)
-            //    {
-            //        int i = ArticleListView.SelectedIndex;
-            //        if ((i - 1) < ArticleListView.Items.Count)
-            //        {
-            //            ArticleListView.SelectedIndex = i + 1;
-            //        }
-            //    }
-            //}
-            //else if (e.Key == Key.Down)
-            //{
-            //    if (currentState == AppState.TOPICS)
-            //    {
-            //        int i = TopicListView.SelectedIndex;
-            //        if (i > 0)
-            //        {
-            //            TopicListView.SelectedIndex = i - 1;
-            //        }
-            //    }
-            //    else if (currentState == AppState.ARTICLES)
-            //    {
-            //        int i = ArticleListView.SelectedIndex;
-            //        if (i > 0)
-            //        {
-            //            ArticleListView.SelectedIndex = i - 1;
-            //        }
-            //    }
-            //}
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
