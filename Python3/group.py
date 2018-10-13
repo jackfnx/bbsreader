@@ -18,12 +18,8 @@ if os.path.exists(meta_data_path):
     timestamp = load_data['timestamp']
     threads = load_data['threads']
     tags = load_data['tags']
-    anthologies = load_data['anthologies']
-    favorites = load_data['favorites']
+    superkeywords = load_data['superkeywords']
     blacklist = load_data['blacklist']
-    followings = load_data['followings']
-    tag_groups = load_data['tag_groups']
-    anthology_groups = load_data['anthology_groups']
 ### 如果不存在json
 else:
     sys.stderr.write('NO meta data.\n')
@@ -37,7 +33,7 @@ def in_group(i, groups):
 
 def do_grouping(ids, groups):
 
-    texts = []
+    texts = {}
     for i in ids:
         t = threads[i]
         txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
@@ -46,21 +42,23 @@ def do_grouping(ids, groups):
         else:
             with open(txtpath, 'rb') as f:
                 text = f.read().decode('gbk', 'ignore')
-        texts.append(text)
+        key = t['siteId'] + '/' + t['threadId']
+        texts[key] = (t, text)
 
-    for i in range(len(ids)):
-        if in_group(ids[i], groups):
+    keys = list(texts.keys())
+    for i in range(len(keys)):
+        key1 = keys[i]
+        t1, text1 = texts[key1]
+        if in_group(key1, groups):
             continue
-        t1 = threads[ids[i]]
-        curr_group = [ids[i]]
+        curr_group = [key1]
         curr_group_site_ids = [t1['siteId']]
         for j in range(i+1, len(ids)):
-            t2 = threads[ids[j]]
-            if t2['siteId'] in curr_group_site_ids:
+            key2 = keys[j]
+            t2, text2 = texts[key2]
+            if t2['siteId'] in curr_group_site_ids or in_group(key2, groups):
                 continue
 
-            text1 = texts[i]
-            text2 = texts[j]
             ### 如果两篇都不为空，比较内容
             if text1 != '' and text2 != '':
                 ### 如果长度差的太多，不用比较内容
@@ -73,47 +71,42 @@ def do_grouping(ids, groups):
                     continue
                 ## 比较内容相似度
                 cr = fuzz.ratio(text1, text2)
-                print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
+                # print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
                 if cr > 70:
                     # print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
-                    curr_group.append(ids[j])
+                    curr_group.append(key2)
                     curr_group_site_ids.append(t2['siteId'])
             ### 如果有空文，比较标题（严格相等才合并）
             else:
                 if t1['title'] == t2['title']:
-                    curr_group.append(ids[j])
+                    curr_group.append(key2)
                     curr_group_site_ids.append(t2['siteId'])
         if len(curr_group) > 1:
             groups.append(curr_group)
 
 
-for tag in favorites:
-    if tag in tags:
-        t_00 = time.time()
-        do_grouping(tags[tag], tag_groups[tag])
-        t_01 = time.time()
-        print('keyword [%s]: grouped. (%.2fs)' % (tag, t_01-t_00))
+def keytext(superkeyword):
+    if superkeyword['simple']:
+        return superkeyword['keyword']
+    else:
+        return superkeyword['author'][0] + ":" + superkeyword['keyword']
 
-for key in anthologies:
+for superkeyword in superkeywords:
+    tids = superkeyword['tids']
     t_00 = time.time()
-    do_grouping(anthologies[key], anthology_groups[key])
+    do_grouping(tids, superkeyword['groups'])
     t_01 = time.time()
-    print('anthology [%s]: grouped. (%.2fs)' % (key, t_01-t_00))
-
+    print('superkeyword [%s]: grouped. (%d match, %.2fs)' % (keytext(superkeyword), len(superkeyword['groups']), t_01-t_00))
 
 
 ### 保存data
 with open(meta_data_path, 'w', encoding='utf-8') as f:
     save_data = {
-        'timestamp': time.time(),
+        'timestamp': timestamp,
         'threads': threads,
         'tags': tags,
-        'anthologies': anthologies,
-        'favorites': favorites,
-        'blacklist': blacklist,
-        'followings': followings,
-        'tag_groups': tag_groups,
-        'anthology_groups': anthology_groups,
+        'superkeywords': superkeywords,
+        'blacklist': blacklist
     }
     json.dump(save_data, f)
 

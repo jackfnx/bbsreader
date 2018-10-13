@@ -91,7 +91,7 @@ namespace BBSReader
             [JsonProperty("read")]
             public int read;
             [JsonProperty("groups")]
-            public List<List<int>> groups;
+            public List<List<string>> groups;
         }
 
         private struct ListItem
@@ -529,7 +529,7 @@ namespace BBSReader
                 superKeyword.authors = new List<string>{ item.Author };
                 superKeyword.tids = tids;
                 superKeyword.read = -1;
-                superKeyword.groups = new List<List<int>>();
+                superKeyword.groups = new List<List<string>>();
                 metaData.superKeywords.Add(superKeyword);
                 SaveMetaData();
                 currentId = -1;
@@ -611,7 +611,7 @@ namespace BBSReader
                 superKeyword.authors = new List<string>(dialog.AuthorList);
                 superKeyword.tids = new List<int>();
                 superKeyword.read = -1;
-                superKeyword.groups = new List<List<int>>();
+                superKeyword.groups = new List<List<string>>();
                 if (!metaData.superKeywords.Contains(superKeyword))
                 {
                     metaData.superKeywords.Add(superKeyword);
