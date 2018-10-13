@@ -547,7 +547,7 @@ namespace BBSReader
             {
                 Backward();
             }
-            else if (e.Key == Key.Up || e.Key == Key.Down)
+            else if (e.Key == Key.Up)
             {
                 if (currentState == AppState.TOPICS)
                 {
@@ -560,9 +560,28 @@ namespace BBSReader
                 else if (currentState == AppState.ARTICLES)
                 {
                     int i = ArticleListView.SelectedIndex;
-                    if ((i + 1) < ArticleListView.Items.Count)
+                    if ((i - 1) < ArticleListView.Items.Count)
                     {
                         ArticleListView.SelectedIndex = i + 1;
+                    }
+                }
+            }
+            else if (e.Key == Key.Down)
+            {
+                if (currentState == AppState.TOPICS)
+                {
+                    int i = TopicListView.SelectedIndex;
+                    if (i > 0)
+                    {
+                        TopicListView.SelectedIndex = i - 1;
+                    }
+                }
+                else if (currentState == AppState.ARTICLES)
+                {
+                    int i = ArticleListView.SelectedIndex;
+                    if (i > 0)
+                    {
+                        ArticleListView.SelectedIndex = i - 1;
                     }
                 }
             }
