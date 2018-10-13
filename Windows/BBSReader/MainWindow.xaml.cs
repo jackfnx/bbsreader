@@ -117,6 +117,7 @@ namespace BBSReader
             internal bool IsFolder;
             internal bool Downloaded;
             internal bool Read;
+            internal string Tooltip;
         }
 
         public MainWindow()
@@ -358,7 +359,7 @@ namespace BBSReader
             topics.Clear();
             items.ForEach(x =>
             {
-                topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.Simple, x.FavoriteId, x.IsFolder, x.Downloaded, x.Read });
+                topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.Simple, x.FavoriteId, x.IsFolder, x.Downloaded, x.Read, x.Tooltip });
             });
         }
 
@@ -547,44 +548,44 @@ namespace BBSReader
             {
                 Backward();
             }
-            else if (e.Key == Key.Up)
-            {
-                if (currentState == AppState.TOPICS)
-                {
-                    int i = TopicListView.SelectedIndex;
-                    if ((i + 1) < TopicListView.Items.Count)
-                    {
-                        TopicListView.SelectedIndex = i + 1;
-                    }
-                }
-                else if (currentState == AppState.ARTICLES)
-                {
-                    int i = ArticleListView.SelectedIndex;
-                    if ((i - 1) < ArticleListView.Items.Count)
-                    {
-                        ArticleListView.SelectedIndex = i + 1;
-                    }
-                }
-            }
-            else if (e.Key == Key.Down)
-            {
-                if (currentState == AppState.TOPICS)
-                {
-                    int i = TopicListView.SelectedIndex;
-                    if (i > 0)
-                    {
-                        TopicListView.SelectedIndex = i - 1;
-                    }
-                }
-                else if (currentState == AppState.ARTICLES)
-                {
-                    int i = ArticleListView.SelectedIndex;
-                    if (i > 0)
-                    {
-                        ArticleListView.SelectedIndex = i - 1;
-                    }
-                }
-            }
+            //else if (e.Key == Key.Up)
+            //{
+            //    if (currentState == AppState.TOPICS)
+            //    {
+            //        int i = TopicListView.SelectedIndex;
+            //        if ((i + 1) < TopicListView.Items.Count)
+            //        {
+            //            TopicListView.SelectedIndex = i + 1;
+            //        }
+            //    }
+            //    else if (currentState == AppState.ARTICLES)
+            //    {
+            //        int i = ArticleListView.SelectedIndex;
+            //        if ((i - 1) < ArticleListView.Items.Count)
+            //        {
+            //            ArticleListView.SelectedIndex = i + 1;
+            //        }
+            //    }
+            //}
+            //else if (e.Key == Key.Down)
+            //{
+            //    if (currentState == AppState.TOPICS)
+            //    {
+            //        int i = TopicListView.SelectedIndex;
+            //        if (i > 0)
+            //        {
+            //            TopicListView.SelectedIndex = i - 1;
+            //        }
+            //    }
+            //    else if (currentState == AppState.ARTICLES)
+            //    {
+            //        int i = ArticleListView.SelectedIndex;
+            //        if (i > 0)
+            //        {
+            //            ArticleListView.SelectedIndex = i - 1;
+            //        }
+            //    }
+            //}
         }
 
         private void Window_Loaded(object sender, RoutedEventArgs e)

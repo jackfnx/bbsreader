@@ -5,8 +5,40 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Background="{DynamicResource MaterialDesignPaper}"
+        Foreground="{DynamicResource MaterialDesignFont}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         ShowInTaskbar="False"
         Title="Advanced Keyword" Height="480" Width="640" MinHeight="480" MinWidth="640" Loaded="Window_Loaded">
+    <Window.Resources>
+        <Style x:Key="AddButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="60" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="10,10,10,10" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=AuthorEditBox, Path=Text}" Value="">
+                    <Setter Property="Button.IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RemoveButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="60" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="10,10,10,10" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=AuthorListBox, Path=SelectedIndex}" Value="-1">
+                    <Setter Property="Button.IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="2*" />
@@ -22,28 +54,8 @@
         <GroupBox Grid.Row="1" Header="Author">
             <DockPanel>
                 <DockPanel DockPanel.Dock="Right" >
-                    <Button DockPanel.Dock="Bottom" Name="AuthorEditAddButton" Content="Add" HorizontalAlignment="Center" VerticalAlignment="Center" Width="60" Margin="10,10,10,10" Click="AuthorEditAddButton_Click">
-                        <Button.Style>
-                            <Style>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ElementName=AuthorEditBox, Path=Text}" Value="">
-                                        <Setter Property="Button.IsEnabled" Value="False"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
-                    <Button DockPanel.Dock="Bottom" Name="AuthorEditRemoveButton" Content="Remove" HorizontalAlignment="Center" VerticalAlignment="Center" Width="60" Margin="10,10,10,10" Click="AuthorEditRemoveButton_Click">
-                        <Button.Style>
-                            <Style>
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding ElementName=AuthorListBox, Path=SelectedIndex}" Value="-1">
-                                        <Setter Property="Button.IsEnabled" Value="False"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Button.Style>
-                    </Button>
+                    <Button DockPanel.Dock="Bottom" Name="AuthorEditAddButton" Content="Add" Click="AuthorEditAddButton_Click" Style="{StaticResource AddButton}"/>
+                    <Button DockPanel.Dock="Bottom" Name="AuthorEditRemoveButton" Content="Remove" Click="AuthorEditRemoveButton_Click" Style="{StaticResource RemoveButton}" />
                     <CheckBox DockPanel.Dock="Top" Name="UseAuthor" Content="Use" Width="60" IsChecked="True" Margin="10,10,10,10" Checked="UseAuthor_Changed" Unchecked="UseAuthor_Changed"/>
                     <Grid/>
                 </DockPanel>
@@ -62,7 +74,7 @@
         <DockPanel Grid.Row="2">
             <Button DockPanel.Dock="Right" Name="CancelButton"  Content="Cancel" Width="100" Height="40" Margin="20,20,30,20" IsCancel="True" />
             <Button DockPanel.Dock="Right" Name="OkButton"  Content="OK" Width="100" Height="40" Margin="20,20,20,20" Click="OkButton_Click" IsDefault="True"/>
-            <Viewbox />
+            <Grid />
         </DockPanel>
     </Grid>
 </Window>

@@ -5,15 +5,19 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Background="{DynamicResource MaterialDesignPaper}"
+        Foreground="{DynamicResource MaterialDesignFont}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Title="DownloadWindow" Height="450" Width="800" KeyUp="Window_KeyUp" Closing="Window_Closing">
     <DockPanel>
         <DockPanel DockPanel.Dock="Top">
-            <Label Content="Pages" DockPanel.Dock="Left" Margin="1,1,1,1"/>
-            <TextBox Text="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" DockPanel.Dock="Left" Width="80" Height="Auto" MaxLines="1" Margin="1,1,1,1"/>
-            <Label Content="BBS" DockPanel.Dock="Left" Margin="1,1,1,1"/>
-            <ComboBox Width="80" Margin="1,1,1,1"/>
-            <Label Content="Pages" DockPanel.Dock="Left" Margin="1,1,1,1" />
-            <ComboBox Width="80" Margin="1,1,1,1" />
+            <TextBlock Text="Pages" HorizontalAlignment="Center" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="5,0,5,0"/>
+            <TextBox Text="5" HorizontalContentAlignment="Center" VerticalContentAlignment="Center" DockPanel.Dock="Left" Width="80" Height="Auto" MaxLines="1" Margin="5,0,5,0"/>
+            <TextBlock Text="BBS" HorizontalAlignment="Center" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="5,0,5,0"/>
+            <ComboBox Width="80" Margin="5,0,5,0"/>
+            <TextBlock Text="Board" HorizontalAlignment="Center" VerticalAlignment="Center" DockPanel.Dock="Left" Margin="5,0,5,0" />
+            <ComboBox Width="80" Margin="5,0,5,0" />
             <Button Name="StartButton" Content="Start" Width="80" DockPanel.Dock="Left" Click="StartButton_Click"/>
             <Grid/>
         </DockPanel>

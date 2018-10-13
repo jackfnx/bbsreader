@@ -5,16 +5,20 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Background="{DynamicResource MaterialDesignPaper}"
+        Foreground="{DynamicResource MaterialDesignFont}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Title="MainWindow" Height="600" Width="1024" KeyUp="Window_KeyUp" Loaded="Window_Loaded" SizeChanged="Window_SizeChanged">
     <Window.Resources>
-        <Style x:Key="DisableOnBeFolder" TargetType="{x:Type MenuItem}">
+        <Style x:Key="DisableOnBeFolder" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=IsFolder}" Value="True">
                     <Setter Property="IsEnabled" Value="False" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnNotBeFolder" TargetType="{x:Type MenuItem}">
+        <Style x:Key="DisableOnNotBeFolder" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=IsFolder}" Value="False">
                     <Setter Property="IsEnabled" Value="False" />
@@ -56,9 +60,9 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <ContextMenu x:Key="KeywordOperationsContextMenu" Background="WhiteSmoke">
+        <ContextMenu x:Key="KeywordOperationsContextMenu" Background="{DynamicResource MaterialDesignPaper}">
             <MenuItem Header="Unread" Name="UnreadContextMenu" Click="UnreadContextMenu_Click" Style="{StaticResource DisableOnUnread}" />
-            <MenuItem Header="view in browser" Name="ViewUrlContextMenu" Click="ViewUrlContextMenu_Click" />
+            <MenuItem Header="view in browser" Name="ViewUrlContextMenu" Click="ViewUrlContextMenu_Click" Style="{StaticResource MaterialDesignMenuItem}"/>
             <MenuItem Header="delete downloaded .txt" Name="DeleteTxtContextMenu" Click="DeleteTxtContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
@@ -66,34 +70,67 @@
             <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnNotSimple}"/>
             <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnSimple}"/>
         </ContextMenu>
-        <Style x:Key="lv" TargetType="{x:Type ListViewItem}">
+        <Style x:Key="lv" TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MaterialDesignGridViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />
+            <Setter Property="Foreground" Value="Wheat" />
+            <Setter Property="HorizontalContentAlignment" Value="Left" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
             <Setter Property="ContextMenu" Value="{StaticResource KeywordOperationsContextMenu}" />
             <Setter Property="ToolTip" Value="{Binding Path=Tooltip}" />
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=Favorite}" Value="True">
-                    <Setter Property="Background" Value="LightYellow" />
+                    <Setter Property="Control.Background" Value="DodgerBlue" />
                 </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=Favorite}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="Gray" />
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=Favorite}" Value="True" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="DeepSkyBlue" />
+                </MultiDataTrigger>
                 <DataTrigger Binding="{Binding Path=Simple}" Value="False">
-                    <Setter Property="Background" Value="DarkSalmon" />
+                    <Setter Property="Control.Background" Value="DarkSalmon" />
                 </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=Simple}" Value="False" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="Gray" />
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=Simple}" Value="False" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="LightSalmon" />
+                </MultiDataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=IsFolder}" Value="False" />
                         <Condition Binding="{Binding Path=Downloaded}" Value="False" />
                     </MultiDataTrigger.Conditions>
-                    <Setter Property="Background" Value="LightGray" />
+                    <Setter Property="Control.Background" Value="LightGray" />
                 </MultiDataTrigger>
                 <DataTrigger Binding="{Binding Path=Read}" Value="False">
-                    <Setter Property="FontWeight" Value="Bold"/>
+                    <Setter Property="Control.FontWeight" Value="Bold" />
+                    <Setter Property="Control.Foreground" Value="White" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Image x:Key="BackIcon" Source="back.png" />
     </Window.Resources>
     <DockPanel>
         <DockPanel DockPanel.Dock="Top">
-            <Button x:Name="BackButton" Content=" &lt; BACK " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="BackButton_Click"/>
             <Button x:Name="DownloadButton" Content=" Download " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="DownloadButton_Click"/>
+            <Button x:Name="KeywordButton" Content=" Keyword " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left"/>
             <TextBox x:Name="SearchBox" Margin="1,5,10,5" HorizontalAlignment="Stretch" TextChanged="SearchTextBox_TextChanged"/>
         </DockPanel>
         <Grid>
@@ -124,6 +161,27 @@
                     <TextBox x:Name="ReaderText" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" FontSize="16" IsReadOnly="True" Background="Transparent" Foreground="LightGray"/>
                 </ScrollViewer>
             </Grid>
+            <Button x:Name="BackButton" Width="128" Height="128" HorizontalAlignment="Left" VerticalAlignment="Center" Content="{StaticResource BackIcon}" BorderBrush="Transparent" Opacity="0.2" Click="BackButton_Click">
+                <Button.Background>
+                    <ImageBrush/>
+                </Button.Background>
+                <Button.Triggers>
+                    <EventTrigger RoutedEvent="Button.MouseEnter">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="BackButton" Storyboard.TargetProperty="Opacity" From="0.2" To="1" Duration="0:0:1" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                    <EventTrigger RoutedEvent="Button.MouseLeave">
+                        <BeginStoryboard>
+                            <Storyboard>
+                                <DoubleAnimation Storyboard.TargetName="BackButton" Storyboard.TargetProperty="Opacity" From="1" To="0.2" Duration="0:0:0" />
+                            </Storyboard>
+                        </BeginStoryboard>
+                    </EventTrigger>
+                </Button.Triggers>
+            </Button>
         </Grid>
     </DockPanel>
 </Window>
