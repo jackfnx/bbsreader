@@ -11,6 +11,10 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using ToastNotifications;
+using ToastNotifications.Lifetime;
+using ToastNotifications.Messages;
+using ToastNotifications.Position;
 
 namespace BBSReader
 {
@@ -33,6 +37,7 @@ namespace BBSReader
         private string searchingKeyword;
         private string text;
         private AppState currentState;
+        private Notifier notifier;
 
         public struct BBSDef
         {
@@ -568,7 +573,7 @@ namespace BBSReader
                     }
                     else
                     {
-
+                        notifier.ShowInformation("There is the LAST chapter.");
                     }
                 }
             }
@@ -585,7 +590,7 @@ namespace BBSReader
                     }
                     else
                     {
-
+                        notifier.ShowInformation("There is the FIRST chapter.");
                     }
                 }
             }
@@ -594,6 +599,26 @@ namespace BBSReader
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             ResetFont();
+
+            notifier = new Notifier(cfg =>
+            {
+                cfg.PositionProvider = new WindowPositionProvider(
+                    parentWindow: Application.Current.MainWindow,
+                    corner: Corner.BottomCenter,
+                    offsetX: 10,
+                    offsetY: 10);
+
+                cfg.LifetimeSupervisor = new TimeAndCountBasedLifetimeSupervisor(
+                    notificationLifetime: TimeSpan.FromSeconds(3),
+                    maximumNotificationCount: MaximumNotificationCount.FromCount(5));
+
+                cfg.Dispatcher = Application.Current.Dispatcher;
+            });
+        }
+        
+        private void Window_Unloaded(object sender, RoutedEventArgs e)
+        {
+            notifier.Dispose();
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
