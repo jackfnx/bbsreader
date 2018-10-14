@@ -34,6 +34,7 @@ namespace BBSReader
         public ObservableCollection<object> articles;
         private MetaData metaData;
         private int currentId;
+        private int readId;
         private string searchingKeyword;
         private string text;
         private AppState currentState;
@@ -246,6 +247,7 @@ namespace BBSReader
                 ArticleListView.Visibility = Visibility.Visible;
                 ReaderView.Visibility = Visibility.Hidden;
                 //ArticleList.Focus();
+                readId = -1;
             }
             else if (currentState == AppState.READER)
             {
@@ -326,7 +328,7 @@ namespace BBSReader
                     item.Title = ("【" + keyword + "】系列");
                 item.Author = author;
 
-                BBSThread example = x.groupedTids.Count > 0 ?  metaData.threads[x.groupedTids[0].exampleId] : new BBSThread { postTime = "1970-01-01" };
+                BBSThread example = x.groupedTids.Count > 0 ?  metaData.threads[x.groupedTids[0].exampleId] : new BBSThread { postTime = "1970-01-01", threadId = "0" };
                 item.Time = example.postTime;
                 item.Url = example.link;
                 item.Source = "";
@@ -497,6 +499,7 @@ namespace BBSReader
                     ReloadArticles();
                     ReloadTopics();
                 }
+                readId = index;
             }
         }
 
@@ -571,12 +574,10 @@ namespace BBSReader
             {
                 if (currentState == AppState.READER)
                 {
-                    int i = ArticleListView.SelectedIndex;
-                    if (i > 0)
+                    if (readId > 0)
                     {
-                        ArticleListView.SelectedIndex = i - 1;
-                        dynamic prevItem = ArticleListView.SelectedItem;
-                        ForwardAtArticles(prevItem);
+                        dynamic nextItem = articles[readId - 1];
+                        ForwardAtArticles(nextItem);
                     }
                     else
                     {
@@ -588,12 +589,10 @@ namespace BBSReader
             {
                 if (currentState == AppState.READER)
                 {
-                    int i = ArticleListView.SelectedIndex;
-                    if (i + 1 < ArticleListView.Items.Count)
+                    if (readId + 1 < articles.Count())
                     {
-                        ArticleListView.SelectedIndex = i + 1;
-                        dynamic nextItem = ArticleListView.SelectedItem;
-                        ForwardAtArticles(nextItem);
+                        dynamic prevItem = articles[readId + 1];
+                        ForwardAtArticles(prevItem);
                     }
                     else
                     {
