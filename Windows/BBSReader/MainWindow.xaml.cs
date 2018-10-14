@@ -326,7 +326,7 @@ namespace BBSReader
                     item.Title = ("【" + keyword + "】系列");
                 item.Author = author;
 
-                BBSThread example = metaData.threads[x.groupedTids[0].exampleId];
+                BBSThread example = x.groupedTids.Count > 0 ?  metaData.threads[x.groupedTids[0].exampleId] : new BBSThread { postTime = "1970-01-01" };
                 item.Time = example.postTime;
                 item.Url = example.link;
                 item.Source = "";
@@ -502,6 +502,11 @@ namespace BBSReader
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
+            if (SearchBox.IsFocused)
+            {
+                return;
+            }
+            
             if (e.Key == System.Windows.Input.Key.Space)
             {
                 if (currentState == AppState.READER)
@@ -519,7 +524,8 @@ namespace BBSReader
                         ArticleListView.SelectedIndex = 0;
                     }
                     ListViewItem item = ArticleListView.ItemContainerGenerator.ContainerFromIndex(ArticleListView.SelectedIndex) as ListViewItem;
-                    item.Focus();
+                    if (item != null)
+                        item.Focus();
                 }
                 else if (currentState == AppState.TOPICS)
                 {
@@ -529,7 +535,8 @@ namespace BBSReader
                         TopicListView.SelectedIndex = 0;
                     }
                     ListViewItem item = TopicListView.ItemContainerGenerator.ContainerFromIndex(TopicListView.SelectedIndex) as ListViewItem;
-                    item.Focus();
+                    if (item != null)
+                        item.Focus();
                 }
             }
             else if (e.Key == Key.Right || e.Key == Key.Enter || e.Key == Key.R)
