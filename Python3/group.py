@@ -3,7 +3,9 @@ import os
 import sys
 import time
 import json
+import argparse
 from fuzzywuzzy import fuzz
+from group_func.grouping import do_grouping
 
 t0 = time.time()
 
@@ -26,77 +28,26 @@ else:
     sys.exit(0)
 
 
-def in_group(i, groups):
-    g = [x for x in groups if len([y for y in x if y==i]) > 0]
-    return len(g) > 0
+parser = argparse.ArgumentParser()
+parser.add_argument('-l', '--list', action='store_true', help='support BBS list')
+parser.add_argument('-k', '--keywordid', type=int, default=-1, help='manual set <BBS ID>')
+args = parser.parse_args()
 
+if args.list:
+    print('%s\n' % '\n'.join(['%-3d: %s' % (x, keytext(superkeywords[x])) for x in range(len(superkeywords))]))
+    sys.exit(0)
 
-def do_grouping(ids, groups):
+keywordId = args.keywordid
 
-    texts = {}
-    for i in ids:
-        t = threads[i]
-        txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
-        if not os.path.exists(txtpath):
-            text = ''
-        else:
-            with open(txtpath, 'rb') as f:
-                text = f.read().decode('gbk', 'ignore')
-        key = t['siteId'] + '/' + t['threadId']
-        texts[key] = (t, text)
-
-    keys = list(texts.keys())
-    for i in range(len(keys)):
-        key1 = keys[i]
-        t1, text1 = texts[key1]
-        if in_group(key1, groups):
-            continue
-        curr_group = [key1]
-        curr_group_site_ids = [t1['siteId']]
-        for j in range(i+1, len(ids)):
-            key2 = keys[j]
-            t2, text2 = texts[key2]
-            if t2['siteId'] in curr_group_site_ids or in_group(key2, groups):
-                continue
-
-            ### 如果两篇都不为空，比较内容
-            if text1 != '' and text2 != '':
-                ### 如果长度差的太多，不用比较内容
-                lenr = len(text1) * 1.0 / len(text2) if len(text1) >= len(text2) else len(text2) * 1.0 / len(text1)
-                if lenr > 1.5:
-                    continue
-                ### 比较标题相似度
-                tr = fuzz.ratio(t1['title'], t2['title'])
-                if tr < 90:
-                    continue
-                ## 比较内容相似度
-                cr = fuzz.ratio(text1, text2)
-                # print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
-                if cr > 70:
-                    # print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
-                    curr_group.append(key2)
-                    curr_group_site_ids.append(t2['siteId'])
-            ### 如果有空文，比较标题（严格相等才合并）
-            else:
-                if t1['title'] == t2['title']:
-                    curr_group.append(key2)
-                    curr_group_site_ids.append(t2['siteId'])
-        if len(curr_group) > 1:
-            groups.append(curr_group)
-
-
-def keytext(superkeyword):
-    if superkeyword['simple']:
-        return superkeyword['keyword']
-    else:
-        return superkeyword['author'][0] + ":" + superkeyword['keyword']
-
-for superkeyword in superkeywords:
-    tids = superkeyword['tids']
-    t_00 = time.time()
-    do_grouping(tids, superkeyword['groups'])
-    t_01 = time.time()
-    print('superkeyword [%s]: grouped. (%d match, %.2fs)' % (keytext(superkeyword), len(superkeyword['groups']), t_01-t_00))
+if keywordId < 0:
+    for superkeyword in superkeywords:
+        do_grouping(threads, superkeyword, save_root_path, silence=True)
+elif keywordId > len(superkeywords):
+    sys.stderr.write('ERROR: The keywordId is NOT FOUND.\n')
+    sys.exit(0)
+else:
+    superkeyword = superkeywords[keywordId]
+    do_grouping(threads, superkeyword, save_root_path, silence=False)
 
 
 ### 保存data
