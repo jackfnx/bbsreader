@@ -1,9 +1,8 @@
 # coding: utf-8
 import os
-import sys
 import time
-import json
 from fuzzywuzzy import fuzz
+from group_func.utils import *
 
 
 def in_group(i, groups):
@@ -63,13 +62,6 @@ def do_grouping_func(threads, ids, groups, save_root_path):
                     curr_group_site_ids.append(t2['siteId'])
         if len(curr_group) > 1:
             groups.append(curr_group)
-
-
-def keytext(superkeyword):
-    if superkeyword['simple']:
-        return superkeyword['keyword']
-    else:
-        return superkeyword['author'][0] + ":" + superkeyword['keyword']
 
 
 def print_groups(groups):
