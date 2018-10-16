@@ -212,7 +212,6 @@ favorites = [x['keyword'] for x in superkeywords if x['simple']]
 
 for superkeyword in superkeywords:
     superkeyword['tids'] = []
-    superkeyword['groups'] = []
 
 tags = {}
 for i in range(len(threads)):
