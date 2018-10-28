@@ -1,9 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.Threading;
 
 namespace BBSReader.PacketServer
 {
-    class MyServer
+    class MyServer : INotifyPropertyChanged
     {
         const int PORT = 5000;
         const int UDP_PORT = 4999;
@@ -27,6 +28,7 @@ namespace BBSReader.PacketServer
                 httpServerThread = new Thread(httpServer.HttpServerThread);
                 httpServer.isRunning = true;
                 httpServerThread.Start();
+                PropertyChanged(this, e: new PropertyChangedEventArgs("IsRunning"));
             }
         }
 
@@ -41,19 +43,26 @@ namespace BBSReader.PacketServer
         private MyHttpServer httpServer;
         private MyUdpServer udpServer;
         private Thread httpServerThread;
-        private Thread udpThread;
+        private Thread udpServerThread;
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void Start()
         {
-            udpThread = new Thread(udpServer.UdpThread);
+            udpServerThread = new Thread(udpServer.UdpThread);
             udpServer.isRunning = true;
-            udpThread.Start();
+            udpServerThread.Start();
         }
 
         public void Stop()
         {
             udpServer.isRunning = false;
             httpServer.isRunning = false;
+            if (httpServer.server != null)
+            {
+                httpServer.server.Abort();
+            }
+            PropertyChanged(this, e: new PropertyChangedEventArgs("IsRunning"));
         }
 
     }

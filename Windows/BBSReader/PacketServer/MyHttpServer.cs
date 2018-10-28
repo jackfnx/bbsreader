@@ -11,11 +11,13 @@ namespace BBSReader.PacketServer
         private ICGI cgiCon;
 
         public bool isRunning;
+        public HttpListener server;
 
         public MyHttpServer(int port)
         {
             this.port = port;
             isRunning = false;
+            server = null;
             cgi404 = new CGI404();
             cgiDoc = new CGIDoc();
             cgiCon = new CGICon();
@@ -23,40 +25,51 @@ namespace BBSReader.PacketServer
 
         public void HttpServerThread()
         {
-            HttpListener server = new HttpListener();
+            server = new HttpListener();
             string prefix = string.Format("http://*:{0}/", port);
             server.Prefixes.Add(prefix);
             server.Start();
 
             while (isRunning)
             {
-                HttpListenerContext context = server.GetContext();
-                HttpListenerResponse response = context.Response;
+                try
+                {
+                    HttpListenerContext context = server.GetContext();
+                    HttpListenerResponse response = context.Response;
 
-                string path = context.Request.Url.LocalPath;
-                string[] paras = path.Split('/');
+                    string path = context.Request.Url.LocalPath;
+                    string[] paras = path.Split('/');
 
-                if (paras.Length <= 1)
-                {
-                    cgi404.Execute(response);
-                }
-                else if (paras[1] == "books")
-                {
-                    cgiDoc.Execute(response);
-                }
-                else if (paras[1] == "book" && paras.Length > 2)
-                {
-                    cgiCon.Execute(response, paras[2]);
-                }
-                else
-                {
-                    cgi404.Execute(response);
-                }
+                    if (paras.Length <= 1)
+                    {
+                        cgi404.Execute(response);
+                    }
+                    else if (paras[1] == "books")
+                    {
+                        cgiDoc.Execute(response);
+                    }
+                    else if (paras[1] == "book" && paras.Length > 2)
+                    {
+                        cgiCon.Execute(response, paras[2]);
+                    }
+                    else
+                    {
+                        cgi404.Execute(response);
+                    }
 
-                response.Close();
+                    response.Close();
+                }
+                catch (HttpListenerException e)
+                {
+                    System.Diagnostics.Debug.WriteLine(e.Message);
+                }
             }
 
-            server.Stop();
+            if (server.IsListening)
+            {
+                server.Stop();
+            }
+            server = null;
         }
     }
 }
