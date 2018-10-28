@@ -1,4 +1,6 @@
-﻿using Newtonsoft.Json;
+﻿using BBSReader.Data;
+using BBSReader.PacketServer;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -23,12 +25,6 @@ namespace BBSReader
     /// </summary>
     public partial class MainWindow : Window
     {
-        const string LOCAL_PATH = "C:/Users/hpjing/Dropbox/BBSReader.Cache/";
-        static readonly Dictionary<string, BBSDef> SITE_DEF = new Dictionary<string, BBSDef> {
-            { "sis001", new BBSDef { siteId="sis001", siteName="第一会所", siteHost="http://www.sis001.com/forum/" } },
-            { "sexinsex", new BBSDef { siteId="sexinsex", siteName="色中色", siteHost="http://www.sexinsex.net/bbs/" } }
-        };
-
         //private ReaderWindow readerWindow;
         public ObservableCollection<object> topics;
         public ObservableCollection<object> articles;
@@ -40,72 +36,11 @@ namespace BBSReader
         private AppState currentState;
         private Notifier notifier;
 
-        public struct BBSDef
-        {
-            public string siteId;
-            public string siteName;
-            public string siteHost;
-        }
-
         public enum AppState
         {
             TOPICS,
             ARTICLES,
             READER
-        }
-
-        public struct MetaData
-        {
-            [JsonProperty("timestamp")]
-            public long timestamp;
-            [JsonProperty("threads")]
-            public List<BBSThread> threads;
-            [JsonProperty("tags")]
-            public Dictionary<string, List<int>> tags;
-            [JsonProperty("superkeywords")]
-            public List<SuperKeyword> superKeywords;
-            [JsonProperty("blacklist")]
-            public List<string> blacklist;
-        }
-
-        public struct BBSThread
-        {
-            [JsonProperty("siteId")]
-            public string siteId;
-            [JsonProperty("threadId")]
-            public string threadId;
-            [JsonProperty("title")]
-            public string title;
-            [JsonProperty("author")]
-            public string author;
-            [JsonProperty("postTime")]
-            public string postTime;
-            [JsonProperty("link")]
-            public string link;
-        }
-
-        public struct SuperKeyword
-        {
-            [JsonProperty("simple")]
-            public bool simple;
-            [JsonProperty("keyword")]
-            public string keyword;
-            [JsonProperty("author")]
-            public List<string> authors;
-            [JsonProperty("tids")]
-            public List<int> tids;
-            [JsonProperty("read")]
-            public int read;
-            [JsonProperty("groups")]
-            public List<List<string>> groups;
-            [JsonIgnore]
-            public List<Group> groupedTids;
-        }
-
-        public struct Group
-        {
-            public int exampleId;
-            public string tooltips;
         }
 
         private struct ListItem
@@ -150,85 +85,22 @@ namespace BBSReader
 
         private void LoadMetaData()
         {
-            string metaPath = LOCAL_PATH + "meta.json";
+            string metaPath = Constants.LOCAL_PATH + "meta.json";
             using (StreamReader sr = new StreamReader(metaPath, Encoding.UTF8))
             {
                 string json = sr.ReadToEnd();
                 metaData = JsonConvert.DeserializeObject<MetaData>(json);
-                GroupingSuperKeyword();
+                Grouper.GroupingSuperKeyword(metaData);
             }
         }
 
         private void SaveMetaData()
         {
-            string metaPath = LOCAL_PATH + "meta.json";
+            string metaPath = Constants.LOCAL_PATH + "meta.json";
             using (StreamWriter sw = new StreamWriter(metaPath, false, new UTF8Encoding(false)))
             {
                 string json = JsonConvert.SerializeObject(metaData);
                 sw.Write(json);
-            }
-        }
-
-        private List<T> in_group<T>(T tid, List<List<T>> groups)
-        {
-            foreach (var group in groups)
-            {
-                if (group.Contains(tid))
-                    return group;
-            }
-            return null;
-        }
-
-        private void GroupingSuperKeyword()
-        {
-            for (int i = 0; i < metaData.superKeywords.Count(); i++)
-            {
-                var sk = metaData.superKeywords[i];
-                var tids = sk.tids;
-                var groups = sk.groups;
-                List<string> keys = new List<string>();
-                foreach (int tid in tids)
-                {
-                    var t = metaData.threads[tid];
-                    string key = t.siteId + "/" + t.threadId;
-                    keys.Add(key);
-                }
-                List<List<int>> id_groups = new List<List<int>>();
-                for (int j = 0; j < tids.Count; j++)
-                {
-                    int tid = tids[j];
-                    string key = keys[j];
-                    if (in_group(tid, id_groups) != null)
-                        continue;
-                    List<int> id_group = new List<int> { tid };
-                    List<string> key_group = in_group(key, groups);
-                    if (key_group != null)
-                    {
-                        foreach (var anotherKey in key_group)
-                        {
-                            if (anotherKey != key)
-                            {
-                                int k = keys.IndexOf(anotherKey);
-                                id_group.Add(tids[k]);
-                            }
-                        }
-                    }
-                    id_groups.Add(id_group);
-                }
-                sk.groupedTids = new List<Group>();
-                var siteIds = new List<string>(SITE_DEF.Keys);
-                foreach (var id_group in id_groups)
-                {
-                    id_group.Sort((x, y) => siteIds.IndexOf(metaData.threads[x].siteId) - siteIds.IndexOf(metaData.threads[y].siteId));
-                    List<string> lines = id_group.ConvertAll(x =>
-                    {
-                        var t = metaData.threads[x];
-                        string siteName = SITE_DEF[t.siteId].siteName;
-                        return string.Format("[{0}]\t<{1}>\t{2}", t.title, t.author, siteName);
-                    });
-                    sk.groupedTids.Add(new Group { exampleId = id_group[0], tooltips = string.Join("\n", lines)});
-                }
-                metaData.superKeywords[i] = sk;
             }
         }
 
@@ -396,8 +268,8 @@ namespace BBSReader
                 BBSThread t = metaData.threads[x.exampleId];
                 if (searchingKeyword == null || t.title.Contains(searchingKeyword))
                 {
-                    string siteName = SITE_DEF[t.siteId].siteName;
-                    string fPath = LOCAL_PATH + t.siteId + "/" + t.threadId + ".txt";
+                    string siteName = Constants.SITE_DEF[t.siteId].siteName;
+                    string fPath = Constants.LOCAL_PATH + t.siteId + "/" + t.threadId + ".txt";
                     bool downloaded = File.Exists(fPath);
                     articles.Add(new
                     {
@@ -474,7 +346,7 @@ namespace BBSReader
 
         private void ForwardAtArticles(dynamic item)
         {
-            string fPath = LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
+            string fPath = Constants.LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
             if (File.Exists(fPath))
             {
                 using (StreamReader sr = new StreamReader(fPath, new UTF8Encoding(false)))
@@ -604,6 +476,8 @@ namespace BBSReader
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
+            MyServer.GetInstance().Start();
+
             ResetFont();
 
             notifier = new Notifier(cfg =>
@@ -625,6 +499,7 @@ namespace BBSReader
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             notifier.Dispose();
+            MyServer.GetInstance().Stop();
         }
 
         private void Window_SizeChanged(object sender, SizeChangedEventArgs e)
@@ -786,7 +661,7 @@ namespace BBSReader
             string siteId = item.SiteId;
             string link = item.Url;
 
-            Process.Start(SITE_DEF[siteId].siteHost + link);
+            Process.Start(Constants.SITE_DEF[siteId].siteHost + link);
         }
 
         private void DeleteTxtContextMenu_Click(object sender, RoutedEventArgs e)
@@ -796,7 +671,7 @@ namespace BBSReader
             string siteId = item.SiteId;
             string threadId = item.ThreadId;
 
-            string fPath = LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
+            string fPath = Constants.LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
             File.Delete(fPath);
             if (currentState == AppState.ARTICLES)
                 ReloadArticles();

@@ -63,6 +63,7 @@
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -87,12 +88,30 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Constants.cs" />
+    <Compile Include="Data\BBSDef.cs" />
+    <Compile Include="Data\BBSThread.cs" />
+    <Compile Include="Data\Group.cs" />
+    <Compile Include="Data\LimitPropsContractResolver.cs" />
+    <Compile Include="Data\MetaData.cs" />
+    <Compile Include="Data\PackChapter.cs" />
+    <Compile Include="Data\Packet.cs" />
+    <Compile Include="Data\SuperKeyword.cs" />
+    <Compile Include="Grouper.cs" />
+    <Compile Include="PacketServer\CGI404.cs" />
+    <Compile Include="PacketServer\CGICon.cs" />
+    <Compile Include="PacketServer\CGIDoc.cs" />
     <Compile Include="DownloadDialog.xaml.cs">
       <DependentUpon>DownloadDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="AdvancedKeywordDialog.xaml.cs">
       <DependentUpon>AdvancedKeywordDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="PacketServer\ICGI.cs" />
+    <Compile Include="PacketServer\MyHttpServer.cs" />
+    <Compile Include="PacketServer\MyServer.cs" />
+    <Compile Include="PacketServer\MyUdpServer.cs" />
+    <Compile Include="PacketServer\PacketLoader.cs" />
     <Compile Include="ReaderWindow.xaml.cs">
       <DependentUpon>ReaderWindow.xaml</DependentUpon>
     </Compile>
