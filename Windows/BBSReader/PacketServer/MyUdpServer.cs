@@ -26,7 +26,6 @@ namespace BBSReader.PacketServer
             using (Socket udpListener = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
             {
                 udpListener.ReceiveTimeout = 5000;
-                udpListener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
                 udpListener.Bind(new IPEndPoint(IPAddress.Any, port));
 
                 for (int i = 0; i < retry; i++)
