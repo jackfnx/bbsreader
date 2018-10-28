@@ -30,6 +30,14 @@ namespace BBSReader.PacketServer
             }
         }
 
+        public bool IsRunning
+        {
+            get
+            {
+                return httpServer.isRunning;
+            }
+        }
+
         private MyHttpServer httpServer;
         private MyUdpServer udpServer;
         private Thread httpServerThread;

@@ -73,6 +73,8 @@ namespace BBSReader
             articles = new ObservableCollection<object>();
             ArticleListView.DataContext = articles;
 
+            ServerInd.DataContext = MyServer.GetInstance();
+
             searchingKeyword = null;
             ReloadTopics();
 
@@ -499,6 +501,10 @@ namespace BBSReader
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             notifier.Dispose();
+        }
+        
+        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
             MyServer.GetInstance().Stop();
         }
 

@@ -9,7 +9,7 @@
         Background="{DynamicResource MaterialDesignPaper}"
         Foreground="{DynamicResource MaterialDesignFont}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Title="MainWindow" Height="600" Width="1024" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Unloaded="Window_Unloaded" SizeChanged="Window_SizeChanged">
+        Title="MainWindow" Height="600" Width="1024" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closing="Window_Closing" SizeChanged="Window_SizeChanged">
     <Window.Resources>
         <Style x:Key="DisableOnBeFolder" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
             <Style.Triggers>
@@ -127,11 +127,24 @@
             </Style.Triggers>
         </Style>
         <Image x:Key="BackIcon" Source="back.png" />
+        <Style TargetType="Ellipse" x:Key="Indicator">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=IsRunning}" Value="False">
+                    <Setter Property="Fill" Value="Red" />
+                    <Setter Property="ToolTip" Value="Server STOP" />
+                </DataTrigger>
+                <DataTrigger Binding="{Binding Path=IsRunning}" Value="True">
+                    <Setter Property="Fill" Value="Lime" />
+                    <Setter Property="ToolTip" Value="Server RUNNING" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
     </Window.Resources>
     <DockPanel>
         <DockPanel DockPanel.Dock="Top">
             <Button x:Name="DownloadButton" Content=" Download " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="DownloadButton_Click"/>
             <Button x:Name="KeywordButton" Content=" Keyword " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left"/>
+            <Ellipse x:Name="ServerInd" DockPanel.Dock="Right" Width="20" Height="20" Margin="1,3,10,3" Style="{StaticResource Indicator}" />
             <TextBox x:Name="SearchBox" Margin="1,5,10,5" HorizontalAlignment="Stretch" TextChanged="SearchTextBox_TextChanged"/>
         </DockPanel>
         <Grid>
