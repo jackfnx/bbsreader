@@ -14,6 +14,8 @@ namespace BBSReader.Data
         [JsonProperty]
         public string key;
         [JsonProperty]
+        public string summary;
+        [JsonProperty]
         public List<PackChapter> chapters;
     }
 }

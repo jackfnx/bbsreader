@@ -46,17 +46,24 @@ namespace BBSReader.PacketServer
                         ch.time = example.postTime;
                         packet.chapters.Add(ch);
                     }
-                    packet.key = CalcKey(packet.title, packet.author, sk.simple, packet.chapters);
+                    packet.key = CalcKey(packet.title, packet.author, sk.simple);
+                    packet.summary = CalcSumary(packet.title, packet.author, sk.simple, packet.chapters);
                     list.Add(packet);
                 }
                 return list;
             }
         }
-        
-        private static string CalcKey(string title, string author, bool simple, List<PackChapter> chapters)
+
+        private static string CalcKey(string title, string author, bool simple)
         {
-            string chaptersFileName = string.Join(":", chapters.ConvertAll(x => x.filename));
-            string rawSign = string.Format("{0}/{1}/{2}:{3}", title, author, simple, chaptersFileName);
+            string rawSign = string.Format("{0}/{1}/{2}", title, author, simple);
+            return GenerateMD5(rawSign);
+        }
+
+        private static string CalcSumary(string title, string author, bool simple, List<PackChapter> chapters)
+        {
+            string chaptersSummary = string.Join(":", chapters.ConvertAll(x => x.filename));
+            string rawSign = string.Format("{0}/{1}/{2}:{3}", title, author, simple, chaptersSummary);
             return GenerateMD5(rawSign);
         }
 
