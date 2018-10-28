@@ -23,30 +23,32 @@ namespace BBSReader.PacketServer
         
         private bool FindServer(int retry)
         {
-            Socket udpListener = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            udpListener.ReceiveTimeout = 5000;
-            udpListener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
-            udpListener.Bind(new IPEndPoint(IPAddress.Any, port));
-
-            for (int i = 0; i < retry; i++)
+            using (Socket udpListener = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
             {
-                try
+                udpListener.ReceiveTimeout = 5000;
+                udpListener.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+                udpListener.Bind(new IPEndPoint(IPAddress.Any, port));
+
+                for (int i = 0; i < retry; i++)
                 {
-                    EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
-                    byte[] buffer = new byte[1024];
-                    int length = udpListener.ReceiveFrom(buffer, ref remote);
-                    string message = Encoding.UTF8.GetString(buffer, 0, length);
-                    if (message == CODES_WORD)
+                    try
                     {
-                        return true;
+                        EndPoint remote = new IPEndPoint(IPAddress.Any, 0);
+                        byte[] buffer = new byte[1024];
+                        int length = udpListener.ReceiveFrom(buffer, ref remote);
+                        string message = Encoding.UTF8.GetString(buffer, 0, length);
+                        if (message == CODES_WORD)
+                        {
+                            return true;
+                        }
+                    }
+                    catch (SocketException e)
+                    {
+                        continue;
                     }
                 }
-                catch (SocketException e)
-                {
-                    continue;
-                }
+                return false;
             }
-            return false;
         }
 
         public void UdpThread()
