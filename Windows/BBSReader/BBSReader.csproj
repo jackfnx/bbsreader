@@ -115,6 +115,7 @@
     <Compile Include="ReaderWindow.xaml.cs">
       <DependentUpon>ReaderWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Utils.cs" />
     <Page Include="DownloadDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

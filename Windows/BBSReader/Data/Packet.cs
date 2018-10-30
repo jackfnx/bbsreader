@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 
 namespace BBSReader.Data
@@ -15,6 +16,8 @@ namespace BBSReader.Data
         public string key;
         [JsonProperty]
         public string summary;
+        [JsonProperty]
+        public long timestamp;
         [JsonProperty]
         public List<PackChapter> chapters;
     }

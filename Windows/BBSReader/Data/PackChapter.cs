@@ -13,6 +13,6 @@ namespace BBSReader.Data
         [JsonProperty]
         public string filename;
         [JsonProperty]
-        public string time;
+        public long timestamp;
     }
 }

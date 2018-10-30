@@ -1,12 +1,9 @@
 ﻿using BBSReader.Data;
 using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace BBSReader.PacketServer
 {
@@ -43,13 +40,16 @@ namespace BBSReader.PacketServer
                         ch.author = example.author;
                         ch.source = Constants.SITE_DEF[example.siteId].siteName;
                         ch.filename = example.siteId + "/" + example.threadId;
-                        ch.time = example.postTime;
+                        ch.timestamp = Utils.GetTimestamp(example.postTime);
                         packet.chapters.Add(ch);
                     }
+                    packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
+                    packet.timestamp = packet.chapters[0].timestamp;
                     packet.key = CalcKey(packet.title, packet.author, sk.simple);
                     packet.summary = CalcSumary(packet.title, packet.author, sk.simple, packet.chapters);
                     list.Add(packet);
                 }
+                list.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
                 return list;
             }
         }
