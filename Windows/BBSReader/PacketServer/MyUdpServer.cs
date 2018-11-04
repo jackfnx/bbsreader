@@ -41,7 +41,7 @@ namespace BBSReader.PacketServer
                             return true;
                         }
                     }
-                    catch (SocketException e)
+                    catch (SocketException)
                     {
                         continue;
                     }

@@ -165,8 +165,10 @@ namespace BBSReader
 
             tags.ForEach(x =>
             {
-                var item = new ListItem();
-                item.Title = x;
+                var item = new ListItem
+                {
+                    Title = x
+                };
 
                 BBSThread example = metaData.threads[metaData.tags[x][0]];
                 item.Author = example.author;
@@ -400,8 +402,7 @@ namespace BBSReader
                     {
                         ArticleListView.SelectedIndex = 0;
                     }
-                    ListViewItem item = ArticleListView.ItemContainerGenerator.ContainerFromIndex(ArticleListView.SelectedIndex) as ListViewItem;
-                    if (item != null)
+                    if (ArticleListView.ItemContainerGenerator.ContainerFromIndex(ArticleListView.SelectedIndex) is ListViewItem item)
                         item.Focus();
                 }
                 else if (currentState == AppState.TOPICS)
@@ -411,8 +412,7 @@ namespace BBSReader
                     {
                         TopicListView.SelectedIndex = 0;
                     }
-                    ListViewItem item = TopicListView.ItemContainerGenerator.ContainerFromIndex(TopicListView.SelectedIndex) as ListViewItem;
-                    if (item != null)
+                    if (TopicListView.ItemContainerGenerator.ContainerFromIndex(TopicListView.SelectedIndex) is ListViewItem item)
                         item.Focus();
                 }
             }
@@ -543,14 +543,16 @@ namespace BBSReader
             {
                 var tids = metaData.tags[title];
                 metaData.tags.Remove(title);
-                SuperKeyword superKeyword = new SuperKeyword();
-                superKeyword.simple = true;
-                superKeyword.keyword = title;
-                superKeyword.authors = new List<string>{ item.Author };
-                superKeyword.tids = tids;
-                superKeyword.read = -1;
-                superKeyword.groups = new List<List<string>>();
-                superKeyword.groupedTids = tids.ConvertAll(x => new Group { exampleId = x, tooltips = "" });
+                SuperKeyword superKeyword = new SuperKeyword
+                {
+                    simple = true,
+                    keyword = title,
+                    authors = new List<string> { item.Author },
+                    tids = tids,
+                    read = -1,
+                    groups = new List<List<string>>(),
+                    groupedTids = tids.ConvertAll(x => new Group { exampleId = x, tooltips = "" })
+                };
                 metaData.superKeywords.Add(superKeyword);
                 SaveMetaData();
                 currentId = -1;
@@ -619,21 +621,25 @@ namespace BBSReader
             string title = item.Title;
             string author = item.Author;
 
-            var dialog = new AdvancedKeywordDialog();
-            dialog.Owner = this;
-            dialog.Keyword = title;
-            dialog.DefaultAuthor = author;
+            var dialog = new AdvancedKeywordDialog
+            {
+                Owner = this,
+                Keyword = title,
+                DefaultAuthor = author
+            };
             var dr = dialog.ShowDialog() ?? false;
             if (dr)
             {
-                SuperKeyword superKeyword = new SuperKeyword();
-                superKeyword.simple = false;
-                superKeyword.keyword = dialog.Keyword;
-                superKeyword.authors = new List<string>(dialog.AuthorList);
-                superKeyword.tids = new List<int>();
-                superKeyword.read = -1;
-                superKeyword.groups = new List<List<string>>();
-                superKeyword.groupedTids = new List<Group>();
+                SuperKeyword superKeyword = new SuperKeyword
+                {
+                    simple = false,
+                    keyword = dialog.Keyword,
+                    authors = new List<string>(dialog.AuthorList),
+                    tids = new List<int>(),
+                    read = -1,
+                    groups = new List<List<string>>(),
+                    groupedTids = new List<Group>()
+                };
                 if (!metaData.superKeywords.Contains(superKeyword))
                 {
                     metaData.superKeywords.Add(superKeyword);
