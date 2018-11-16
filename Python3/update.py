@@ -16,7 +16,7 @@ save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
 ### BBS列表
 bbsdef = [
     ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, [383,322]],
-    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), [383,359]],
+    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), [383,322,359]],
 ]
 
 
@@ -294,8 +294,5 @@ with open(meta_data_path, 'w', encoding='utf-8') as f:
         'blacklist': blacklist
     }
     json.dump(save_data, f)
-
-
-
 
 
