@@ -4,6 +4,9 @@ import sys
 import time
 import json
 import argparse
+import re
+from zhon.hanzi import punctuation as cn_punctuation
+from string import punctuation as en_punctuation
 from fuzzywuzzy import fuzz
 
 def keytext(superkeyword):
@@ -17,6 +20,11 @@ def in_group(i, groups):
     g = [x for x in groups if len([y for y in x if y==i]) > 0]
     return len(g) > 0
 
+
+def clean_punc(line):
+    return re.sub("[%s]+" % (cn_punctuation + en_punctuation), "", line)
+
+ 
 
 def do_grouping_func(threads, ids, groups, save_root_path):
 
@@ -32,6 +40,7 @@ def do_grouping_func(threads, ids, groups, save_root_path):
         key = t['siteId'] + '/' + t['threadId']
         texts[key] = (t, text)
 
+    new_group_count = 0
     keys = list(texts.keys())
     for i in range(len(keys)):
         key1 = keys[i]
@@ -53,7 +62,9 @@ def do_grouping_func(threads, ids, groups, save_root_path):
                 if lenr > 1.5:
                     continue
                 ### 比较标题相似度
-                tr = fuzz.ratio(t1['title'], t2['title'])
+                pure_title1 = clean_punc(t1['title'])
+                pure_title2 = clean_punc(t2['title'])
+                tr = fuzz.ratio(pure_title1, pure_title2)
                 if tr < 90:
                     continue
                 ## 比较内容相似度
@@ -63,13 +74,17 @@ def do_grouping_func(threads, ids, groups, save_root_path):
                     # print('%s <%s> vs %s <%s>: title[%d], content[%d]' % (t1['title'], t1['siteId'], t2['title'], t2['siteId'], tr, cr))
                     curr_group.append(key2)
                     curr_group_site_ids.append(t2['siteId'])
+                    # print(t1['title'], t2['title'])
             ### 如果有空文，比较标题（严格相等才合并）
             else:
                 if t1['title'] == t2['title']:
                     curr_group.append(key2)
                     curr_group_site_ids.append(t2['siteId'])
+                    # print(t1['title'], t2['title'])
         if len(curr_group) > 1:
             groups.append(curr_group)
+            new_group_count+=1
+    return new_group_count
 
 
 def print_groups(groups):
@@ -83,9 +98,9 @@ def do_grouping(threads, superkeyword, save_root_path, silence=True):
         print('The origin:')
         print_groups(superkeyword['groups'])
     t_00 = time.time()
-    do_grouping_func(threads, tids, superkeyword['groups'], save_root_path)
+    inc = do_grouping_func(threads, tids, superkeyword['groups'], save_root_path)
     t_01 = time.time()
-    print('superkeyword [%s]: grouped. (%d match, %.2fs)' % (keytext(superkeyword), len(superkeyword['groups']), t_01-t_00))
+    print('superkeyword [%s]: grouped. (%d match, %d new, %.2fs)' % (keytext(superkeyword), len(superkeyword['groups']), inc, t_01-t_00))
     if not silence:
         print('The result:')
         print_groups(superkeyword['groups'])
