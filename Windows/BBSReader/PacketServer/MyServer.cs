@@ -43,15 +43,18 @@ namespace BBSReader.PacketServer
         private MyHttpServer httpServer;
         private MyUdpServer udpServer;
         private Thread httpServerThread;
-        private Thread udpServerThread;
+        private Thread udpListenThread;
+        private Thread udpBroadcastThread;
 
         public event PropertyChangedEventHandler PropertyChanged;
 
         public void Start()
         {
-            udpServerThread = new Thread(udpServer.UdpThread);
+            udpBroadcastThread = new Thread(udpServer.UdpBroadcastThread);
+            udpListenThread = new Thread(udpServer.UdpListenThread);
             udpServer.isRunning = true;
-            udpServerThread.Start();
+            udpListenThread.Start();
+            udpBroadcastThread.Start();
         }
 
         public void Stop()

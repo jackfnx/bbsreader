@@ -9,6 +9,8 @@ namespace BBSReader.PacketServer
     class MyUdpServer
     {
         const string CODES_WORD = "Naive Reader Pack Server RUNNING.";
+        const int STARTUP_TIMEOUT = 5000;
+        const int STARTUP_RETRY = 3;
 
         private readonly int port;
 
@@ -16,19 +18,23 @@ namespace BBSReader.PacketServer
 
         public event EventHandler ServerStarted;
 
+        private bool findServer;
+
         public MyUdpServer(int port)
         {
             this.port = port;
+            findServer = false;
         }
         
-        private bool FindServer(int retry)
+        public void UdpListenThread()
         {
             using (Socket udpListener = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp))
             {
-                udpListener.ReceiveTimeout = 5000;
+                udpListener.ReceiveTimeout = STARTUP_TIMEOUT;
                 udpListener.Bind(new IPEndPoint(IPAddress.Any, port));
 
-                for (int i = 0; i < retry; i++)
+                int error = 0;
+                while (isRunning)
                 {
                     try
                     {
@@ -38,34 +44,36 @@ namespace BBSReader.PacketServer
                         string message = Encoding.UTF8.GetString(buffer, 1, length - 1);
                         if (message == CODES_WORD)
                         {
-                            return true;
+                            error = 0;
+                            findServer = true;
+                        }
+                        else
+                        {
+                            error++;
                         }
                     }
                     catch (SocketException)
                     {
+                        error++;
                         continue;
                     }
+                    if (error > 1000)
+                    {
+                        findServer = false;
+                    }
                 }
-                return false;
             }
         }
 
-        public void UdpThread()
+        public void UdpBroadcastThread()
         {
-            bool iamServer = false;
             Socket broadcastSocket = null;
+
+            Thread.Sleep(STARTUP_TIMEOUT * STARTUP_RETRY);
 
             while (isRunning)
             {
-                if (!iamServer)
-                {
-                    if (!FindServer(3))
-                    {
-                        iamServer = true;
-                    }
-                }
-
-                if (iamServer)
+                if (!findServer)
                 {
                     if (broadcastSocket == null)
                     {
@@ -86,7 +94,7 @@ namespace BBSReader.PacketServer
                 Thread.Sleep(1000);
             }
 
-            if (iamServer && broadcastSocket != null)
+            if (broadcastSocket != null)
             {
                 broadcastSocket.Close();
             }
