@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -25,6 +26,13 @@ namespace BBSReader.PacketServer
             this.port = port;
             findServer = false;
         }
+
+        private bool _IsLocalIP(IPEndPoint remote)
+        {
+            IPAddress remoteIP = remote.Address;
+            List<IPAddress> localIPs = new List<IPAddress>(Dns.GetHostAddresses(Dns.GetHostName()));
+            return IPAddress.IsLoopback(remoteIP) || localIPs.Contains(remoteIP);
+        }
         
         public void UdpListenThread()
         {
@@ -45,6 +53,10 @@ namespace BBSReader.PacketServer
                         if (message == CODES_WORD)
                         {
                             error = 0;
+                            if (_IsLocalIP(remote as IPEndPoint))
+                            {
+                                continue;
+                            }
                             findServer = true;
                         }
                         else
