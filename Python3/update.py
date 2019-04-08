@@ -167,10 +167,18 @@ def bbsdoc(html, siteId):
 ### 读取文章
 def bbscon(html):
     soup = BeautifulSoup(html, 'html5lib')
-    postobj = soup.select('div[id^=postmessage_] div[id^=postmessage_]')[0]
-    [x.decompose() for x in postobj.select('strong')]
-    [x.decompose() for x in postobj.select('table')]
-    return postobj.text
+    posts = soup.select('div[id^=postmessage_] div[id^=postmessage_]')
+    if len(posts) > 0:
+        postobj = posts[0]
+        [x.decompose() for x in postobj.select('strong')]
+        [x.decompose() for x in postobj.select('table')]
+        return postobj.text
+    else:
+        boxmsg = soup.select('div.box.message')
+        if len(boxmsg) > 0:
+            return ''
+        else:
+            raise IOError('load html error.')
 
 
 
