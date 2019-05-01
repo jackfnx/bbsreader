@@ -221,12 +221,26 @@ favorites = [x['keyword'] for x in superkeywords if x['simple']]
 for superkeyword in superkeywords:
     superkeyword['tids'] = []
 
+
+def find_keywords(title):
+    keywords = [title]
+    keywords += [re.sub('\\(.*?\\)', '', title)]
+    keywords += [re.sub('（.*?\\)', '', title)]
+    keywords += [re.sub('\\(.*?）', '', title)]
+    keywords += [re.sub('（.*?）', '', title)]
+    keywords += [re.sub('【.*?】', '', title)]
+    keywords = list(set(keywords))
+    keywords += re.findall('【(.*?)】', title)
+    keywords = [x for x in keywords if not re.match('【.*?】', x)]
+    return keywords
+
+
 tags = {}
 for i in range(len(threads)):
     t = threads[i]
     title = t['title']
     author = t['author']
-    keywords = re.findall('【(.*?)】', title)
+    keywords = find_keywords(title)
     for keyword in keywords:
         if not keyword.isdigit() and not keyword in blacklist and not keyword in favorites:
             if not keyword in tags:
