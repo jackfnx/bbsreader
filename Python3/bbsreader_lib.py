@@ -1,5 +1,7 @@
 import os
+import re
 import yaml
+import json
 import time
 import requests
 
@@ -101,3 +103,149 @@ class Crawler:
         html = response.content.decode('gbk', 'ignore')
         print('Get [%s] OK' % url)
         return html
+
+
+
+### Thread对象
+def MakeThread(siteId, threadId, title, author, postTime, link):
+    dic = {
+        'siteId': siteId,
+        'threadId': threadId,
+        'title': title,
+        'author': author,
+        'postTime': postTime,
+        'link': link
+    }
+    return dic
+
+
+class MetaData:
+    """docstring for MetaData"""
+    def __init__(self, save_root_path):
+        self.meta_data_path = os.path.join(save_root_path, 'meta.json')
+        self._load_meta_data()
+
+
+    def _load_meta_data(self):
+
+        ### 如果存在json，load数据
+        if os.path.exists(self.meta_data_path):
+            with open(self.meta_data_path, encoding='utf-8') as f:
+                load_data = json.load(f)
+            self.last_timestamp = load_data['timestamp']
+            self.last_threads = load_data['threads']
+            self.tags = load_data['tags']
+            self.superkeywords = load_data['superkeywords']
+            self.blacklist = load_data['blacklist']
+        ### 如果不存在json，初始化空数据
+        else:
+            self.last_timestamp = 0
+            self.last_threads = []
+            self.tags = {}
+            self.superkeywords = []
+            self.blacklist = []
+
+
+    def merge_threads(self, latest_threads, force=False):
+
+        ### 合并新旧数据
+        def merge(lasts, latest, force):
+            threads = lasts[:]
+            
+            lastIds = [(x['siteId'], x['threadId']) for x in lasts]
+            for t in latest:
+                if not force:
+                    if not (t['siteId'], t['threadId']) in lastIds:
+                        threads.append(t)
+                else:
+                    if (t['siteId'], t['threadId']) in lastIds:
+                        threads.pop(lastIds.index((t['siteId'], t['threadId'])))
+                    threads.append(t)
+            return threads
+
+        threads = merge(self.last_threads, latest_threads, force)
+
+
+        ### 扫描数据，重新提取关键字
+        favorites = [x['keyword'] for x in self.superkeywords if x['simple']]
+
+        for superkeyword in self.superkeywords:
+            superkeyword['tids'] = []
+
+
+        def find_keywords(title):
+            keywords = [title]
+            keywords += [re.sub('\\(.*?\\)', '', title)]
+            keywords += [re.sub('（.*?\\)', '', title)]
+            keywords += [re.sub('\\(.*?）', '', title)]
+            keywords += [re.sub('（.*?）', '', title)]
+            keywords += [re.sub('【.*?】', '', title)]
+            keywords = list(set(keywords))
+            keywords += re.findall('【(.*?)】', title)
+            keywords = [x for x in keywords if not re.match('【.*?】', x)]
+            keywords_no_kh = [re.sub('(?:（|\\()(.*?)(?:\\)|）)', '', x) for x in keywords if re.search('(?:（|\\()(.*?)(?:\\)|）)', x)]
+            keywords_in_kh = []
+            for x in keywords:
+                if re.search('(?:（|\\()(.*?)(?:\\)|）)', x):
+                    keywords_in_kh += re.findall('(?:（|\\()(.*?)(?:\\)|）)', x)
+            keywords += keywords_no_kh
+            keywords += keywords_in_kh
+            return keywords
+
+
+        tags = {}
+        for i in range(len(threads)):
+            t = threads[i]
+            title = t['title']
+            author = t['author']
+            keywords = find_keywords(title)
+            for keyword in keywords:
+                if keyword != '' and not keyword.isdigit() and not keyword in self.blacklist and not keyword in favorites:
+                    if not keyword in tags:
+                        tags[keyword] = []
+                    tags[keyword].append(i)
+
+            for superkeyword in self.superkeywords:
+                keyword = superkeyword['keyword']
+                authors = superkeyword['author']
+                if superkeyword['simple']:
+                    if keyword in keywords:
+                        superkeyword['tids'].append(i)
+                else:
+                    if keyword == '*' or keyword in title:
+                        if authors[0] == '*' or authors.count(author) > 0:
+                            superkeyword['tids'].append(i)
+
+
+        ### 主题下，按照时间排序
+        def getPostTime(x):
+            timestr = threads[x]['postTime']
+            secs = time.mktime(time.strptime(timestr, '%Y-%m-%d'))
+            return secs
+
+        for keyword in tags:
+            tags[keyword].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
+
+        for superkeyword in self.superkeywords:
+            tids = superkeyword['tids']
+            tids = list(set(tids))
+            tids.sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
+            superkeyword['tids'] = tids
+
+        self.tags = tags
+        self.last_threads = threads
+
+
+    def save_meta_data(self):
+
+        ### 保存data
+        with open(self.meta_data_path, 'w', encoding='utf-8') as f:
+            save_data = {
+                'timestamp': time.time(),
+                'threads': self.last_threads,
+                'tags': self.tags,
+                'superkeywords': self.superkeywords,
+                'blacklist': self.blacklist
+            }
+            json.dump(save_data, f)
+

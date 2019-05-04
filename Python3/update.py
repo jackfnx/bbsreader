@@ -2,8 +2,6 @@
 # coding: utf-8
 import os
 import sys
-import json
-import re
 from bs4 import BeautifulSoup
 import argparse
 
@@ -26,36 +24,18 @@ if args.list:
     print('%s\n' % '\n'.join([str(x) for x in bbsdef]))
     sys.exit(0)
 
-meta_data_path = os.path.join(save_root_path, 'meta.json')
-
-### 如果存在json，load数据
-if os.path.exists(meta_data_path):
-    with open(meta_data_path, encoding='utf-8') as f:
-        load_data = json.load(f)
-    last_timestamp = load_data['timestamp']
-    last_threads = load_data['threads']
-    tags = load_data['tags']
-    superkeywords = load_data['superkeywords']
-    blacklist = load_data['blacklist']
-### 如果不存在json，初始化空数据
-else:
-    last_timestamp = 0
-    last_threads = []
-    tags = {}
-    superkeywords = []
-    blacklist = []
-
+meta_data = MetaData(save_root_path)
 
 ### 根据上次更新时间，确定这次读取几页
 if pages is None:
     now = time.time()
-    if last_timestamp == 0:
+    if meta_data.last_timestamp == 0:
         pages = 100
-    elif now - last_timestamp < 60*60*24*10: # 没超过10天，查看5页
+    elif now - meta_data.last_timestamp < 60*60*24*10: # 没超过10天，查看5页
         pages = 5
     else:
         pages = 30
-    tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(last_timestamp))
+    tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(meta_data.last_timestamp))
     print('] last update at [%s], this update will load <%d> pages' % (tmstr, pages))
 else:
     print('] manual set, update <%d> pages.' % (pages))
@@ -63,18 +43,6 @@ else:
 
 crawler = Crawler.getCrawler(bbsId)
 
-
-### Thread对象
-def MakeThread(siteId, threadId, title, author, postTime, link):
-    dic = {
-        'siteId': siteId,
-        'threadId': threadId,
-        'title': title,
-        'author': author,
-        'postTime': postTime,
-        'link': link
-    }
-    return dic
 
 ### 读取版面
 def bbsdoc(html, siteId):
@@ -108,7 +76,6 @@ def bbscon(html):
             raise IOError('load html error.')
 
 
-
 ### 读取新数据
 def update_threads(boardId, threads):
     print('Updating [%s] <board: %d>.' % (crawler.bbsname, boardId))
@@ -129,77 +96,7 @@ else:
     update_threads(curr_board, latest_threads)
 
 
-### 合并新旧数据
-def merge(lasts, latest):
-    threads = lasts[:]
-    
-    lastIds = [(x['siteId'], x['threadId']) for x in lasts]
-    for t in latest:
-        if not (t['siteId'], t['threadId']) in lastIds:
-            threads.append(t)
-    return threads
-
-threads = merge(last_threads, latest_threads)
-
-
-### 扫描数据，重新提取关键字
-favorites = [x['keyword'] for x in superkeywords if x['simple']]
-
-for superkeyword in superkeywords:
-    superkeyword['tids'] = []
-
-
-def find_keywords(title):
-    keywords = [title]
-    keywords += [re.sub('\\(.*?\\)', '', title)]
-    keywords += [re.sub('（.*?\\)', '', title)]
-    keywords += [re.sub('\\(.*?）', '', title)]
-    keywords += [re.sub('（.*?）', '', title)]
-    keywords += [re.sub('【.*?】', '', title)]
-    keywords = list(set(keywords))
-    keywords += re.findall('【(.*?)】', title)
-    keywords = [x for x in keywords if not re.match('【.*?】', x)]
-    return keywords
-
-
-tags = {}
-for i in range(len(threads)):
-    t = threads[i]
-    title = t['title']
-    author = t['author']
-    keywords = find_keywords(title)
-    for keyword in keywords:
-        if not keyword.isdigit() and not keyword in blacklist and not keyword in favorites:
-            if not keyword in tags:
-                tags[keyword] = []
-            tags[keyword].append(i)
-
-    for superkeyword in superkeywords:
-        keyword = superkeyword['keyword']
-        authors = superkeyword['author']
-        if superkeyword['simple']:
-            if keyword in keywords:
-                superkeyword['tids'].append(i)
-        else:
-            if keyword == '*' or keyword in title:
-                if authors[0] == '*' or author in authors:
-                    superkeyword['tids'].append(i)
-
-
-### 主题下，按照时间排序
-def getPostTime(x):
-    timestr = threads[x]['postTime']
-    secs = time.mktime(time.strptime(timestr, '%Y-%m-%d'))
-    return secs
-
-for keyword in tags:
-    tags[keyword].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
-
-for superkeyword in superkeywords:
-    tids = superkeyword['tids']
-    tids = list(set(tids))
-    tids.sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
-    superkeyword['tids'] = tids
+meta_data.merge_threads(latest_threads)
 
 
 ### 根据收藏夹，扫描所有文章，是否存在本地数据，如果不存在则下载
@@ -225,23 +122,10 @@ def keytext(superkeyword):
     else:
         return superkeyword['author'][0] + ":" + superkeyword['keyword']
 
-for superkeyword in superkeywords:
+for superkeyword in meta_data.superkeywords:
     for i in superkeyword['tids']:
-        t = threads[i]
+        t = meta_data.last_threads[i]
         download_article(t)
     print('superkeyword [%s] saved.' % keytext(superkeyword))
 
-
-
-### 保存data
-with open(meta_data_path, 'w', encoding='utf-8') as f:
-    save_data = {
-        'timestamp': time.time(),
-        'threads': threads,
-        'tags': tags,
-        'superkeywords': superkeywords,
-        'blacklist': blacklist
-    }
-    json.dump(save_data, f)
-
-
+meta_data.save_meta_data()

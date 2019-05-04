@@ -2,8 +2,6 @@
 # coding: utf-8
 import os
 import sys
-import json
-import re
 from bs4 import BeautifulSoup
 import argparse
 
@@ -14,10 +12,15 @@ from bbsreader_lib import *
 parser = argparse.ArgumentParser()
 parser.add_argument('threadid', type=int, help='<Thread ID>')
 parser.add_argument('bbsid', type=int, default=0, help='<BBS ID>')
+parser.add_argument('-u', '--updateindex', action='store_true', help='update index')
+parser.add_argument('-t', '--title', nargs='?', type=str, help='manual set title (when update index)')
+parser.add_argument('-a', '--author', nargs='?', type=str, help='manual set author (when update index)')
+parser.add_argument('-p', '--posttime', nargs='?', type=str, help='manual set post time (when update index)')
 args = parser.parse_args()
 
-threadId = args.threadid
+threadId = str(args.threadid)
 bbsId = args.bbsid
+updateIndex = args.updateindex
 
 
 crawler = Crawler.getCrawler(bbsId)
@@ -26,6 +29,39 @@ crawler = Crawler.getCrawler(bbsId)
 ### 读取文章
 def bbstcon(html):
     soup = BeautifulSoup(html, 'html5lib')
+
+    titles = soup.select('div[id=nav]')
+    if len(titles) > 0:
+        titleobj = titles[0]
+        [x.decompose() for x in titleobj.select('a')]
+        title = titleobj.text
+        title = title.replace('»', '')
+        title = title.strip()
+    else:
+        title = None
+
+    authors = soup.select('td.postauthor cite a')
+    if len(authors) > 0:
+        author = authors[0].text
+    else:
+        author = 'unknown'
+
+    postinfos = soup.select('div.postinfo')
+    if len(postinfos) > 0:
+        postinfo = postinfos[0]
+        [x.decompose() for x in postinfo.select('strong')]
+        [x.decompose() for x in postinfo.select('em')]
+        [x.decompose() for x in postinfo.select('a')]
+        postTime = postinfo.text
+        postTime = postTime.strip()
+        prefix = '发表于 '
+        if postTime.startswith(prefix):
+            postTime = postTime[len(prefix):]
+        if ' ' in postTime:
+            postTime = postTime[:postTime.index(' ')]
+    else:
+        postTime = '1970-1-1'
+
     posts = soup.select('div[id^=postmessage_] div[id^=postmessage_]')
     if len(posts) > 0:
         floors = []
@@ -37,19 +73,34 @@ def bbstcon(html):
                 floors.append(s)
             elif len(s) > 1000:
                 floors.append(s)
-        return '\n\n\n\n-------------------------------------------------\n\n\n\n'.join(floors)
+        text = '\n\n\n\n-------------------------------------------------\n\n\n\n'.join(floors)
     else:
         boxmsg = soup.select('div.box.message')
         if len(boxmsg) > 0:
-            return ''
+            text = ''
         else:
             raise IOError('load html error.')
+    return text, title, author, postTime
 
 
-html = crawler.getUrl('thread-%d-1-1.html' % threadId)
-text = bbstcon(html)
+postUrl = 'thread-%s-1-1.html' % threadId
+html = crawler.getUrl(postUrl)
+text, title, author, postTime = bbstcon(html)
 save_path = os.path.join(save_root_path, crawler.siteId)
-txtpath = os.path.join(save_root_path, crawler.siteId, '%d.txt' % threadId)
+txtpath = os.path.join(save_root_path, crawler.siteId, '%s.txt' % threadId)
 with open(txtpath, 'w', encoding='utf-8') as f:
     f.write(text)
 print('[%s] saved, (%d bytes)' % (txtpath, len(text)))
+
+if updateIndex:
+    if args.title:
+        title = args.title
+    if args.author:
+        author = args.author
+    if args.posttime:
+        postTime = args.posttime
+    new_threads = [MakeThread(crawler.siteId, threadId, title, author, postTime, postUrl)]
+
+    meta_data = MetaData(save_root_path)
+    meta_data.merge_threads(new_threads, force=True)
+    meta_data.save_meta_data()
