@@ -110,7 +110,6 @@
     <Compile Include="PacketServer\ICGI.cs" />
     <Compile Include="PacketServer\MyHttpServer.cs" />
     <Compile Include="PacketServer\MyServer.cs" />
-    <Compile Include="PacketServer\MyUdpServer.cs" />
     <Compile Include="PacketServer\PacketLoader.cs" />
     <Compile Include="ReaderWindow.xaml.cs">
       <DependentUpon>ReaderWindow.xaml</DependentUpon>
