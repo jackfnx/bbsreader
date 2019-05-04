@@ -602,7 +602,7 @@ namespace BBSReader
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
-            DownloadDialog dialog = new DownloadDialog();
+            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.UPDATE_ALL);
             if (dialog.ShowDialog() ?? false)
             {
                 LoadMetaData();
@@ -712,6 +712,20 @@ namespace BBSReader
                         UpdateView();
                     }
                 }
+            }
+        }
+
+        private void DownloadDetailContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            int siteId = Constants.SITE_DEF[item.SiteId].id;
+            long threadId = long.Parse(item.ThreadId);
+
+            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, threadId, siteId);
+            if (dialog.ShowDialog() ?? false)
+            {
+                ReloadArticles();
             }
         }
     }

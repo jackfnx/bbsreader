@@ -63,6 +63,7 @@
         <ContextMenu x:Key="KeywordOperationsContextMenu" Background="{DynamicResource MaterialDesignPaper}">
             <MenuItem Header="Unread" Name="UnreadContextMenu" Click="UnreadContextMenu_Click" Style="{StaticResource DisableOnUnread}" />
             <MenuItem Header="view in browser" Name="ViewUrlContextMenu" Click="ViewUrlContextMenu_Click" Style="{StaticResource MaterialDesignMenuItem}"/>
+            <MenuItem Header="download multi-floors .txt" Name="DownloadDetailContextMenu" Click="DownloadDetailContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="delete downloaded .txt" Name="DeleteTxtContextMenu" Click="DeleteTxtContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>

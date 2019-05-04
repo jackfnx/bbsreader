@@ -11,5 +11,6 @@ namespace BBSReader.Data
         public string siteId;
         public string siteName;
         public string siteHost;
+        public int id;
     }
 }

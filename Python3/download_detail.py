@@ -50,6 +50,6 @@ html = crawler.getUrl('thread-%d-1-1.html' % threadId)
 text = bbstcon(html)
 save_path = os.path.join(save_root_path, crawler.siteId)
 txtpath = os.path.join(save_root_path, crawler.siteId, '%d.txt' % threadId)
-with open(txtpath, 'w') as f:
+with open(txtpath, 'w', encoding='utf-8') as f:
     f.write(text)
 print('[%s] saved, (%d bytes)' % (txtpath, len(text)))

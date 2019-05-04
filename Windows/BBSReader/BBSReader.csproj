@@ -101,8 +101,8 @@
     <Compile Include="PacketServer\CGI404.cs" />
     <Compile Include="PacketServer\CGICon.cs" />
     <Compile Include="PacketServer\CGIDoc.cs" />
-    <Compile Include="DownloadDialog.xaml.cs">
-      <DependentUpon>DownloadDialog.xaml</DependentUpon>
+    <Compile Include="ScriptDialog.xaml.cs">
+      <DependentUpon>ScriptDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="AdvancedKeywordDialog.xaml.cs">
       <DependentUpon>AdvancedKeywordDialog.xaml</DependentUpon>
@@ -116,7 +116,7 @@
       <DependentUpon>ReaderWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils.cs" />
-    <Page Include="DownloadDialog.xaml">
+    <Page Include="ScriptDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
