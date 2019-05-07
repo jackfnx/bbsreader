@@ -94,7 +94,7 @@
     <Compile Include="Data\Group.cs" />
     <Compile Include="Data\LimitPropsContractResolver.cs" />
     <Compile Include="Data\MetaData.cs" />
-    <Compile Include="Data\PackChapter.cs" />
+    <Compile Include="Data\Chapter.cs" />
     <Compile Include="Data\Packet.cs" />
     <Compile Include="Data\SuperKeyword.cs" />
     <Compile Include="Grouper.cs" />

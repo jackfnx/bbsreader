@@ -31,15 +31,17 @@ namespace BBSReader.PacketServer
                         packet.title = string.Format("【{0}】系列", sk.keyword);
                     packet.author = sk.authors[0];
                     packet.simple = sk.simple;
-                    packet.chapters = new List<PackChapter>();
+                    packet.chapters = new List<Chapter>();
                     foreach (Group g in sk.groupedTids)
                     {
                         BBSThread example = metaData.threads[g.exampleId];
-                        PackChapter ch = new PackChapter();
+                        string filename = example.siteId + "/" + example.threadId;
+                        Chapter ch = new Chapter();
+                        ch.id = filename;
                         ch.title = example.title;
                         ch.author = example.author;
                         ch.source = Constants.SITE_DEF[example.siteId].siteName;
-                        ch.filename = example.siteId + "/" + example.threadId;
+                        ch.savePath = filename;
                         ch.timestamp = Utils.GetTimestamp(example.postTime);
                         packet.chapters.Add(ch);
                     }
@@ -60,9 +62,9 @@ namespace BBSReader.PacketServer
             return GenerateMD5(rawSign);
         }
 
-        private static string CalcSumary(string title, string author, bool simple, List<PackChapter> chapters)
+        private static string CalcSumary(string title, string author, bool simple, List<Chapter> chapters)
         {
-            string chaptersSummary = string.Join(":", chapters.ConvertAll(x => x.filename));
+            string chaptersSummary = string.Join(":", chapters.ConvertAll(x => x.savePath));
             string rawSign = string.Format("{0}/{1}/{2}:{3}", title, author, simple, chaptersSummary);
             return GenerateMD5(rawSign);
         }

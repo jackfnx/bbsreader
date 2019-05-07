@@ -18,7 +18,6 @@ namespace BBSReader.Data
         public string summary;
         [JsonProperty]
         public long timestamp;
-        [JsonProperty]
-        public List<PackChapter> chapters;
+        public List<Chapter> chapters;
     }
 }

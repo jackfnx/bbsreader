@@ -2,8 +2,10 @@
 
 namespace BBSReader.Data
 {
-    struct PackChapter
+    struct Chapter
     {
+        [JsonProperty]
+        public string id;
         [JsonProperty]
         public string title;
         [JsonProperty]
@@ -11,7 +13,7 @@ namespace BBSReader.Data
         [JsonProperty]
         public string source;
         [JsonProperty]
-        public string filename;
+        public string savePath;
         [JsonProperty]
         public long timestamp;
     }

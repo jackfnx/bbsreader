@@ -32,6 +32,7 @@ namespace BBSReader.PacketServer
         private static byte[] ZipPacket(Packet packet)
         {
             string metaJson = JsonConvert.SerializeObject(packet);
+            string contentJson = JsonConvert.SerializeObject(packet.chapters);
             using (MemoryStream ms = new MemoryStream())
             {
                 using (ZipArchive zip = new ZipArchive(ms, ZipArchiveMode.Create))
@@ -41,10 +42,15 @@ namespace BBSReader.PacketServer
                     {
                         sw.Write(metaJson);
                     }
-                    foreach (PackChapter ch in packet.chapters)
+                    ZipArchiveEntry content = zip.CreateEntry(".CONTENT");
+                    using (StreamWriter sw = new StreamWriter(content.Open()))
                     {
-                        ZipArchiveEntry zae = zip.CreateEntry(ch.filename);
-                        string src = string.Format("{0}/{1}.txt", Constants.LOCAL_PATH, ch.filename);
+                        sw.Write(contentJson);
+                    }
+                    foreach (Chapter ch in packet.chapters)
+                    {
+                        ZipArchiveEntry zae = zip.CreateEntry(ch.savePath);
+                        string src = string.Format("{0}/{1}.txt", Constants.LOCAL_PATH, ch.savePath);
                         using (FileStream ins = new FileStream(src, FileMode.Open))
                         using (Stream outs = zae.Open())
                         {
