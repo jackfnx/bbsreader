@@ -182,7 +182,6 @@ class MetaData:
             keywords += [re.sub('【.*?】', '', title)]
             keywords = list(set(keywords))
             keywords += re.findall('【(.*?)】', title)
-            keywords = [x for x in keywords if not re.match('【.*?】', x)]
             keywords_no_kh = [re.sub('(?:（|\\()(.*?)(?:\\)|）)', '', x) for x in keywords if re.search('(?:（|\\()(.*?)(?:\\)|）)', x)]
             keywords_in_kh = []
             for x in keywords:
@@ -190,6 +189,21 @@ class MetaData:
                     keywords_in_kh += re.findall('(?:（|\\()(.*?)(?:\\)|）)', x)
             keywords += keywords_no_kh
             keywords += keywords_in_kh
+            keywords = [x for x in keywords if not re.match('【.*?】', x)]
+            keywords = [x for x in keywords if not re.match('\\(.*?\\)', x)]
+            keywords = [x for x in keywords if not re.match('（.*?\\)', x)]
+            keywords = [x for x in keywords if not re.match('\\(.*?）', x)]
+            keywords = [x for x in keywords if not re.match('（.*?）', x)]
+            keywords = list(set(keywords))
+            keywords = [x for x in keywords if not re.match('[ 　]+', x)]
+            keywords = [x for x in keywords if not re.match('第?[ 0-9\\-]+[章卷篇]?', x)]
+            keywords = [x for x in keywords if not re.match('第?[ ０１２３４５６７８９]+[章卷篇]?', x)]
+            keywords = [x for x in keywords if not re.match('第?[零一二三四五六七八九十百千万]+[章卷篇]?', x)]
+            keywords = [x for x in keywords if not re.match('[上中下终][章卷篇]?', x)]
+            keywords = [x for x in keywords if not re.match('[续完]', x)]
+            keywords = [x for x in keywords if not re.match('大?结局', x)]
+            keywords = [x for x in keywords if not re.match('代友?发', x)]
+            keywords = [x.strip() for x in keywords]
             return keywords
 
 
@@ -234,6 +248,7 @@ class MetaData:
 
         self.tags = tags
         self.last_threads = threads
+        print('tags: %d' % len(tags))
 
 
     def save_meta_data(self):
