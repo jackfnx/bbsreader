@@ -64,6 +64,7 @@
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.IO.Compression, Version=4.1.2.0, Culture=neutral, PublicKeyToken=b77a5c561934e089, processorArchitecture=MSIL" />
+    <Reference Include="System.IO.Compression.FileSystem" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Core" />
@@ -101,6 +102,9 @@
     <Compile Include="PacketServer\CGI404.cs" />
     <Compile Include="PacketServer\CGICon.cs" />
     <Compile Include="PacketServer\CGIDoc.cs" />
+    <Compile Include="PacketWindow.xaml.cs">
+      <DependentUpon>PacketWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ScriptDialog.xaml.cs">
       <DependentUpon>ScriptDialog.xaml</DependentUpon>
     </Compile>
@@ -115,6 +119,10 @@
       <DependentUpon>ReaderWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils.cs" />
+    <Page Include="PacketWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ScriptDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

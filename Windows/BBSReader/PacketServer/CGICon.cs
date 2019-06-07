@@ -21,12 +21,18 @@ namespace BBSReader.PacketServer
 
             Packet packet = packets.Find(x => x.key == key);
             string fileName = packet.key + ".zip";
-            byte[] packetData = ZipPacket(packet);
+            byte[] packetData = packet.source != "TextRepack" ? ZipPacket(packet) : LoadPacket(packet);
 
             response.ContentType = "application/zip";
             response.AddHeader("Content-Disposition", "attachment;FileName=" + fileName);
             response.ContentLength64 = packetData.Length;
             response.OutputStream.Write(packetData, 0, packetData.Length);
+        }
+
+        private byte[] LoadPacket(Packet packet)
+        {
+            string path = string.Format("{0}/packets/{1}_{2}.zip", Constants.LOCAL_PATH, packet.title, packet.author);
+            return File.ReadAllBytes(path);
         }
 
         private static byte[] ZipPacket(Packet packet)

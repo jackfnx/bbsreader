@@ -1,8 +1,9 @@
 ﻿using BBSReader.Data;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
+using System.IO.Compression;
 using System.Text;
 
 namespace BBSReader.PacketServer
@@ -12,12 +13,12 @@ namespace BBSReader.PacketServer
         public static List<Packet> LoadPackets()
         {
             string metaPath = Constants.LOCAL_PATH + "meta.json";
+            List<Packet> list = new List<Packet>();
             using (StreamReader sr = new StreamReader(metaPath, Encoding.UTF8))
             {
                 string json = sr.ReadToEnd();
                 MetaData metaData = JsonConvert.DeserializeObject<MetaData>(json);
                 Grouper.GroupingSuperKeyword(metaData);
-                List<Packet> list = new List<Packet>();
                 foreach (SuperKeyword sk in metaData.superKeywords)
                 {
                     Packet packet = new Packet();
@@ -47,38 +48,57 @@ namespace BBSReader.PacketServer
                     }
                     packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
                     packet.timestamp = packet.chapters[0].timestamp;
-                    packet.key = CalcKey(packet.title, packet.author, sk.simple);
-                    packet.summary = CalcSumary(packet.title, packet.author, sk.simple, packet.chapters);
+                    packet.key = Utils.CalcKey(packet.title, packet.author, sk.simple);
+                    packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.simple, packet.chapters);
+                    packet.source = "Forum";
                     list.Add(packet);
                 }
                 list.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
-                return list;
             }
-        }
-
-        private static string CalcKey(string title, string author, bool simple)
-        {
-            string rawSign = string.Format("{0}/{1}/{2}", title, author, simple);
-            return GenerateMD5(rawSign);
-        }
-
-        private static string CalcSumary(string title, string author, bool simple, List<Chapter> chapters)
-        {
-            string chaptersSummary = string.Join(":", chapters.ConvertAll(x => x.savePath));
-            string rawSign = string.Format("{0}/{1}/{2}:{3}", title, author, simple, chaptersSummary);
-            return GenerateMD5(rawSign);
-        }
-
-        private static string GenerateMD5(string s)
-        {
-            MD5CryptoServiceProvider md5Hasher = new MD5CryptoServiceProvider();
-            byte[] data = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(s));
-            StringBuilder sBuilder = new StringBuilder();
-            for (int i = 0; i < data.Length; i++)
+            string packetFolder = Constants.LOCAL_PATH + "packets";
+            foreach (string f in Directory.EnumerateFiles(packetFolder))
             {
-                sBuilder.Append(data[i].ToString("x2"));
+                Packet packet = LoadPacketFromZip(f);
+                list.Add(packet);
             }
-            return sBuilder.ToString();
+            return list;
         }
+
+        private static Packet LoadPacketFromZip(string f)
+        {
+            using (ZipArchive za = ZipFile.OpenRead(f))
+            {
+                ZipArchiveEntry metaEntry = FindEntryFromZip(za, ".META.json");
+                ZipArchiveEntry chaptersEntry = FindEntryFromZip(za, ".CONTENT");
+                Packet packet = LoadFromZae<Packet>(metaEntry);
+                packet.chapters = LoadFromZae<List<Chapter>>(chaptersEntry);
+                return packet;
+            }
+        }
+
+        private static ZipArchiveEntry FindEntryFromZip(ZipArchive za, string name)
+        {
+            foreach (ZipArchiveEntry zae in za.Entries)
+            {
+                if (zae.FullName == name)
+                {
+                    return zae;
+                }
+            }
+            return null;
+        }
+
+        private static T LoadFromZae<T>(ZipArchiveEntry zae)
+        {
+            Stream s = zae.Open();
+            using (MemoryStream ms = new MemoryStream())
+            {
+                s.CopyTo(ms);
+                byte[] bytes = ms.ToArray();
+                string json = Encoding.UTF8.GetString(bytes);
+                return JsonConvert.DeserializeObject<T>(json);
+            }
+        }
+
     }
 }

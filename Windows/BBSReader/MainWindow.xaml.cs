@@ -315,20 +315,6 @@ namespace BBSReader
             }
         }
 
-        private void SearchTextBox_TextChanged(object sender, TextChangedEventArgs e)
-        {
-            if (string.IsNullOrWhiteSpace(SearchBox.Text))
-                searchingKeyword = null;
-            else
-                searchingKeyword = SearchBox.Text;
-
-            if (currentState == AppState.TOPICS)
-                ReloadTopics();
-            else if (currentState == AppState.ARTICLES)
-                ReloadArticles();
-            UpdateView();
-        }
-
         private void ForwardAtTopics(dynamic item)
         {
             currentId = topics.IndexOf(item);
@@ -344,7 +330,10 @@ namespace BBSReader
             else if (currentState == AppState.ARTICLES)
                 currentState = AppState.TOPICS;
             else if (currentState == AppState.TOPICS && searchingKeyword != null)
-                SearchBox.Clear();
+            {
+                searchingKeyword = null;
+                ReloadTopics();
+            }
             UpdateView();
         }
 
@@ -727,6 +716,26 @@ namespace BBSReader
             {
                 ReloadArticles();
             }
+        }
+
+        private void SearchButton_Click(object sender, RoutedEventArgs e)
+        {
+            if (string.IsNullOrWhiteSpace(SearchBox.Text))
+                searchingKeyword = null;
+            else
+                searchingKeyword = SearchBox.Text;
+
+            if (currentState == AppState.TOPICS)
+                ReloadTopics();
+            else if (currentState == AppState.ARTICLES)
+                ReloadArticles();
+            UpdateView();
+        }
+
+        private void PacketButton_Click(object sender, RoutedEventArgs e)
+        {
+            PacketWindow dialog = new PacketWindow();
+            dialog.ShowDialog();
         }
     }
 }
