@@ -142,7 +142,7 @@ namespace BBSReader
                 List<object> chapterNodes = new List<object>();
                 string text = tr.ReadToEnd();
                 string[] patterns = new string[] {
-                "\\b第[\\d\\uFF10-\\uFF19一二三四五六七八九十百千零]+[部章节篇集卷]\\b",
+                "\\b第[\\d\\uFF10-\\uFF19一二三四五六七八九十百千零]+[部章节篇集卷]",
                 "\\b[\\d\\uFF10-\\uFF19]+\\b" };
                 foreach (string ps in patterns)
                 {
