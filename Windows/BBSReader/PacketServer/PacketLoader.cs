@@ -49,7 +49,7 @@ namespace BBSReader.PacketServer
                     packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
                     packet.timestamp = packet.chapters[0].timestamp;
                     packet.key = Utils.CalcKey(packet.title, packet.author, sk.simple);
-                    packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.simple, packet.chapters);
+                    packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.simple, packet.chapters, null);
                     packet.source = "Forum";
                     list.Add(packet);
                 }

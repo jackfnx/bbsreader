@@ -21,10 +21,14 @@ namespace BBSReader
             return Utils.GenerateMD5(rawSign);
         }
 
-        public static string CalcSumary(string title, string author, bool simple, List<Chapter> chapters)
+        public static string CalcSumary(string title, string author, bool simple, List<Chapter> chapters, byte[] cover)
         {
             string chaptersSummary = string.Join(":", chapters.ConvertAll(x => x.savePath));
             string rawSign = string.Format("{0}/{1}/{2}:{3}", title, author, simple, chaptersSummary);
+            if (cover != null)
+            {
+                rawSign += ":" + Utils.Hash(cover);
+            }
             return Utils.GenerateMD5(rawSign);
         }
 
@@ -32,6 +36,18 @@ namespace BBSReader
         {
             MD5CryptoServiceProvider md5Hasher = new MD5CryptoServiceProvider();
             byte[] data = md5Hasher.ComputeHash(Encoding.UTF8.GetBytes(s));
+            StringBuilder sBuilder = new StringBuilder();
+            for (int i = 0; i < data.Length; i++)
+            {
+                sBuilder.Append(data[i].ToString("x2"));
+            }
+            return sBuilder.ToString();
+        }
+
+        private static string Hash(byte[] raw)
+        {
+            MD5CryptoServiceProvider md5Hasher = new MD5CryptoServiceProvider();
+            byte[] data = md5Hasher.ComputeHash(raw);
             StringBuilder sBuilder = new StringBuilder();
             for (int i = 0; i < data.Length; i++)
             {

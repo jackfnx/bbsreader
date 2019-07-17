@@ -1,9 +1,12 @@
 ﻿using BBSReader.Data;
 using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
@@ -64,12 +67,20 @@ namespace BBSReader
         {
             BookTitle.Text = "";
             BookAuthor.Text = "";
+            CoverUrl.Text = "";
             filenames.Clear();
             contents.Clear();
         }
 
         private void Submit_Click(object sender, RoutedEventArgs e)
         {
+            byte[] coverData = DownloadCover(CoverUrl.Text);
+            if (!string.IsNullOrEmpty(CoverUrl.Text) && coverData == null)
+            {
+                MessageBox.Show("Download Cover Error.");
+                return;
+            }
+
             Packet packet = new Packet();
             packet.title = BookTitle.Text;
             packet.author = BookAuthor.Text;
@@ -89,7 +100,7 @@ namespace BBSReader
             packet.chapters.Reverse();
             packet.timestamp = 0;
             packet.key = Utils.CalcKey(packet.title, packet.author, true);
-            packet.summary = Utils.CalcSumary(packet.title, packet.author, true, packet.chapters);
+            packet.summary = Utils.CalcSumary(packet.title, packet.author, true, packet.chapters, coverData);
             packet.source = "TextRepack";
 
             string folder = string.Format("{0}/packets", Constants.LOCAL_PATH);
@@ -99,10 +110,99 @@ namespace BBSReader
             }
             string path = string.Format("{0}/{1}_{2}.zip", folder, packet.title, packet.author);
 
-            PacketToZip(packet, path, contents);
+            PacketToZip(packet, path, contents, coverData);
         }
 
-        private static void PacketToZip(Packet packet, string path, ObservableCollection<object> contents)
+        private byte[] DownloadCover(string url)
+        {
+            const int STD_WIDTH = 160;
+            const int STD_HEIGHT = 200;
+            if (string.IsNullOrEmpty(url))
+            {
+                return null;
+            }
+            try
+            {
+                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUriString: url);
+                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
+                if (resp.ContentLength <= 0)
+                {
+                    return null;
+                }
+                Stream stream = resp.GetResponseStream();
+                byte[] buffer = new byte[resp.ContentLength];
+                int offset = 0;
+                int actRead = 0;
+                do
+                {
+                    actRead = stream.Read(buffer, offset, buffer.Length - offset);
+                    offset += actRead;
+                } while (actRead > 0);
+
+                using (MemoryStream ms = new MemoryStream(buffer))
+                {
+                    using (Bitmap raw = new Bitmap(ms))
+                    {
+
+                        int w = 0;
+                        int h = 0;
+                        int rawWidth = raw.Width;
+                        int rawHeight = raw.Height;
+                        if (rawWidth > STD_WIDTH || rawHeight > STD_HEIGHT)
+                        {
+                            if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
+                            {
+                                w = STD_WIDTH;
+                                h = STD_WIDTH * rawHeight / rawWidth;
+                            }
+                            else
+                            {
+                                w = STD_HEIGHT * rawWidth / rawHeight;
+                                h = STD_HEIGHT;
+                            }
+                        }
+                        else
+                        {
+                            if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
+                            {
+                                w = STD_WIDTH;
+                                h = STD_WIDTH * rawHeight / rawWidth;
+                            }
+                            else
+                            {
+                                w = STD_HEIGHT * rawWidth / rawHeight;
+                                h = STD_HEIGHT;
+                            }
+                        }
+                        Bitmap bm = new Bitmap(w, h);
+                        using (Graphics g = Graphics.FromImage(bm))
+                        {
+                            g.Clear(Color.Transparent);
+                            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                            g.DrawImage(raw, new Rectangle((STD_WIDTH - w) / 2, (STD_HEIGHT - h) / 2, w, h), 0, 0, raw.Width, raw.Height, GraphicsUnit.Pixel);
+                        }
+
+                        //System.Drawing.Imaging.EncoderParameters encoderParams = new System.Drawing.Imaging.EncoderParameters();
+                        //long[] quality = new long[1] { 100 };
+                        //System.Drawing.Imaging.EncoderParameter encoderParam = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+
+                        using (MemoryStream ms2 = new MemoryStream())
+                        {
+                            bm.Save(ms2, System.Drawing.Imaging.ImageFormat.Jpeg);
+                            return ms2.ToArray();
+                        }
+                    }
+                }
+            }
+            catch (WebException)
+            {
+                return null;
+            }
+        }
+
+        private static void PacketToZip(Packet packet, string path, ObservableCollection<object> contents, byte[] coverData)
         {
             string metaJson = JsonConvert.SerializeObject(packet);
             string contentJson = JsonConvert.SerializeObject(packet.chapters);
@@ -119,6 +219,14 @@ namespace BBSReader
                     using (StreamWriter sw = new StreamWriter(content.Open()))
                     {
                         sw.Write(contentJson);
+                    }
+                    if (coverData != null)
+                    {
+                        ZipArchiveEntry cover = zip.CreateEntry("cover.jpg");
+                        using (BinaryWriter sw = new BinaryWriter(cover.Open()))
+                        {
+                            sw.Write(coverData);
+                        }
                     }
                     for (int i = 0; i < packet.chapters.Count; i++)
                     {
