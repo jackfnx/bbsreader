@@ -10,6 +10,7 @@ using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace BBSReader
 {
@@ -18,15 +19,19 @@ namespace BBSReader
     /// </summary>
     public partial class PacketWindow : Window
     {
-        private ObservableCollection<string> filenames;
+        private const string REG_EX = "\\b第[\\d\\uFF10-\\uFF19一二三四五六七八九十百千零]+[部章节篇集卷]";
+        private ObservableCollection<object> files;
         private ObservableCollection<object> contents;
+        private byte[] coverData;
+        private Bitmap coverBm;
 
         public PacketWindow()
         {
             InitializeComponent();
 
-            filenames = new ObservableCollection<string>();
-            FileNameListView.DataContext = filenames;
+            files = new ObservableCollection<object>();
+            FileNameListView.DataContext = files;
+            RegExListView.DataContext = files;
 
             contents = new ObservableCollection<object>();
             ContentListView.DataContext = contents;
@@ -36,29 +41,65 @@ namespace BBSReader
         {
             if (e.Data.GetDataPresent(DataFormats.FileDrop))
             {
-                string s = ((System.Array)e.Data.GetData(DataFormats.FileDrop)).GetValue(0).ToString();
-                if (string.IsNullOrWhiteSpace(BookTitle.Text))
+                List<string> fileDrops = new List<string>((string [])e.Data.GetData(DataFormats.FileDrop));
+                fileDrops.RemoveAll(x => !x.EndsWith(".txt") && !x.EndsWith(".zip"));
+                fileDrops.RemoveAll(x => x.StartsWith(Path.GetTempPath()));
+                if (files.Count != 0)
                 {
-                    string basename = s.Substring(s.LastIndexOfAny("/\\".ToCharArray()) + 1);
-                    basename = basename.Substring(0, basename.LastIndexOf("."));
-                    if (basename.IndexOf("_") != -1)
+                    if (fileDrops.Exists(x => x.EndsWith(".zip")))
                     {
-                        BookTitle.Text = basename.Substring(0, basename.IndexOf("_"));
-                        BookAuthor.Text = basename.Substring(basename.IndexOf("_") + 1);
+                        MessageBox.Show(string.Format("{0} is packet.", fileDrops.Find(x => x.EndsWith(".zip"))));
+                        return;
+                    }
+                    foreach (dynamic ob in files)
+                    {
+                        string filename = ob.filename;
+                        if (fileDrops.Contains(filename))
+                        {
+                            fileDrops.Remove(filename);
+                        }
+                    }
+                }
+
+                if (files.Count == 0)
+                {
+                    string zipName = fileDrops.Find(x => x.EndsWith(".zip"));
+                    if (zipName != null)
+                    {
+                        UnzipPacket(zipName);
+                        return;
                     }
                     else
                     {
-                        BookTitle.Text = basename;
-                        BookAuthor.Text = "";
+                        string filename = fileDrops[0];
+                        string basename = filename.Substring(filename.LastIndexOfAny("/\\".ToCharArray()) + 1);
+                        basename = basename.Substring(0, basename.LastIndexOf("."));
+                        if (basename.IndexOf("_") != -1)
+                        {
+                            BookTitle.Text = basename.Substring(0, basename.IndexOf("_"));
+                            BookAuthor.Text = basename.Substring(basename.IndexOf("_") + 1);
+                        }
+                        else
+                        {
+                            BookTitle.Text = basename;
+                            BookAuthor.Text = "";
+                        }
                     }
                 }
-                if (!filenames.Contains(s))
+                string regex = REG_EX;
+                if (files.Count != 0)
                 {
-                    foreach (object ch in SearchChapterNodes(s, filenames.Count))
+                    dynamic data = files[files.Count - 1];
+                    regex = data.regex;
+                }
+                foreach (string s in fileDrops)
+                {
+                    string text = Utils.ReadText(s, Encoding.UTF8);
+                    foreach (object ch in SearchChapterNodes(text, files.Count, regex))
                     {
                         contents.Add(ch);
                     }
-                    filenames.Add(s);
+                    files.Add(new { filename = s, text = text, regex = regex });
                 }
             }
         }
@@ -67,18 +108,28 @@ namespace BBSReader
         {
             BookTitle.Text = "";
             BookAuthor.Text = "";
+            CoverUrl.IsEnabled = true;
             CoverUrl.Text = "";
-            filenames.Clear();
+            coverBm = null;
+            coverData = null;
+            files.Clear();
             contents.Clear();
         }
 
         private void Submit_Click(object sender, RoutedEventArgs e)
         {
-            byte[] coverData = DownloadCover(CoverUrl.Text);
-            if (!string.IsNullOrEmpty(CoverUrl.Text) && coverData == null)
+            if (coverData != null && !CoverUrl.IsEnabled && CoverUrl.Text.StartsWith(Path.GetTempPath()))
             {
-                MessageBox.Show("Download Cover Error.");
-                return;
+                // do nothing
+            }
+            else
+            {
+                FetchCover();
+                if (!string.IsNullOrEmpty(CoverUrl.Text) && coverData == null)
+                {
+                    MessageBox.Show("Download Cover Error.");
+                    return;
+                }
             }
 
             Packet packet = new Packet();
@@ -97,6 +148,11 @@ namespace BBSReader
                 ch.timestamp = 0;
                 packet.chapters.Add(ch);
             }
+            packet.regexps = new List<string>();
+            foreach (dynamic ob in files)
+            {
+                packet.regexps.Add(ob.regex);
+            }
             packet.chapters.Reverse();
             packet.timestamp = 0;
             packet.key = Utils.CalcKey(packet.title, packet.author, true);
@@ -111,12 +167,113 @@ namespace BBSReader
             string path = string.Format("{0}/{1}_{2}.zip", folder, packet.title, packet.author);
 
             PacketToZip(packet, path, contents, coverData);
+            MessageBox.Show(string.Format("{0} saved.", path));
+        }
+
+        private void RegExpEdit_Click(object sender, RoutedEventArgs e)
+        {
+            var button = sender as Button;
+            dynamic fn = button.DataContext;
+
+            RegExEditor editor = new RegExEditor();
+            editor.text = fn.text;
+            editor.RegExp.Text = fn.regex;
+            if (editor.ShowDialog() ?? true)
+            {
+                string regex = editor.RegExp.Text;
+                int k = files.IndexOf(fn);
+                files.RemoveAt(k);
+                files.Insert(0, new { filename = fn.filename, text = fn.text, regex = regex });
+                string prefix = string.Format("{0}_", k);
+                int j = contents.Count;
+                for (int i = contents.Count - 1; i >= 0; i--)
+                {
+                    dynamic ch = contents[i];
+                    if (ch.id.StartsWith(prefix))
+                    {
+                        contents.Remove(ch);
+                        j = i;
+                    }
+                }
+                List<object> newChapters = SearchChapterNodes(fn.text, k, regex);
+                for (int i = newChapters.Count - 1; i >= 0; i--)
+                {
+                    dynamic ch = newChapters[i];
+                    contents.Insert(j, ch);
+                }
+            }
+        }
+
+        private void FetchCover()
+        {
+            const int STD_WIDTH = 160;
+            const int STD_HEIGHT = 200;
+
+            byte[] rawCoverData = DownloadCover(CoverUrl.Text);
+            if (rawCoverData == null)
+            {
+                return;
+            }
+
+            using (MemoryStream ms = new MemoryStream(rawCoverData))
+            {
+                using (Bitmap raw = new Bitmap(ms))
+                {
+                    int w = 0;
+                    int h = 0;
+                    int rawWidth = raw.Width;
+                    int rawHeight = raw.Height;
+                    if (rawWidth > STD_WIDTH || rawHeight > STD_HEIGHT)
+                    {
+                        if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
+                        {
+                            w = STD_WIDTH;
+                            h = STD_WIDTH * rawHeight / rawWidth;
+                        }
+                        else
+                        {
+                            w = STD_HEIGHT * rawWidth / rawHeight;
+                            h = STD_HEIGHT;
+                        }
+                    }
+                    else
+                    {
+                        if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
+                        {
+                            w = STD_WIDTH;
+                            h = STD_WIDTH * rawHeight / rawWidth;
+                        }
+                        else
+                        {
+                            w = STD_HEIGHT * rawWidth / rawHeight;
+                            h = STD_HEIGHT;
+                        }
+                    }
+                    coverBm = new Bitmap(w, h);
+                    using (Graphics g = Graphics.FromImage(coverBm))
+                    {
+                        g.Clear(Color.Transparent);
+                        g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
+                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
+                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                        g.DrawImage(raw, new Rectangle((STD_WIDTH - w) / 2, (STD_HEIGHT - h) / 2, w, h), 0, 0, raw.Width, raw.Height, GraphicsUnit.Pixel);
+                    }
+
+                    //System.Drawing.Imaging.EncoderParameters encoderParams = new System.Drawing.Imaging.EncoderParameters();
+                    //long[] quality = new long[1] { 100 };
+                    //System.Drawing.Imaging.EncoderParameter encoderParam = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
+
+                    using (MemoryStream ms2 = new MemoryStream())
+                    {
+                        coverBm.Save(ms2, System.Drawing.Imaging.ImageFormat.Jpeg);
+                        coverData = ms2.ToArray();
+                    }
+                }
+            }
         }
 
         private byte[] DownloadCover(string url)
         {
-            const int STD_WIDTH = 160;
-            const int STD_HEIGHT = 200;
             if (string.IsNullOrEmpty(url))
             {
                 return null;
@@ -139,62 +296,7 @@ namespace BBSReader
                     offset += actRead;
                 } while (actRead > 0);
 
-                using (MemoryStream ms = new MemoryStream(buffer))
-                {
-                    using (Bitmap raw = new Bitmap(ms))
-                    {
-
-                        int w = 0;
-                        int h = 0;
-                        int rawWidth = raw.Width;
-                        int rawHeight = raw.Height;
-                        if (rawWidth > STD_WIDTH || rawHeight > STD_HEIGHT)
-                        {
-                            if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
-                            {
-                                w = STD_WIDTH;
-                                h = STD_WIDTH * rawHeight / rawWidth;
-                            }
-                            else
-                            {
-                                w = STD_HEIGHT * rawWidth / rawHeight;
-                                h = STD_HEIGHT;
-                            }
-                        }
-                        else
-                        {
-                            if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
-                            {
-                                w = STD_WIDTH;
-                                h = STD_WIDTH * rawHeight / rawWidth;
-                            }
-                            else
-                            {
-                                w = STD_HEIGHT * rawWidth / rawHeight;
-                                h = STD_HEIGHT;
-                            }
-                        }
-                        Bitmap bm = new Bitmap(w, h);
-                        using (Graphics g = Graphics.FromImage(bm))
-                        {
-                            g.Clear(Color.Transparent);
-                            g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-                            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                            g.DrawImage(raw, new Rectangle((STD_WIDTH - w) / 2, (STD_HEIGHT - h) / 2, w, h), 0, 0, raw.Width, raw.Height, GraphicsUnit.Pixel);
-                        }
-
-                        //System.Drawing.Imaging.EncoderParameters encoderParams = new System.Drawing.Imaging.EncoderParameters();
-                        //long[] quality = new long[1] { 100 };
-                        //System.Drawing.Imaging.EncoderParameter encoderParam = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-
-                        using (MemoryStream ms2 = new MemoryStream())
-                        {
-                            bm.Save(ms2, System.Drawing.Imaging.ImageFormat.Jpeg);
-                            return ms2.ToArray();
-                        }
-                    }
-                }
+                return buffer;
             }
             catch (WebException)
             {
@@ -243,48 +345,157 @@ namespace BBSReader
             }
         }
 
-        private static List<object> SearchChapterNodes(string path, int k)
+        private void UnzipPacket(string zipName)
         {
-            using (TextReader tr = new StreamReader(path, Encoding.UTF8))
+            using (ZipArchive zip = ZipFile.OpenRead(zipName))
             {
-                List<object> chapterNodes = new List<object>();
-                string text = tr.ReadToEnd();
-                string[] patterns = new string[] {
-                "\\b第[\\d\\uFF10-\\uFF19一二三四五六七八九十百千零]+[部章节篇集卷]",
-                "\\b[\\d\\uFF10-\\uFF19]+\\b" };
-                foreach (string ps in patterns)
+                Packet packet;
+                ZipArchiveEntry meta = zip.GetEntry(".META.json");
+                using (StreamReader sr = new StreamReader(meta.Open()))
                 {
-                    Regex reg = new Regex(ps);
-                    int last = 0;
-                    foreach (Match m in Regex.Matches(text, ps))
+                    string metaJson = sr.ReadToEnd();
+                    packet = JsonConvert.DeserializeObject<Packet>(metaJson);
+                }
+                BookTitle.Text = packet.title;
+                BookAuthor.Text = packet.author;
+                ZipArchiveEntry content = zip.GetEntry(".CONTENT");
+                using (StreamReader sr = new StreamReader(content.Open()))
+                {
+                    string contentJson = sr.ReadToEnd();
+                    packet.chapters = JsonConvert.DeserializeObject<List<Chapter>>(contentJson);
+                }
+                ZipArchiveEntry cover = zip.GetEntry("cover.jpg");
+                if (cover != null)
+                {
+                    using (BinaryReader sr = new BinaryReader(cover.Open()))
                     {
-                        int i = m.Index;
-                        if (!text.Substring(last, i - last).Contains("\n"))
+                        coverData = sr.ReadBytes((int)cover.Length);
+                        string coverPath = Utils.GenerateTempFileName(".jpg");
+                        using (FileStream fs = new FileStream(coverPath, FileMode.Create))
+                        using (BinaryWriter sw = new BinaryWriter(fs))
                         {
-                            continue;
+                            sw.Write(coverData);
                         }
-                        string id = string.Format("{0}_{1}_{2}", k, last, i);
-                        string title = text.Substring(last);
-                        title = title.Substring(0, title.IndexOf("\n") - 1);
-                        string content = text.Substring(last, i - last);
-                        chapterNodes.Add(new { id = id, title = title, content = content });
-                        last = i;
-                    }
-                    if (chapterNodes.Count != 0)
-                    {
-                        if (last < text.Length)
-                        {
-                            string id = string.Format("{0}_{1}_{2}", k, last, text.Length);
-                            string title = text.Substring(last);
-                            title = title.Substring(0, title.IndexOf("\n") - 1);
-                            string content = text.Substring(last, text.Length - last);
-                            chapterNodes.Add(new { id = id, title = title, content = content });
-                        }
-                        break;
+                        CoverUrl.IsEnabled = false;
+                        CoverUrl.Text = coverPath;
                     }
                 }
-                return chapterNodes;
+                if (packet.source == "TextRepack")
+                {
+                    string currentId = "";
+                    string currentText = "";
+                    Action saveCurrentText = delegate
+                    {
+                        if (!string.IsNullOrEmpty(currentText))
+                        {
+                            string nextPath = Utils.GenerateTempFileName(".txt");
+                            using (FileStream fs = new FileStream(nextPath, FileMode.Create))
+                            using (StreamWriter sw = new StreamWriter(fs))
+                            {
+                                sw.Write(currentText);
+                            }
+                            string regex = REG_EX;
+                            if (packet.regexps != null && packet.regexps.Count > files.Count)
+                            {
+                                regex = packet.regexps[files.Count];
+                            }
+                            files.Add(new { filename = nextPath, text = currentText, regex = regex });
+                        }
+                    };
+                    for (int i = 0; i < packet.chapters.Count; i++)
+                    {
+                        Chapter ch = packet.chapters[i];
+                        ZipArchiveEntry che = zip.GetEntry(ch.savePath);
+                        using (StreamReader sr = new StreamReader(che.Open()))
+                        {
+                            string text = sr.ReadToEnd();
+                            string textId = ch.id.Substring(0, ch.id.IndexOf("_"));
+                            if (textId == currentId)
+                            {
+                                currentText = text + currentText;
+                            }
+                            else
+                            {
+                                saveCurrentText();
+                                currentText = text;
+                                currentId = textId;
+                            }
+                            contents.Insert(0, new { id = ch.id, title = ch.title, content = text });
+                        }
+                    }
+                    saveCurrentText();
+                }
+                else
+                {
+                    MessageBox.Show("It is not a 'TextRepack' packet.");
+                }
             }
+        }
+
+        private void UpdateChapterNodes(string text, int k, string pattern)
+        {
+            string prefix = string.Format("{0}_", k);
+            List<object> newChapters = SearchChapterNodes(text, k, pattern);
+            int s = -1;
+            int e = contents.Count;
+            for (int i = 0; i < contents.Count; i++)
+            {
+                dynamic ch = contents[i];
+                string id = ch.id;
+                if (s == 1 && id.StartsWith(prefix))
+                {
+                    s = i;
+                }
+                if (s != -1 && !id.StartsWith(prefix))
+                {
+                    e = i;
+                    break;
+                }
+            }
+            if (s == -1)
+            {
+                s = contents.Count;
+            }
+            for (int i = s; i < e; i++)
+            {
+                contents.RemoveAt(s);
+            }
+            for (int i = newChapters.Count; i >= 0; i--)
+            {
+                contents.Insert(s, newChapters[i]);
+            }
+        }
+
+        private static List<object> SearchChapterNodes(string text, int k, string pattern)
+        {
+            Func<int, int, int, object> generateChapter = delegate(int key, int from, int to)
+            {
+                string id = string.Format("{0}_{1}_{2}", key, from, to);
+                string title = text.Substring(from);
+                title = title.Substring(0, title.IndexOf("\n") - 1);
+                string content = text.Substring(from, to - from);
+                return new { id = id, title = title, content = content };
+            };
+            List<object> chapterNodes = new List<object>();
+            int last = 0;
+            foreach (Match m in Regex.Matches(text, pattern))
+            {
+                int i = m.Index;
+                if (!text.Substring(last, i - last).Contains("\n"))
+                {
+                    continue;
+                }
+                chapterNodes.Add(generateChapter(k, last, i));
+                last = i;
+            }
+            if (chapterNodes.Count != 0)
+            {
+                if (last < text.Length)
+                {
+                    chapterNodes.Add(generateChapter(k, last, text.Length));
+                }
+            }
+            return chapterNodes;
         }
     }
 }

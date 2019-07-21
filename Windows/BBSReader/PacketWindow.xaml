@@ -9,50 +9,85 @@
         Background="{DynamicResource MaterialDesignPaper}"
         Foreground="{DynamicResource MaterialDesignFont}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Title="PacketWindow" Height="450" Width="800" AllowDrop="True" Drop="Window_Drop">
+        Title="PacketWindow" Height="650" Width="1200" AllowDrop="True" Drop="Window_Drop">
     <Window.Resources>
         <Style x:Key="ListViewItemStyle" TargetType="{x:Type ListViewItem}">
             <Setter Property="HorizontalContentAlignment" Value="Left" />
         </Style>
+        <Style x:Key="ListViewItemStyleMute" TargetType="{x:Type ListViewItem}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Style.Triggers>
+                <Trigger Property="IsSelected" Value="True">
+                    <Setter Property="Background" Value="{x:Null}" />
+                    <Setter Property="BorderBrush" Value="{x:Null}" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="Margin" Value="20" />
+        </Style>
     </Window.Resources>
     <DockPanel>
-        <Grid DockPanel.Dock="Top">
-            <Grid.RowDefinitions>
-                <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
-                <RowDefinition></RowDefinition>
-            </Grid.RowDefinitions>
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-                <ColumnDefinition Width="3*"></ColumnDefinition>
-                <ColumnDefinition Width="*"></ColumnDefinition>
-            </Grid.ColumnDefinitions>
-            <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Title</TextBlock>
-            <TextBox Grid.Row="0" Grid.Column="1" x:Name="BookTitle"/>
-            <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Author</TextBlock>
-            <TextBox Grid.Row="1" Grid.Column="1" x:Name="BookAuthor"/>
-            <Button Grid.Row="0" Grid.Column="2" x:Name="Submit" Content=" Submit " Click="Submit_Click"></Button>
-            <Button Grid.Row="1" Grid.Column="2" x:Name="Clear" Content=" Clear " Click="Clear_Click"></Button>
-            <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Cover</TextBlock>
-            <TextBox Grid.Row="2" Grid.Column="1" x:Name="CoverUrl" />
-            <ListView Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="2" x:Name="FileNameListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource ListViewItemStyle}">
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" DockPanel.Dock="Bottom">
+            <Button x:Name="Submit" Content=" Submit " Click="Submit_Click"></Button>
+            <Button x:Name="Clear" Content=" Clear " Click="Clear_Click"></Button>
+        </StackPanel>
+        <UniformGrid Rows="1" Columns="2">
+            <StackPanel Orientation="Vertical">
+                <Grid Margin="10">
+                    <Grid.RowDefinitions>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                        <RowDefinition></RowDefinition>
+                    </Grid.RowDefinitions>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
+                        <ColumnDefinition Width="3*"></ColumnDefinition>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Title</TextBlock>
+                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="BookTitle"/>
+                    <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Author</TextBlock>
+                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="BookAuthor"/>
+                    <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Cover</TextBlock>
+                    <TextBox Grid.Row="2" Grid.Column="1" x:Name="CoverUrl" />
+                </Grid>
+                <DockPanel>
+                    <ListView Margin="20" DockPanel.Dock="Right" x:Name="RegExListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource ListViewItemStyleMute}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="RegEx">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Margin="0" Content=" RegExp " Click="RegExpEdit_Click" />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                    <ListView Margin="20" x:Name="FileNameListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource ListViewItemStyle}">
+                        <ListView.View>
+                            <GridView>
+                                <GridViewColumn Header="Files" DisplayMemberBinding="{Binding Path=filename}" />
+                                <GridViewColumn Width="0">
+                                    <GridViewColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <Button Margin="0" Content=" Hidden " />
+                                        </DataTemplate>
+                                    </GridViewColumn.CellTemplate>
+                                </GridViewColumn>
+                            </GridView>
+                        </ListView.View>
+                    </ListView>
+                </DockPanel>
+            </StackPanel>
+            <ListView Margin="20" x:Name="ContentListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource ListViewItemStyle}">
                 <ListView.View>
                     <GridView>
-                        <GridViewColumn Header="Files" Width="500" DisplayMemberBinding="{Binding}" />
+                        <GridViewColumn Header="Contents" Width="500" DisplayMemberBinding="{Binding Path=title}" />
                     </GridView>
                 </ListView.View>
             </ListView>
-        </Grid>
-        <ListView x:Name="ContentListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource ListViewItemStyle}">
-            <ListView.View>
-                <GridView>
-                    <GridViewColumn Header="Contents" Width="500" DisplayMemberBinding="{Binding Path=title}" />
-                </GridView>
-            </ListView.View>
-        </ListView>
+        </UniformGrid>
     </DockPanel>
 </Window>

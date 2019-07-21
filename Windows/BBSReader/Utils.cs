@@ -1,6 +1,7 @@
 ﻿using BBSReader.Data;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -8,6 +9,8 @@ namespace BBSReader
 {
     class Utils
     {
+        internal const int MIN_CHAPTER_SIZE = 500;
+
         public static long GetTimestamp(string s)
         {
             DateTime t = DateTime.Parse(s);
@@ -54,6 +57,22 @@ namespace BBSReader
                 sBuilder.Append(data[i].ToString("x2"));
             }
             return sBuilder.ToString();
+        }
+
+        internal static string ReadText(string path, Encoding encoding)
+        {
+            using (TextReader tr = new StreamReader(path, encoding))
+            {
+                string text = tr.ReadToEnd();
+                return text;
+            }
+        }
+
+        internal static string GenerateTempFileName(string extension)
+        {
+            string path = Path.GetTempPath();
+            string fileName = Guid.NewGuid().ToString() + extension;
+            return Path.Combine(path, fileName);
         }
     }
 }

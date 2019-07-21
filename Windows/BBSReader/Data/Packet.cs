@@ -19,6 +19,8 @@ namespace BBSReader.Data
         public string source;
         [JsonProperty]
         public long timestamp;
+        [JsonProperty]
+        public List<string> regexps;
         public List<Chapter> chapters;
     }
 }

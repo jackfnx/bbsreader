@@ -106,6 +106,9 @@
     <Compile Include="PacketWindow.xaml.cs">
       <DependentUpon>PacketWindow.xaml</DependentUpon>
     </Compile>
+    <Compile Include="RegExEditor.xaml.cs">
+      <DependentUpon>RegExEditor.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ScriptDialog.xaml.cs">
       <DependentUpon>ScriptDialog.xaml</DependentUpon>
     </Compile>
@@ -121,6 +124,10 @@
     </Compile>
     <Compile Include="Utils.cs" />
     <Page Include="PacketWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="RegExEditor.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
