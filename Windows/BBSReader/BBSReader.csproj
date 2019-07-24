@@ -91,6 +91,9 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="Constants.cs" />
+    <Compile Include="CoverDownloader.xaml.cs">
+      <DependentUpon>CoverDownloader.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Data\BBSDef.cs" />
     <Compile Include="Data\BBSThread.cs" />
     <Compile Include="Data\Group.cs" />
@@ -123,6 +126,10 @@
       <DependentUpon>ReaderWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils.cs" />
+    <Page Include="CoverDownloader.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="PacketWindow.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

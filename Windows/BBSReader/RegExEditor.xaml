@@ -9,7 +9,7 @@
         Background="{DynamicResource MaterialDesignPaper}"
         Foreground="{DynamicResource MaterialDesignFont}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
-        Title="RegExpressionEditor" Height="650" Width="1200" Loaded="Window_Loaded">
+        Title="Reg Expression Editor" Height="650" Width="1200" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="ListViewItemStyle" TargetType="{x:Type ListViewItem}">
             <Setter Property="HorizontalContentAlignment" Value="Left" />

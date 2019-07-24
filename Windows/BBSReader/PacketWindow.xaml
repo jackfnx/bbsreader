@@ -43,13 +43,16 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"></ColumnDefinition>
                         <ColumnDefinition Width="3*"></ColumnDefinition>
+                        <ColumnDefinition Width="*"></ColumnDefinition>
                     </Grid.ColumnDefinitions>
                     <TextBlock Grid.Row="0" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Title</TextBlock>
-                    <TextBox Grid.Row="0" Grid.Column="1" x:Name="BookTitle"/>
+                    <TextBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" x:Name="BookTitle"/>
                     <TextBlock Grid.Row="1" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Author</TextBlock>
-                    <TextBox Grid.Row="1" Grid.Column="1" x:Name="BookAuthor"/>
+                    <TextBox Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" x:Name="BookAuthor"/>
                     <TextBlock Grid.Row="2" Grid.Column="0" HorizontalAlignment="Center" VerticalAlignment="Center">Cover</TextBlock>
                     <TextBox Grid.Row="2" Grid.Column="1" x:Name="CoverUrl" />
+                    <Button Grid.Row="2" Grid.Column="2" Margin="10,0,10,0" x:Name="DownloadCover" Content=" Fetch " Click="DownloadCover_Click" />
+                    <Button Grid.Row="2" Grid.Column="2" Margin="10,0,10,0" Visibility="Collapsed" x:Name="ResetCover" Content=" Reset " Click="ResetCover_Click" />
                 </Grid>
                 <DockPanel>
                     <ListView Margin="20" DockPanel.Dock="Right" x:Name="RegExListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource ListViewItemStyleMute}">

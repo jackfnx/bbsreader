@@ -23,7 +23,6 @@ namespace BBSReader
         private ObservableCollection<object> files;
         private ObservableCollection<object> contents;
         private byte[] coverData;
-        private Bitmap coverBm;
 
         public PacketWindow()
         {
@@ -108,27 +107,32 @@ namespace BBSReader
         {
             BookTitle.Text = "";
             BookAuthor.Text = "";
+            coverData = null;
             CoverUrl.IsEnabled = true;
             CoverUrl.Text = "";
-            coverBm = null;
-            coverData = null;
+            DownloadCover.Visibility = Visibility.Visible;
+            ResetCover.Visibility = Visibility.Collapsed;
             files.Clear();
             contents.Clear();
         }
 
         private void Submit_Click(object sender, RoutedEventArgs e)
         {
-            if (coverData != null && !CoverUrl.IsEnabled && CoverUrl.Text.StartsWith(Path.GetTempPath()))
+            if (!string.IsNullOrEmpty(CoverUrl.Text) && CoverUrl.IsEnabled && !CoverUrl.Text.StartsWith(Path.GetTempPath()))
             {
-                // do nothing
-            }
-            else
-            {
-                FetchCover();
-                if (!string.IsNullOrEmpty(CoverUrl.Text) && coverData == null)
+                if (coverData != null)
                 {
-                    MessageBox.Show("Download Cover Error.");
-                    return;
+                    // do nothing
+                }
+                else
+                {
+                    byte[] coverBytes = CoverDownloader.BatchProc(CoverUrl.Text);
+                    if (coverBytes == null)
+                    {
+                        MessageBox.Show("Download Cover Error.");
+                        return;
+                    }
+                    SaveCoverToTempFile(coverBytes);
                 }
             }
 
@@ -204,106 +208,6 @@ namespace BBSReader
             }
         }
 
-        private void FetchCover()
-        {
-            const int STD_WIDTH = 160;
-            const int STD_HEIGHT = 200;
-
-            byte[] rawCoverData = DownloadCover(CoverUrl.Text);
-            if (rawCoverData == null)
-            {
-                return;
-            }
-
-            using (MemoryStream ms = new MemoryStream(rawCoverData))
-            {
-                using (Bitmap raw = new Bitmap(ms))
-                {
-                    int w = 0;
-                    int h = 0;
-                    int rawWidth = raw.Width;
-                    int rawHeight = raw.Height;
-                    if (rawWidth > STD_WIDTH || rawHeight > STD_HEIGHT)
-                    {
-                        if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
-                        {
-                            w = STD_WIDTH;
-                            h = STD_WIDTH * rawHeight / rawWidth;
-                        }
-                        else
-                        {
-                            w = STD_HEIGHT * rawWidth / rawHeight;
-                            h = STD_HEIGHT;
-                        }
-                    }
-                    else
-                    {
-                        if (rawWidth * STD_HEIGHT > STD_WIDTH * rawHeight)
-                        {
-                            w = STD_WIDTH;
-                            h = STD_WIDTH * rawHeight / rawWidth;
-                        }
-                        else
-                        {
-                            w = STD_HEIGHT * rawWidth / rawHeight;
-                            h = STD_HEIGHT;
-                        }
-                    }
-                    coverBm = new Bitmap(w, h);
-                    using (Graphics g = Graphics.FromImage(coverBm))
-                    {
-                        g.Clear(Color.Transparent);
-                        g.CompositingQuality = System.Drawing.Drawing2D.CompositingQuality.HighQuality;
-                        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.HighQuality;
-                        g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                        g.DrawImage(raw, new Rectangle((STD_WIDTH - w) / 2, (STD_HEIGHT - h) / 2, w, h), 0, 0, raw.Width, raw.Height, GraphicsUnit.Pixel);
-                    }
-
-                    //System.Drawing.Imaging.EncoderParameters encoderParams = new System.Drawing.Imaging.EncoderParameters();
-                    //long[] quality = new long[1] { 100 };
-                    //System.Drawing.Imaging.EncoderParameter encoderParam = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.Quality, quality);
-
-                    using (MemoryStream ms2 = new MemoryStream())
-                    {
-                        coverBm.Save(ms2, System.Drawing.Imaging.ImageFormat.Jpeg);
-                        coverData = ms2.ToArray();
-                    }
-                }
-            }
-        }
-
-        private byte[] DownloadCover(string url)
-        {
-            if (string.IsNullOrEmpty(url))
-            {
-                return null;
-            }
-            try
-            {
-                HttpWebRequest req = (HttpWebRequest)WebRequest.Create(requestUriString: url);
-                HttpWebResponse resp = (HttpWebResponse)req.GetResponse();
-                if (resp.ContentLength <= 0)
-                {
-                    return null;
-                }
-                Stream stream = resp.GetResponseStream();
-                byte[] buffer = new byte[resp.ContentLength];
-                int offset = 0;
-                int actRead = 0;
-                do
-                {
-                    actRead = stream.Read(buffer, offset, buffer.Length - offset);
-                    offset += actRead;
-                } while (actRead > 0);
-
-                return buffer;
-            }
-            catch (WebException)
-            {
-                return null;
-            }
-        }
-
         private static void PacketToZip(Packet packet, string path, ObservableCollection<object> contents, byte[] coverData)
         {
             string metaJson = JsonConvert.SerializeObject(packet);
@@ -369,15 +273,7 @@ namespace BBSReader
                 {
                     using (BinaryReader sr = new BinaryReader(cover.Open()))
                     {
-                        coverData = sr.ReadBytes((int)cover.Length);
-                        string coverPath = Utils.GenerateTempFileName(".jpg");
-                        using (FileStream fs = new FileStream(coverPath, FileMode.Create))
-                        using (BinaryWriter sw = new BinaryWriter(fs))
-                        {
-                            sw.Write(coverData);
-                        }
-                        CoverUrl.IsEnabled = false;
-                        CoverUrl.Text = coverPath;
+                        SaveCoverToTempFile(sr.ReadBytes((int)cover.Length));
                     }
                 }
                 if (packet.source == "TextRepack")
@@ -496,6 +392,40 @@ namespace BBSReader
                 }
             }
             return chapterNodes;
+        }
+
+        private void DownloadCover_Click(object sender, RoutedEventArgs e)
+        {
+            CoverDownloader downloader = new CoverDownloader();
+            downloader.CoverUrl.Text = CoverUrl.Text;
+            if (downloader.ShowDialog() ?? true)
+            {
+                SaveCoverToTempFile(downloader.coverData);
+            }
+        }
+
+        private void ResetCover_Click(object sender, RoutedEventArgs e)
+        {
+            coverData = null;
+            CoverUrl.IsEnabled = true;
+            CoverUrl.Text = "";
+            DownloadCover.Visibility = Visibility.Visible;
+            ResetCover.Visibility = Visibility.Collapsed;
+        }
+
+        private void SaveCoverToTempFile(byte[] coverBytes)
+        {
+            string coverPath = Utils.GenerateTempFileName(".jpg");
+            using (FileStream fs = new FileStream(coverPath, FileMode.Create))
+            using (BinaryWriter sw = new BinaryWriter(fs))
+            {
+                sw.Write(coverBytes);
+            }
+            coverData = coverBytes;
+            CoverUrl.IsEnabled = false;
+            CoverUrl.Text = coverPath;
+            DownloadCover.Visibility = Visibility.Collapsed;
+            ResetCover.Visibility = Visibility.Visible;
         }
     }
 }
