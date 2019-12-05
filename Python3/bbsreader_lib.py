@@ -4,9 +4,10 @@ import yaml
 import json
 import time
 import requests
+import pinyin
+
 
 save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
-
 
 class SexInSex_Login:
     def __init__(self, save_root_path):
@@ -35,14 +36,11 @@ class SexInSex_Login:
         resp = session.post(loginurl, data=loginparams, headers=head, proxies=proxy)
         print('[色中色] 登陆: %s' % (resp))
 
-
 ### BBS列表
 bbsdef = [
     ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, [383,322]],
     ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), [383,322,359]],
 ]
-
-
 
 ### 获取html的爬虫类
 class Crawler:
@@ -71,7 +69,7 @@ class Crawler:
         return cls.crawlers[siteId]
 
     def __init__(self, delay, login):
-        
+
         self.head = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 6.2; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/27.0.1453.94 Safari/537.36'
         }
@@ -96,15 +94,13 @@ class Crawler:
             if sleep_secs > 0:
                 time.sleep(sleep_secs) 
         self.last_accessed = time.time()
-        
+
         url = self.base + url
         response = self.session.get(url, headers=self.head, proxies=self.proxy)
 
         html = response.content.decode('gbk', 'ignore')
         print('Get [%s] OK' % url)
         return html
-
-
 
 ### Thread对象
 def MakeThread(siteId, threadId, title, author, postTime, link):
@@ -118,11 +114,10 @@ def MakeThread(siteId, threadId, title, author, postTime, link):
     }
     return dic
 
-
 class MetaData:
     """docstring for MetaData"""
     def __init__(self, save_root_path):
-        self.meta_data_path = os.path.join(save_root_path, 'meta.json')
+        self.meta_data_path = os.path.join(save_root_path, 'meta')
         self._load_meta_data()
 
 
@@ -130,13 +125,33 @@ class MetaData:
 
         ### 如果存在json，load数据
         if os.path.exists(self.meta_data_path):
-            with open(self.meta_data_path, encoding='utf-8') as f:
-                load_data = json.load(f)
-            self.last_timestamp = load_data['timestamp']
-            self.last_threads = load_data['threads']
-            self.tags = load_data['tags']
-            self.superkeywords = load_data['superkeywords']
-            self.blacklist = load_data['blacklist']
+            timestamp_json = os.path.join(self.meta_data_path, 'timestamp.json')
+            with open(timestamp_json, encoding='utf-8') as f:
+                self.last_timestamp = json.load(f)
+
+            self.last_threads = []
+            threads_dir = os.path.join(self.meta_data_path, 'threads')
+            threads_fs = sorted(os.listdir(threads_dir), key=lambda x: int(x.split('-')[0]))
+            for threads_fname in threads_fs:
+                threads_json = os.path.join(threads_dir, threads_fname)
+                with open(threads_json, encoding='utf-8') as f:
+                    self.last_threads += json.load(f)
+
+            self.tags = {}
+            tags_dir = os.path.join(self.meta_data_path, 'tags')
+            for tags_fname in os.listdir(tags_dir):
+                tags_json = os.path.join(tags_dir, tags_fname)
+                with open(tags_json, encoding='utf-8') as f:
+                    tags_segs = json.load(f)
+                self.tags.update(tags_segs)
+
+            superkeywords_json = os.path.join(self.meta_data_path, 'superkeywords.json')
+            with open(superkeywords_json, encoding='utf-8') as f:
+                self.superkeywords = json.load(f)
+
+            blacklist_json = os.path.join(self.meta_data_path, 'blacklist.json')
+            with open(blacklist_json, encoding='utf-8') as f:
+                self.blacklist = json.load(f)
         ### 如果不存在json，初始化空数据
         else:
             self.last_timestamp = 0
@@ -145,13 +160,12 @@ class MetaData:
             self.superkeywords = []
             self.blacklist = []
 
-
     def merge_threads(self, latest_threads, force=False):
 
         ### 合并新旧数据
         def merge(lasts, latest, force):
             threads = lasts[:]
-            
+
             lastIds = [(x['siteId'], x['threadId']) for x in lasts]
             for t in latest:
                 if not force:
@@ -165,13 +179,11 @@ class MetaData:
 
         threads = merge(self.last_threads, latest_threads, force)
 
-
         ### 扫描数据，重新提取关键字
         favorites = [x['keyword'] for x in self.superkeywords if x['simple']]
 
         for superkeyword in self.superkeywords:
             superkeyword['tids'] = []
-
 
         def find_keywords(title):
             keywords = [title]
@@ -206,7 +218,6 @@ class MetaData:
             keywords = [x.strip() for x in keywords]
             return keywords
 
-
         tags = {}
         for i in range(len(threads)):
             t = threads[i]
@@ -230,7 +241,6 @@ class MetaData:
                         if authors[0] == '*' or authors.count(author) > 0:
                             superkeyword['tids'].append(i)
 
-
         ### 主题下，按照时间排序
         def getPostTime(x):
             timestr = threads[x]['postTime']
@@ -252,15 +262,73 @@ class MetaData:
 
 
     def save_meta_data(self):
+        def get_pinyin_first_alpha(name, n=1):
+            def Q2B(uchar):
+                inside_code = ord(uchar)
+                if inside_code == 12288:  # 全角空格直接转换
+                    inside_code = 32
+                elif (inside_code >= 65281 and inside_code <= 65374):  # 全角字符（除空格）根据关系转化
+                    inside_code -= 65248
+                return chr(inside_code)
+            name = ''.join(Q2B(e) for e in name if e.isalnum())
+            pre = pinyin.get_initial(name).replace(' ', '')
+            if len(pre) < n:
+                pre = '_'
+            else:
+                pre = pre[:n].upper()
+            return pre
 
-        ### 保存data
-        with open(self.meta_data_path, 'w', encoding='utf-8') as f:
-            save_data = {
-                'timestamp': time.time(),
-                'threads': self.last_threads,
-                'tags': self.tags,
-                'superkeywords': self.superkeywords,
-                'blacklist': self.blacklist
-            }
-            json.dump(save_data, f)
+        if not os.path.exists(self.meta_data_path):
+            os.makedirs(self.meta_data_path)
+
+        timestamp_json = os.path.join(self.meta_data_path, 'timestamp.json')
+        with open(timestamp_json, 'w', encoding='utf-8') as f:
+            json.dump(self.last_timestamp, f)
+
+        threads_dir = os.path.join(self.meta_data_path, 'threads')
+        if not os.path.exists(threads_dir):
+            os.makedirs(threads_dir)
+
+        threads = {}
+        for i in range(0, len(self.last_threads), 1000):
+            threads_fname = '%d-%s-x.json' % (i, self.last_threads[i]['threadId'])
+            threads[threads_fname] = self.last_threads[i:i+1000]
+
+        threads_rm = [os.path.join(threads_dir, x) for x in os.listdir(threads_dir) if x not in threads]
+        for t in threads_rm:
+            os.unlink(t)
+
+        for threads_fname in threads:
+            threads_json = os.path.join(threads_dir, threads_fname)
+            with open(threads_json, 'w', encoding='utf-8') as f:
+                json.dump(threads[threads_fname], f)
+
+        tags_dir = os.path.join(self.meta_data_path, 'tags')
+        if not os.path.exists(tags_dir):
+            os.makedirs(tags_dir)
+
+        tags = {}
+        for t, tv in self.tags.items():
+            tags_fname = get_pinyin_first_alpha(t, n=1) + '.json'
+            if tags_fname not in tags:
+                tags[tags_fname] = {}
+            tags[tags_fname][t] = tv
+
+        tags_rm = [os.path.join(tags_dir, x) for x in os.listdir(tags_dir) if x not in tags]
+        for t in tags_rm:
+            os.unlink(t)
+
+        for tags_fname in tags:
+            tags_json = os.path.join(tags_dir, tags_fname)
+            with open(tags_json, 'w', encoding='utf-8') as f:
+                json.dump(tags[tags_fname], f)
+
+        superkeywords_json = os.path.join(self.meta_data_path, 'superkeywords.json')
+        with open(superkeywords_json, 'w', encoding='utf-8') as f:
+            json.dump(self.superkeywords, f)
+
+        blacklist_json = os.path.join(self.meta_data_path, 'blacklist.json')
+        with open(blacklist_json, 'w', encoding='utf-8') as f:
+            json.dump(self.blacklist, f)
+
 

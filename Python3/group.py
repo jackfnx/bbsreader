@@ -9,6 +9,9 @@ from zhon.hanzi import punctuation as cn_punctuation
 from string import punctuation as en_punctuation
 from fuzzywuzzy import fuzz
 
+from bbsreader_lib import *
+
+
 def keytext(superkeyword):
     if superkeyword['simple']:
         return superkeyword['keyword']
@@ -109,19 +112,15 @@ def do_grouping(threads, superkeyword, save_root_path, silence=True):
 def main():
     t0 = time.time()
 
-    save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
-
-    meta_data_path = os.path.join(save_root_path, 'meta.json')
+    meta_data = MetaData(save_root_path)
 
     ### 如果存在json，load数据
-    if os.path.exists(meta_data_path):
-        with open(meta_data_path, encoding='utf-8') as f:
-            load_data = json.load(f)
-        timestamp = load_data['timestamp']
-        threads = load_data['threads']
-        tags = load_data['tags']
-        superkeywords = load_data['superkeywords']
-        blacklist = load_data['blacklist']
+    if len(meta_data.last_threads) > 0:
+        timestamp = meta_data.last_timestamp
+        threads = meta_data.last_threads
+        tags = meta_data.tags
+        superkeywords = meta_data.superkeywords
+        blacklist = meta_data.blacklist
     ### 如果不存在json
     else:
         sys.stderr.write('NO meta data.\n')
@@ -153,16 +152,8 @@ def main():
 
 
     if not printOnly:
-        ### 保存data
-        with open(meta_data_path, 'w', encoding='utf-8') as f:
-            save_data = {
-                'timestamp': timestamp,
-                'threads': threads,
-                'tags': tags,
-                'superkeywords': superkeywords,
-                'blacklist': blacklist
-            }
-            json.dump(save_data, f)
+        meta_data.superkeywords = superkeywords
+        meta_data.save_meta_data()
 
 
     t1 = time.time()
