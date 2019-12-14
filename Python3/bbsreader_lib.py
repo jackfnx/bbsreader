@@ -13,7 +13,7 @@ class SexInSex_Login:
     def __init__(self, save_root_path):
         passwd_yaml = os.path.join(save_root_path, 'PASSWORD.yaml')
         with open(passwd_yaml) as f:
-            passwd = yaml.load(f)
+            passwd = yaml.load(f, Loader=yaml.FullLoader)
             self.name = passwd['SexInSex']['name']
             self.pw = passwd['SexInSex']['pw']
 
@@ -299,9 +299,16 @@ class MetaData:
             os.unlink(t)
 
         for threads_fname in threads:
+            threads_json_s = json.dumps(threads[threads_fname])
             threads_json = os.path.join(threads_dir, threads_fname)
-            with open(threads_json, 'w', encoding='utf-8') as f:
-                json.dump(threads[threads_fname], f)
+            if os.path.exists(threads_json):
+                with open(threads_json, encoding='utf-8') as f:
+                    s = f.read()
+            else:
+                s = ''
+            if s != threads_json_s:
+                with open(threads_json, 'w', encoding='utf-8') as f:
+                    f.write(threads_json_s)
 
         tags_dir = os.path.join(self.meta_data_path, 'tags')
         if not os.path.exists(tags_dir):
@@ -319,9 +326,16 @@ class MetaData:
             os.unlink(t)
 
         for tags_fname in tags:
+            tags_json_s = json.dumps(tags[tags_fname])
             tags_json = os.path.join(tags_dir, tags_fname)
-            with open(tags_json, 'w', encoding='utf-8') as f:
-                json.dump(tags[tags_fname], f)
+            if os.path.exists(tags_json):
+                with open(tags_json, encoding='utf-8') as f:
+                    s = f.read()
+            else:
+                s = ''
+            if s != tags_json_s:
+                with open(tags_json, 'w', encoding='utf-8') as f:
+                    f.write(tags_json_s)
 
         superkeywords_json = os.path.join(self.meta_data_path, 'superkeywords.json')
         with open(superkeywords_json, 'w', encoding='utf-8') as f:
