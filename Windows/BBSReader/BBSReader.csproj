@@ -104,6 +104,7 @@
     <Compile Include="Data\Packet.cs" />
     <Compile Include="Data\SuperKeyword.cs" />
     <Compile Include="Grouper.cs" />
+    <Compile Include="MetaDataLoader.cs" />
     <Compile Include="PacketServer\CGI404.cs" />
     <Compile Include="PacketServer\CGICon.cs" />
     <Compile Include="PacketServer\CGIDoc.cs" />

@@ -12,49 +12,44 @@ namespace BBSReader.PacketServer
     {
         public static List<Packet> LoadPackets()
         {
-            string metaPath = Constants.LOCAL_PATH + "meta.json";
             List<Packet> list = new List<Packet>();
-            using (StreamReader sr = new StreamReader(metaPath, Encoding.UTF8))
+            MetaData metaData = MetaDataLoader.Load();
+            Grouper.GroupingSuperKeyword(metaData);
+            foreach (SuperKeyword sk in metaData.superKeywords)
             {
-                string json = sr.ReadToEnd();
-                MetaData metaData = JsonConvert.DeserializeObject<MetaData>(json);
-                Grouper.GroupingSuperKeyword(metaData);
-                foreach (SuperKeyword sk in metaData.superKeywords)
+                Packet packet = new Packet();
+                if (sk.simple)
+                    packet.title = sk.keyword;
+                else if (sk.keyword == "*")
+                    packet.title = string.Format("【{0}】的作品集", sk.authors[0]);
+                else if (sk.authors[0] == "*")
+                    packet.title = string.Format("专题：【{0}】", sk.keyword);
+                else
+                    packet.title = string.Format("【{0}】系列", sk.keyword);
+                packet.author = sk.authors[0];
+                packet.simple = sk.simple;
+                packet.chapters = new List<Chapter>();
+                foreach (Group g in sk.groupedTids)
                 {
-                    Packet packet = new Packet();
-                    if (sk.simple)
-                        packet.title = sk.keyword;
-                    else if (sk.keyword == "*")
-                        packet.title = string.Format("【{0}】的作品集", sk.authors[0]);
-                    else if (sk.authors[0] == "*")
-                        packet.title = string.Format("专题：【{0}】", sk.keyword);
-                    else
-                        packet.title = string.Format("【{0}】系列", sk.keyword);
-                    packet.author = sk.authors[0];
-                    packet.simple = sk.simple;
-                    packet.chapters = new List<Chapter>();
-                    foreach (Group g in sk.groupedTids)
-                    {
-                        BBSThread example = metaData.threads[g.exampleId];
-                        string filename = example.siteId + "/" + example.threadId;
-                        Chapter ch = new Chapter();
-                        ch.id = filename;
-                        ch.title = example.title;
-                        ch.author = example.author;
-                        ch.source = Constants.SITE_DEF[example.siteId].siteName;
-                        ch.savePath = filename;
-                        ch.timestamp = Utils.GetTimestamp(example.postTime);
-                        packet.chapters.Add(ch);
-                    }
-                    packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
-                    packet.timestamp = packet.chapters[0].timestamp;
-                    packet.key = Utils.CalcKey(packet.title, packet.author, sk.simple);
-                    packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.simple, packet.chapters, null);
-                    packet.source = "Forum";
-                    list.Add(packet);
+                    BBSThread example = metaData.threads[g.exampleId];
+                    string filename = example.siteId + "/" + example.threadId;
+                    Chapter ch = new Chapter();
+                    ch.id = filename;
+                    ch.title = example.title;
+                    ch.author = example.author;
+                    ch.source = Constants.SITE_DEF[example.siteId].siteName;
+                    ch.savePath = filename;
+                    ch.timestamp = Utils.GetTimestamp(example.postTime);
+                    packet.chapters.Add(ch);
                 }
-                list.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
+                packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
+                packet.timestamp = packet.chapters[0].timestamp;
+                packet.key = Utils.CalcKey(packet.title, packet.author, sk.simple);
+                packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.simple, packet.chapters, null);
+                packet.source = "Forum";
+                list.Add(packet);
             }
+            list.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
             string packetFolder = Constants.LOCAL_PATH + "packets";
             foreach (string f in Directory.EnumerateFiles(packetFolder))
             {
