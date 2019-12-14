@@ -565,7 +565,7 @@ namespace BBSReader
                     new Typeface(ReaderText.FontFamily, ReaderText.FontStyle, ReaderText.FontWeight, ReaderText.FontStretch),
                     fontSize,
                     Brushes.Black,
-                    new NumberSubstitution());
+                    VisualTreeHelper.GetDpi(this).PixelsPerDip);
                 if (formattedText.Width >= (this.ActualWidth * 35 / 40))
                 {
                     break;
