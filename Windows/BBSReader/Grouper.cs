@@ -53,10 +53,11 @@ namespace BBSReader
                     id_groups.Add(id_group);
                 }
                 sk.groupedTids = new List<Group>();
-                var siteIds = new List<string>(Constants.SITE_DEF.Keys);
                 foreach (var id_group in id_groups)
                 {
-                    id_group.Sort((x, y) => siteIds.IndexOf(metaData.threads[x].siteId) - siteIds.IndexOf(metaData.threads[y].siteId));
+                    var group_keys = id_group.ConvertAll(x => keys[tids.IndexOf(x)]);
+                    var key_group = in_group(group_keys[0], groups);
+                    id_group.Sort((x, y) => key_group.IndexOf(group_keys[id_group.IndexOf(x)]) - key_group.IndexOf(group_keys[id_group.IndexOf(y)]));
                     List<string> lines = id_group.ConvertAll(x =>
                     {
                         var t = metaData.threads[x];
