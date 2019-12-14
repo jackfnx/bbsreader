@@ -128,4 +128,5 @@ for superkeyword in meta_data.superkeywords:
         download_article(t)
     print('superkeyword [%s] saved.' % keytext(superkeyword))
 
+meta_data.last_timestamp = time.time()
 meta_data.save_meta_data()

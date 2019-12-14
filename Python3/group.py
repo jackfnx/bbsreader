@@ -93,7 +93,7 @@ def do_grouping_func(threads, ids, groups, save_root_path):
             txtpath = os.path.join(save_root_path, k + '.txt')
             with open(txtpath, 'rb') as f:
                 text_lens[k] = len(f.read().decode('gbk', 'ignore'))
-        print(text_lens)
+        # print(text_lens)
         g.sort(key=lambda x: text_lens[x], reverse=True)
     return new_group_count
 
