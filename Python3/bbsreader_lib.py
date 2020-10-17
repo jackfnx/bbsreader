@@ -38,8 +38,8 @@ class SexInSex_Login:
 
 ### BBS列表
 bbsdef = [
-    ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, [383,322]],
-    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), [383,322,359]],
+    ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, 'utf-8', [383,322]],
+    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), 'gbk', [383,322,359]],
 ]
 
 ### 获取html的爬虫类
@@ -64,7 +64,7 @@ class Crawler:
         if not siteId in cls.crawlers:
             login = bbsinfo[4]
             obj = cls(1, login)
-            obj.bbsname, obj.siteId, obj.base, obj.index_page, _, obj.boardIds = bbsinfo
+            obj.bbsname, obj.siteId, obj.base, obj.index_page, _, obj.encoding, obj.boardIds = bbsinfo
             cls.crawlers[siteId] = obj
         return cls.crawlers[siteId]
 
@@ -98,7 +98,7 @@ class Crawler:
         url = self.base + url
         response = self.session.get(url, headers=self.head, proxies=self.proxy)
 
-        html = response.content.decode('gbk', 'ignore')
+        html = response.content.decode(self.encoding, 'ignore')
         print('Get [%s] OK' % url)
         return html
 
