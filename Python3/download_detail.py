@@ -27,7 +27,7 @@ crawler = Crawler.getCrawler(bbsId)
 
 
 ### 读取文章
-def bbstcon(html):
+def bbstcon(html, page):
     soup = BeautifulSoup(html, 'html5lib')
 
     titles = soup.select('div[id=nav]')
@@ -69,7 +69,7 @@ def bbstcon(html):
             [x.decompose() for x in postobj.select('strong')]
             [x.decompose() for x in postobj.select('table')]
             s = postobj.text
-            if i == 0:
+            if (i == 0) and (page == 1):
                 floors.append(s)
             elif len(s) > 1000:
                 floors.append(s)
@@ -82,15 +82,32 @@ def bbstcon(html):
             raise IOError('load html error.')
     return text, title, author, postTime
 
+def getpage_num(html):
+    soup = BeautifulSoup(html, 'html5lib')
+    pages = soup.select('div[class=pages] a')
+    if len(pages) > 1:
+        return int(pages[-2].text)
+    else:
+        return 1
 
-postUrl = 'thread-%s-1-1.html' % threadId
-html = crawler.getUrl(postUrl)
-text, title, author, postTime = bbstcon(html)
+def getpage(crawler, threadId, page):
+    postUrl = 'thread-%s-%d-1.html' % (threadId, page)
+    html = crawler.getUrl(postUrl)
+    page_num = getpage_num(html) if page == 1 else -1
+    text, title, author, postTime = bbstcon(html, page)
+    return text, title, author, postTime, postUrl, page_num
+
+
+text, title, author, postTime, postUrl, page_num = getpage(crawler, threadId, 1)
+for page in range(2, page_num+1):
+    nextPage, _, _, postTime, _, _ = getpage(crawler, threadId, page)
+    text += '\n\n\n\n-------------------------------------------------\n\n\n\n'
+    text += nextPage
 save_path = os.path.join(save_root_path, crawler.siteId)
 txtpath = os.path.join(save_root_path, crawler.siteId, '%s.txt' % threadId)
 with open(txtpath, 'w', encoding='utf-8') as f:
     f.write(text)
-print('[%s] saved, (%d bytes)' % (txtpath, len(text)))
+print('[%s] saved, (%d bytes), %s' % (txtpath, len(text), title))
 
 if updateIndex:
     if args.title:
