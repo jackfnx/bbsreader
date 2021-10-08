@@ -50,6 +50,18 @@ def do_grouping_func(threads, ids, groups, save_root_path):
 
     for i in dup_ids:
         ids.remove(i)
+    
+    drop_gs = []
+    for g in groups:
+        eff_key = [gkey for gkey in g if (gkey in texts)]
+        if len(eff_key) <= 1:
+            drop_gs.append(g)
+        else:
+            drop_keys = [gkey for gkey in g if (gkey not in texts)]
+            for drop_key in drop_keys:
+                g.remove(drop_key)
+    for drop_g in drop_gs:
+        groups.remove(drop_g)
 
     new_group_count = 0
     keys = list(texts.keys())

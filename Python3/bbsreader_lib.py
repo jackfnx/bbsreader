@@ -52,7 +52,7 @@ class Crawler:
 
         if isinstance(bbsId, int):
             bbsinfo = bbsdef[bbsId]
-        elif isinstance(bbsId, str) or isinstance(bbsId, unicode):
+        elif isinstance(bbsId, str):
             for s in bbsdef:
                 if s[1] == bbsId:
                     bbsinfo = s
