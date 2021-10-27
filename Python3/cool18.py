@@ -86,14 +86,14 @@ def bbscon(input_url, new_threads, fwd_link=False):
         text = pre.text
 
         if fwd_link:
-            links = []
-
+            links = [x['href'] for x in pre.find_all('a')]
+            
             ul0 = soup.select('ul')[0]
             for x in ul0.select('li > a'):
                 y = urllib.parse.urljoin(input_url, x['href'])
                 links.append(y)
 
-            links += list(reversed([x['href'] for x in pre.find_all('a')]))
+            links = list(reversed(links))
         else:
             links = []
 
