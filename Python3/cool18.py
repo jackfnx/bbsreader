@@ -116,6 +116,7 @@ def bbstcon(input_url):
     title, links = bbscon(input_url, new_threads, fwd_link=True)
     for lnk in links:
         _, _ = bbscon(lnk, new_threads, fwd_link=False)
+    new_threads = list(reversed(new_threads))
     return title, new_threads
 
 def main(input_url):
@@ -142,8 +143,7 @@ def main(input_url):
             'groups': [],
             'groupedTids': [],
         }
-
-    meta_data.superkeywords.append(superkeyword)
+        meta_data.superkeywords.append(superkeyword)
     print('superkeyword [%s] saved.' % keytext(superkeyword))
     meta_data.save_meta_data()
 
