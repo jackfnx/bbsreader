@@ -1,4 +1,5 @@
 import sys
+from typing import NewType
 import requests
 import urllib
 from bs4 import BeautifulSoup
@@ -78,7 +79,7 @@ def bbscon(input_url, new_threads, fwd_link=False):
 
         title_str = soup.select('td.show_content > center')[0].text
         title, author = parse_title_str(title_str)
-        postTime = '1970-1-1'
+        postTime = '1970-1-2'
 
         pre = soup.select('td.show_content > pre')[0]
         [x.decompose() for x in pre.select('font[color="#E6E6DD"]')]
