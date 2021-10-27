@@ -12,13 +12,6 @@ from fuzzywuzzy import fuzz
 from bbsreader_lib import *
 
 
-def keytext(superkeyword):
-    if superkeyword['simple']:
-        return superkeyword['keyword']
-    else:
-        return superkeyword['author'][0] + ":" + superkeyword['keyword']
-
-
 def in_group(i, groups):
     g = [x for x in groups if len([y for y in x if y==i]) > 0]
     return len(g) > 0

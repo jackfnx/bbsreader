@@ -60,6 +60,12 @@ def save_article(t, text):
         with open(txtpath, 'w', encoding='utf-8') as f:
             f.write(text)
 
+def verify_url(url):
+    o = urllib.parse.urlparse(url)
+    if o.netloc != 'www.cool18.com':
+        return False
+    return True
+
 def parse_url(url):
     o = urllib.parse.urlparse(url)
     if o.netloc != 'www.cool18.com':
@@ -94,6 +100,7 @@ def bbscon(input_url, new_threads, fwd_link=False):
                 y = urllib.parse.urljoin(input_url, x['href'])
                 links.append(y)
 
+            links = [x for x in links if verify_url(x)]
             links = list(reversed(links))
         else:
             links = []
