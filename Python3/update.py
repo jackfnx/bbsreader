@@ -116,12 +116,6 @@ def download_article(t):
         except Exception as e:
             print('Get [%s]: %s' % (t['link'], str(e)))
 
-def keytext(superkeyword):
-    if superkeyword['simple']:
-        return superkeyword['keyword']
-    else:
-        return superkeyword['author'][0] + ":" + superkeyword['keyword']
-
 for superkeyword in meta_data.superkeywords:
     for i in superkeyword['tids']:
         t = meta_data.last_threads[i]

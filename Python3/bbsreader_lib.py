@@ -1,4 +1,6 @@
 import os
+import platform
+import enum
 import re
 import yaml
 import json
@@ -7,7 +9,19 @@ import requests
 import pinyin
 
 
-save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
+save_root_path = 'C:/Users/apple/Dropbox/BBSReader.Cache'
+sysstr = platform.system()
+if sysstr == 'Windows':
+    pass
+elif sysstr == 'Linux' or sysstr == 'Darwin':
+    save_root_path = '/Users/apple/Dropbox/BBSReader.Cache'
+else:
+    raise 'Unknown system <%s>.' % sysstr
+
+class SK_Type(str, enum.Enum):
+    Simple = 'Simple'
+    Advanced = 'Advanced'
+    Manual = 'Manual'
 
 class SexInSex_Login:
     def __init__(self, save_root_path):
@@ -180,7 +194,7 @@ class MetaData:
         threads = merge(self.last_threads, latest_threads, force)
 
         ### 扫描数据，重新提取关键字
-        favorites = [x['keyword'] for x in self.superkeywords if x['simple']]
+        favorites = [x['keyword'] for x in self.superkeywords if x['skType'] == SK_Type.Simple]
 
         for superkeyword in self.superkeywords:
             superkeyword['tids'] = []
@@ -233,13 +247,17 @@ class MetaData:
             for superkeyword in self.superkeywords:
                 keyword = superkeyword['keyword']
                 authors = superkeyword['author']
-                if superkeyword['simple']:
+                if superkeyword['skType'] == SK_Type.Simple:
                     if keyword in keywords:
                         superkeyword['tids'].append(i)
-                else:
+                elif superkeyword['skType'] == SK_Type.Advanced:
                     if keyword == '*' or keyword in title:
                         if authors[0] == '*' or authors.count(author) > 0:
                             superkeyword['tids'].append(i)
+                elif superkeyword['skType'] == SK_Type.Manual:
+                    pass
+                else:
+                    pass
 
         ### 主题下，按照时间排序
         def getPostTime(x):
@@ -346,3 +364,8 @@ class MetaData:
             json.dump(self.blacklist, f)
 
 
+def keytext(superkeyword):
+    if superkeyword['skType'] == SK_Type.Simple:
+        return superkeyword['keyword']
+    else:
+        return superkeyword['author'][0] + ":" + superkeyword['keyword']
