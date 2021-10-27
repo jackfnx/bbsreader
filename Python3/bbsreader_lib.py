@@ -55,6 +55,7 @@ bbsdef = [
     ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, 'utf-8', [383,322]],
     ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), 'gbk', [383,322,359]],
 ]
+bbsdef_ids = [x[1] for x in bbsdef]
 
 ### 获取html的爬虫类
 class Crawler:
@@ -197,7 +198,8 @@ class MetaData:
         favorites = [x['keyword'] for x in self.superkeywords if x['skType'] == SK_Type.Simple]
 
         for superkeyword in self.superkeywords:
-            superkeyword['tids'] = []
+            if superkeyword['skType'] != SK_Type.Manual:
+                superkeyword['tids'] = []
 
         def find_keywords(title):
             keywords = [title]
@@ -233,8 +235,9 @@ class MetaData:
             return keywords
 
         tags = {}
-        for i in range(len(threads)):
-            t = threads[i]
+        for i, t in enumerate(threads):
+            if t['siteId'] not in bbsdef_ids:
+                continue
             title = t['title']
             author = t['author']
             keywords = find_keywords(title)

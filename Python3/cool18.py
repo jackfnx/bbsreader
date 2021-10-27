@@ -128,15 +128,20 @@ def main(input_url):
     last_tids = [(t['siteId'], t['threadId']) for t in meta_data.last_threads]
     new_tids = [last_tids.index((t['siteId'], t['threadId'])) for t in new_threads]
 
-    superkeyword = {
-        'skType': SK_Type.Manual,
-        'keyword': title,
-        'author': ['*'],
-        'tids': new_tids,
-        'read': -1,
-        'groups': [],
-        'groupedTids': [],
-    }
+    exists_sks = [sk for sk in meta_data.superkeywords if sk['skType'] == SK_Type.Manual and sk['keyword'] == title]
+    if len(exists_sks) != 0:
+        superkeyword = exists_sks[0]
+        superkeyword['tids'] = new_tids
+    else:
+        superkeyword = {
+            'skType': SK_Type.Manual,
+            'keyword': title,
+            'author': ['*'],
+            'tids': new_tids,
+            'read': -1,
+            'groups': [],
+            'groupedTids': [],
+        }
 
     meta_data.superkeywords.append(superkeyword)
     print('superkeyword [%s] saved.' % keytext(superkeyword))
