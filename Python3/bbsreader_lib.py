@@ -9,7 +9,7 @@ import requests
 import pinyin
 
 
-save_root_path = 'C:/Users/apple/Dropbox/BBSReader.Cache'
+save_root_path = 'C:/Users/hpjing/Dropbox/BBSReader.Cache'
 sysstr = platform.system()
 if sysstr == 'Windows':
     pass
