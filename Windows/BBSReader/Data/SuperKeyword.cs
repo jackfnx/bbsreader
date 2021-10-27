@@ -5,8 +5,8 @@ namespace BBSReader.Data
 {
     public struct SuperKeyword
     {
-        [JsonProperty("simple")]
-        public bool simple;
+        [JsonProperty("skType")]
+        public string skType;
         [JsonProperty("keyword")]
         public string keyword;
         [JsonProperty("author")]

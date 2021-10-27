@@ -18,7 +18,7 @@ namespace BBSReader.PacketServer
             foreach (SuperKeyword sk in metaData.superKeywords)
             {
                 Packet packet = new Packet();
-                if (sk.simple)
+                if (sk.skType == SKType.Simple)
                     packet.title = sk.keyword;
                 else if (sk.keyword == "*")
                     packet.title = string.Format("【{0}】的作品集", sk.authors[0]);
@@ -27,7 +27,7 @@ namespace BBSReader.PacketServer
                 else
                     packet.title = string.Format("【{0}】系列", sk.keyword);
                 packet.author = sk.authors[0];
-                packet.simple = sk.simple;
+                packet.skType = sk.skType;
                 packet.chapters = new List<Chapter>();
                 foreach (Group g in sk.groupedTids)
                 {
@@ -44,8 +44,8 @@ namespace BBSReader.PacketServer
                 }
                 packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
                 packet.timestamp = packet.chapters[0].timestamp;
-                packet.key = Utils.CalcKey(packet.title, packet.author, sk.simple);
-                packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.simple, packet.chapters, null);
+                packet.key = Utils.CalcKey(packet.title, packet.author, sk.skType == SKType.Simple);
+                packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.skType == SKType.Simple, packet.chapters, null);
                 packet.source = "Forum";
                 list.Add(packet);
             }

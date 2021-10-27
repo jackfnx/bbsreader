@@ -52,7 +52,7 @@ namespace BBSReader
             internal string SiteId;
             internal string ThreadId;
             internal bool Favorite;
-            internal bool Simple;
+            internal string SKType;
             internal int FavoriteId;
             internal bool IsFolder;
             internal bool Downloaded;
@@ -156,7 +156,7 @@ namespace BBSReader
                 item.SiteId = example.siteId;
                 item.ThreadId = example.threadId;
                 item.Favorite = false;
-                item.Simple = true;
+                item.SKType = SKType.Simple;
                 item.FavoriteId = -1;
                 item.IsFolder = true;
                 item.Downloaded = false;
@@ -172,7 +172,7 @@ namespace BBSReader
 
                 var item = new ListItem();
 
-                if (x.simple)
+                if (x.skType == SKType.Simple)
                     item.Title = x.keyword;
                 else if (keyword == "*")
                     item.Title = ("【" + author + "】的作品集");
@@ -189,7 +189,7 @@ namespace BBSReader
                 item.SiteId = example.siteId;
                 item.ThreadId = example.threadId;
                 item.Favorite = true;
-                item.Simple = x.simple;
+                item.SKType = x.skType;
                 item.FavoriteId = metaData.superKeywords.IndexOf(x);
                 item.IsFolder = true;
                 item.Downloaded = false;
@@ -221,7 +221,7 @@ namespace BBSReader
             topics.Clear();
             items.ForEach(x =>
             {
-                topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.Simple, x.FavoriteId, x.IsFolder, x.Downloaded, x.Read, x.Tooltip });
+                topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.SKType, x.FavoriteId, x.IsFolder, x.Downloaded, x.Read, x.Tooltip });
             });
         }
 
@@ -512,7 +512,7 @@ namespace BBSReader
                 metaData.tags.Remove(title);
                 SuperKeyword superKeyword = new SuperKeyword
                 {
-                    simple = true,
+                    skType = SKType.Simple,
                     keyword = title,
                     authors = new List<string> { item.Author },
                     tids = tids,
@@ -536,7 +536,7 @@ namespace BBSReader
             string title = item.Title;
             int FavoriteId = item.FavoriteId;
             SuperKeyword superKeyword = metaData.superKeywords[FavoriteId];
-            if (superKeyword.simple)
+            if (superKeyword.skType == SKType.Simple)
             {
                 var tids = superKeyword.tids;
                 var keyword = superKeyword.keyword;
@@ -599,7 +599,7 @@ namespace BBSReader
             {
                 SuperKeyword superKeyword = new SuperKeyword
                 {
-                    simple = false,
+                    skType = SKType.Advanced,
                     keyword = dialog.Keyword,
                     authors = new List<string>(dialog.AuthorList),
                     tids = new List<int>(),

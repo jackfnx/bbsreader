@@ -39,16 +39,16 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnNotSimple" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+        <Style x:Key="DisableOnAdvanced" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Path=Simple}" Value="False">
+                <DataTrigger Binding="{Binding Path=SKType}" Value="Advanced">
                     <Setter Property="IsEnabled" Value="False" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="DisableOnSimple" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
             <Style.Triggers>
-                <DataTrigger Binding="{Binding Path=Simple}" Value="True">
+                <DataTrigger Binding="{Binding Path=SKType}" Value="Simple">
                     <Setter Property="IsEnabled" Value="False" />
                 </DataTrigger>
             </Style.Triggers>
@@ -68,7 +68,7 @@
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
             <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
-            <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnNotSimple}"/>
+            <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnAdvanced}"/>
             <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnSimple}"/>
         </ContextMenu>
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MaterialDesignGridViewItem}">
@@ -96,19 +96,19 @@
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Control.Background" Value="DeepSkyBlue" />
                 </MultiDataTrigger>
-                <DataTrigger Binding="{Binding Path=Simple}" Value="False">
+                <DataTrigger Binding="{Binding Path=SKType}" Value="Advanced">
                     <Setter Property="Control.Background" Value="DarkSalmon" />
                 </DataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=Simple}" Value="False" />
+                        <Condition Binding="{Binding Path=SKType}" Value="Advanced" />
                         <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Control.Background" Value="Gray" />
                 </MultiDataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=Simple}" Value="False" />
+                        <Condition Binding="{Binding Path=SKType}" Value="Advanced" />
                         <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Control.Background" Value="LightSalmon" />

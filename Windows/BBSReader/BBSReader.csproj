@@ -102,6 +102,7 @@
     <Compile Include="Data\MetaData.cs" />
     <Compile Include="Data\Chapter.cs" />
     <Compile Include="Data\Packet.cs" />
+    <Compile Include="Data\SKType.cs" />
     <Compile Include="Data\SuperKeyword.cs" />
     <Compile Include="Grouper.cs" />
     <Compile Include="MetaDataLoader.cs" />
