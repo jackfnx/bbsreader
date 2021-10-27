@@ -317,7 +317,7 @@ class MetaData:
             os.unlink(t)
 
         for threads_fname in threads:
-            threads_json_s = json.dumps(threads[threads_fname])
+            threads_json_s = json.dumps(threads[threads_fname], indent=2)
             threads_json = os.path.join(threads_dir, threads_fname)
             if os.path.exists(threads_json):
                 with open(threads_json, encoding='utf-8') as f:
@@ -344,7 +344,7 @@ class MetaData:
             os.unlink(t)
 
         for tags_fname in tags:
-            tags_json_s = json.dumps(tags[tags_fname])
+            tags_json_s = json.dumps(tags[tags_fname], indent=2)
             tags_json = os.path.join(tags_dir, tags_fname)
             if os.path.exists(tags_json):
                 with open(tags_json, encoding='utf-8') as f:

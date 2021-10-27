@@ -11,12 +11,14 @@ from bbsreader_lib import *
 ### 参数
 parser = argparse.ArgumentParser()
 parser.add_argument('pages', nargs='?', type=int, help='manual set download pages number')
+parser.add_argument('start', nargs='?', type=int, help='manual set download start page')
 parser.add_argument('-l', '--list', action='store_true', help='support BBS list')
 parser.add_argument('--bbsid', type=int, default=0, help='manual set <BBS ID>')
 parser.add_argument('--boardid', type=int, default=None, help='manual set <BOARD ID>')
 args = parser.parse_args()
 
 pages = args.pages
+start = args.start
 bbsId = args.bbsid
 boardId = args.boardid
 
@@ -36,10 +38,12 @@ if pages is None:
     else:
         pages = 30
     tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(meta_data.last_timestamp))
+    start = 0
     print('] last update at [%s], this update will load <%d> pages' % (tmstr, pages))
 else:
-    print('] manual set, update <%d> pages.' % (pages))
-
+    if start is None:
+        start = 0
+    print('] manual set, update <%d> pages, from <%d>.' % (pages, start))
 
 crawler = Crawler.getCrawler(bbsId)
 
@@ -79,7 +83,7 @@ def bbscon(html):
 ### 读取新数据
 def update_threads(boardId, threads):
     print('Updating [%s] <board: %d>.' % (crawler.bbsname, boardId))
-    for i in range(0, pages):
+    for i in range(start, start+pages):
         url = crawler.index_page % (boardId, (i+1))
         try:
             threads += bbsdoc(crawler.getUrl(url), crawler.siteId)
