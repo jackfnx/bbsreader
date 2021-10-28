@@ -1,5 +1,5 @@
 import sys
-from typing import NewType
+import argparse
 import requests
 import urllib
 from bs4 import BeautifulSoup
@@ -120,9 +120,14 @@ def bbstcon(input_url):
     new_threads = list(reversed(new_threads))
     return title, new_threads
 
-def main(input_url):
+def main(urls, title):
 
-    title, new_threads = bbstcon(input_url)
+    new_threads = []
+    for url in urls:
+        t, ts = bbstcon(url)
+        if title is None:
+            title = t
+        new_threads += ts
 
     meta_data = MetaData(save_root_path)
     meta_data.merge_threads(new_threads)
@@ -149,10 +154,18 @@ def main(input_url):
     meta_data.save_meta_data()
 
 if __name__=='__main__':
-    if len(sys.argv) != 2:
-        print('USAGE: python cool18.py <url>')
-        sys.exit(0)
+    ### 参数
+    parser = argparse.ArgumentParser()
+    parser.add_argument('urls', nargs='+', help='<urls>')
+    parser.add_argument('-t', '--title', nargs='?', type=str, help='manual set title (when update index)')
+    args = parser.parse_args()
 
-    # input_url = 'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=14062432'
-    input_url = sys.argv[1]
-    main(input_url)
+    print(args.urls)
+    
+    # urls = [
+    #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=70315',
+    #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=13869433',
+    #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=14014890',
+    # ]
+    # title = '六朝系列'
+    main(args.urls, args.title)
