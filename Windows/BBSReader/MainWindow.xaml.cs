@@ -174,6 +174,8 @@ namespace BBSReader
 
                 if (x.skType == SKType.Simple)
                     item.Title = x.keyword;
+                else if (x.skType == SKType.Manual)
+                    item.Title = ("冻结：【" + keyword + "】");
                 else if (keyword == "*")
                     item.Title = ("【" + author + "】的作品集");
                 else if (author == "*")
