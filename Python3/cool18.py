@@ -33,6 +33,20 @@ def parse_title_str(title_str):
         s = title_str.index('【')
         e = title_str.index('】')
         title = title_str[s+1:e]
+
+        if '作者：' in title_str:
+            c = title_str.index('作者：')
+            author = title_str[c+3:].strip()
+        elif '作者:' in title_str:
+            c = title_str.index('作者:')
+            author = title_str[c+3:].strip()
+        else:
+            author = '*'
+    elif '《' in title_str and '》' in title_str:
+        s = title_str.index('《')
+        e = title_str.index('》')
+        title = title_str[s+1:e]
+
         if '作者：' in title_str:
             c = title_str.index('作者：')
             author = title_str[c+3:].strip()
@@ -50,8 +64,7 @@ def save_article(t, text):
     save_path = os.path.join(save_root_path, t['siteId'])
 
     txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
-    # if not os.path.exists(txtpath):
-    if 1:
+    if not os.path.exists(txtpath):
         if not os.path.isdir(save_path):
             os.makedirs(save_path)
         with open(txtpath, 'w', encoding='utf-8') as f:
@@ -159,7 +172,7 @@ def main(urls, title, author, trace):
     new_threads = list(reversed(new_threads))
 
     meta_data = MetaData(save_root_path)
-    meta_data.merge_threads(new_threads)
+    meta_data.merge_threads(new_threads, force=True)
 
     last_tids = [(t['siteId'], t['threadId']) for t in meta_data.last_threads]
     new_tids = [last_tids.index((t['siteId'], t['threadId'])) for t in new_threads]

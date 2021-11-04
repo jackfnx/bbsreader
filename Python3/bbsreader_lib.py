@@ -177,6 +177,9 @@ class MetaData:
 
     def merge_threads(self, latest_threads, force=False):
 
+        # 临时存储Manual SK tids
+        manual_threads = {i: [self.last_threads[y] for y in x['tids']] for (i, x) in enumerate(self.superkeywords) if x['skType'] == SK_Type.Manual}
+
         ### 合并新旧数据
         def merge(lasts, latest, force):
             threads = lasts[:]
@@ -188,18 +191,21 @@ class MetaData:
                         threads.append(t)
                 else:
                     if (t['siteId'], t['threadId']) in lastIds:
-                        threads.pop(lastIds.index((t['siteId'], t['threadId'])))
-                    threads.append(t)
+                        idx = lastIds.index((t['siteId'], t['threadId']))
+                        threads.pop(idx)
+                        threads.insert(idx, t)
+                    else:
+                        threads.append(t)
             return threads
-
-        # 临时存储Manual SK tids
-        manual_restore = {i: [self.last_threads[y] for y in x['tids']] for (i, x) in enumerate(self.superkeywords) if x['skType'] == SK_Type.Manual}
 
         threads = merge(self.last_threads, latest_threads, force)
         thread_ids = [(x['siteId'], x['threadId']) for x in threads]
         # 更新新的tids
-        for i, t in manual_restore.items():
-            tids = [thread_ids.index((x['siteId'], x['threadId'])) for x in t]
+        for i, x in manual_threads.items():
+            for t in x:
+                if (t['siteId'], t['threadId']) not in thread_ids:
+                    print(t)
+            tids = [thread_ids.index((t['siteId'], t['threadId'])) for t in x]
             self.superkeywords[i]['tids'] = tids
 
         ### 扫描数据，重新提取关键字
