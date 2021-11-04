@@ -109,27 +109,22 @@ def bbscon(url, fwd_link=False):
     new_thread = MakeThread(crawler.siteId, threadId, title_str, author, postTime, postUrl)
     return title_str, title, author, poster, links, text, new_thread
 
-def bbstcon(url, trace, indent, bypass_urls, poster_leader=None):
+def bbstcon(url, trace, indent, bypass_urls):
     new_threads = []
 
     try:
         title_str, title, author, poster, links, text, new_thread = bbscon(url, fwd_link=(trace!=0))
         bypass_urls.append(url)
-        if poster_leader is None:
-            print('Root link, poster: [%s]' % poster)
 
         print('%sGet: [%s], OK.' % (' '*indent, url))
         logger = '%sTitle: [%s], Text: [%d], Poster: [%s]' % (' '*indent, title_str, len(text), poster)
-        if (len(text) > 1000) or (poster_leader is None) or (poster_leader == poster):
+        if (len(text) > 1000):
             new_threads.append(new_thread)
             save_article(new_thread, text)
-            poster_flag = '*' if ((poster_leader is None) or (poster_leader == poster)) else ''
             save_flag = True
-            print('%s%s, Saved.' % (logger, poster_flag))
+            print('%s, Saved.' % (logger))
         else:
             save_flag = False
-        if poster_leader is None:
-            poster_leader = poster
 
     except Exception as e:
         print('Get [%s]: %s' % (url, str(e)))
@@ -138,7 +133,7 @@ def bbstcon(url, trace, indent, bypass_urls, poster_leader=None):
     for lnk in links:
         if url_in(lnk, bypass_urls):
             continue
-        _, _, sub_threads = bbstcon(lnk, trace-1, indent+1, bypass_urls=bypass_urls, poster_leader=poster_leader)
+        _, _, sub_threads = bbstcon(lnk, trace-1, indent+1, bypass_urls=bypass_urls)
         if not save_flag and len(sub_threads) > 0:
             new_threads.append(new_thread)
             save_article(new_thread, text)
