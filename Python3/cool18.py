@@ -1,5 +1,6 @@
 import sys
 import argparse
+from typing import NewType
 import requests
 import urllib
 from bs4 import BeautifulSoup
@@ -21,14 +22,9 @@ class Crawler:
         self.siteId = 'cool18'
     
     def get(self, url):
-
-        try:
-            response = self.session.get(url, headers=self.head, proxies=self.proxy)
-            html = response.content.decode('utf-8', 'ignore')
-            print('Get [%s]: OK.' % (url))
-            return html
-        except Exception as e:
-            print('Get [%s]: %s' % (url, str(e)))
+        response = self.session.get(url, headers=self.head, proxies=self.proxy)
+        html = response.content.decode('utf-8', 'ignore')
+        return html
 
 crawler = Crawler()
 
@@ -54,7 +50,8 @@ def save_article(t, text):
     save_path = os.path.join(save_root_path, t['siteId'])
 
     txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
-    if not os.path.exists(txtpath):
+    # if not os.path.exists(txtpath):
+    if 1:
         if not os.path.isdir(save_path):
             os.makedirs(save_path)
         with open(txtpath, 'w', encoding='utf-8') as f:
@@ -71,70 +68,100 @@ def parse_url(url):
     if o.netloc != 'www.cool18.com':
         print('ERROR: site is not www.cool18.com, [%s]' % o.netloc)
         sys.exit(1)
-    postUrl = o.path + '?' + o.query
     params = urllib.parse.parse_qs(o.query)
     threadId = params['tid'][0]
-    return postUrl, threadId
+    return o.query, threadId
 
-def bbscon(input_url, new_threads, fwd_link=False):
+def bbscon(url, fwd_link=False):
+    postUrl, threadId = parse_url(url)
+
+    html = crawler.get(url)
+    soup = BeautifulSoup(html, 'html5lib')
+
+    title_str = soup.select('td.show_content > center')[0].text
+    title, author = parse_title_str(title_str)
+
+    tab2 = soup.select('table')[1]
+    poster = tab2.select('td > a')[0].text
+
+    line = tab2.text.strip()
+    postTime = line[line.index('] 于')+3: line.index('已读')].strip()
+    postTime = time.strftime('%Y-%m-%d', time.strptime(postTime, '%Y-%m-%d %H:%M'))
+
+    pre = soup.select('td.show_content > pre')[0]
+    [x.decompose() for x in pre.select('font[color="E6E6DD"]')]
+    [x.replace_with(x.text + '\n') for x in pre.find_all(['br', 'p'])]
+    text = pre.text
+
+    if fwd_link:
+        links = [x['href'] for x in pre.find_all('a')]
+        
+        ul0 = soup.select('ul')[0]
+        for x in ul0.select('li > a'):
+            y = urllib.parse.urljoin(url, x['href'])
+            links.append(y)
+
+        links = [x for x in links if verify_url(x)]
+        links = list(reversed(links))
+    else:
+        links = []
+
+    new_thread = MakeThread(crawler.siteId, threadId, title_str, author, postTime, postUrl)
+    return title_str, title, author, poster, links, text, new_thread
+
+def bbstcon(url, trace, indent, bypass_urls, poster_leader=None):
+    new_threads = []
+
     try:
-        postUrl, threadId = parse_url(input_url)
+        title_str, title, author, poster, links, text, new_thread = bbscon(url, fwd_link=(trace!=0))
+        bypass_urls.append(url)
+        if poster_leader is None:
+            print('Root link, poster: [%s]' % poster)
 
-        html = crawler.get(input_url)
-        soup = BeautifulSoup(html, 'html5lib')
-
-        title_str = soup.select('td.show_content > center')[0].text
-        title, author = parse_title_str(title_str)
-        postTime = '1970-1-2'
-
-        pre = soup.select('td.show_content > pre')[0]
-        [x.decompose() for x in pre.select('font[color="#E6E6DD"]')]
-        [x.replace_with('\n') for x in pre.find_all(['br', 'p'])]
-        text = pre.text
-
-        if fwd_link:
-            links = [x['href'] for x in pre.find_all('a')]
-            
-            ul0 = soup.select('ul')[0]
-            for x in ul0.select('li > a'):
-                y = urllib.parse.urljoin(input_url, x['href'])
-                links.append(y)
-
-            links = [x for x in links if verify_url(x)]
-            links = list(reversed(links))
+        print('%sGet: [%s], OK.' % (' '*indent, url))
+        logger = '%sTitle: [%s], Text: [%d], Poster: [%s]' % (' '*indent, title_str, len(text), poster)
+        if (len(text) > 1000) or (poster_leader is None) or (poster_leader == poster):
+            new_threads.append(new_thread)
+            save_article(new_thread, text)
+            poster_flag = '*' if ((poster_leader is None) or (poster_leader == poster)) else ''
+            save_flag = True
+            print('%s%s, Saved.' % (logger, poster_flag))
         else:
-            links = []
+            save_flag = False
+        if poster_leader is None:
+            poster_leader = poster
 
-        new_thread = MakeThread(crawler.siteId, threadId, title_str, author, postTime, postUrl)
+    except Exception as e:
+        print('Get [%s]: %s' % (url, str(e)))
+        return None, None, new_threads
 
-        if not fwd_link and len(text) < 1000:
-            return None, None
-
-        new_threads.append(new_thread)
-        save_article(new_thread, text)
-        print('Article, Title: [%s], Text: <%d>.' % (title_str, len(text)))
-
-        return title, links
-    except  Exception as e:
-        print('Get [%s]: %s' % (input_url, str(e)))
-        return None, None
-
-def bbstcon(input_url):
-    new_threads = []
-    title, links = bbscon(input_url, new_threads, fwd_link=True)
     for lnk in links:
-        _, _ = bbscon(lnk, new_threads, fwd_link=False)
-    new_threads = list(reversed(new_threads))
-    return title, new_threads
+        if url_in(lnk, bypass_urls):
+            continue
+        _, _, sub_threads = bbstcon(lnk, trace-1, indent+1, bypass_urls=bypass_urls, poster_leader=poster_leader)
+        if not save_flag and len(sub_threads) > 0:
+            new_threads.append(new_thread)
+            save_article(new_thread, text)
+            save_flag = True
+            print('%s, Saved(for sub_threads).' % (logger))
+            new_threads += sub_threads
 
-def main(urls, title):
+    if not save_flag:
+        print('%s, Not saved.' % (logger))
+
+    return title, author, new_threads
+
+def main(urls, title, author, trace):
 
     new_threads = []
-    for url in urls:
-        t, ts = bbstcon(url)
+    for url in urls.copy():
+        t, a, ts = bbstcon(url, trace, 0, bypass_urls=urls)
         if title is None:
             title = t
+        if author is None:
+            author = a
         new_threads += ts
+    new_threads = list(reversed(new_threads))
 
     meta_data = MetaData(save_root_path)
     meta_data.merge_threads(new_threads)
@@ -145,12 +172,13 @@ def main(urls, title):
     exists_sks = [sk for sk in meta_data.superkeywords if sk['skType'] == SK_Type.Manual and sk['keyword'] == title]
     if len(exists_sks) != 0:
         superkeyword = exists_sks[0]
+        superkeyword['author'] = [author]
         superkeyword['tids'] = new_tids
     else:
         superkeyword = {
             'skType': SK_Type.Manual,
             'keyword': title,
-            'author': ['*'],
+            'author': [author],
             'tids': new_tids,
             'read': -1,
             'groups': [],
@@ -164,15 +192,19 @@ if __name__=='__main__':
     ### 参数
     parser = argparse.ArgumentParser()
     parser.add_argument('urls', nargs='+', help='<urls>')
-    parser.add_argument('-t', '--title', nargs='?', type=str, help='manual set title (when update index)')
+    parser.add_argument('--title', nargs='?', type=str, help='manual set title (when update index)')
+    parser.add_argument('--author', nargs='?', type=str, help='manual set author (when update index)')
+    parser.add_argument('--trace', default=1, type=int, help='manual set trace step')
     args = parser.parse_args()
 
     print(args.urls)
-    
+
     # urls = [
     #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=70315',
     #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=13869433',
     #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=14014890',
     # ]
     # title = '六朝系列'
-    main(args.urls, args.title)
+    # author = '弄玉+龙璇'
+    # trace = 1
+    main(args.urls, args.title, args.author, args.trace)

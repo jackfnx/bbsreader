@@ -192,7 +192,15 @@ class MetaData:
                     threads.append(t)
             return threads
 
+        # 临时存储Manual SK tids
+        manual_restore = {i: [self.last_threads[y] for y in x['tids']] for (i, x) in enumerate(self.superkeywords) if x['skType'] == SK_Type.Manual}
+
         threads = merge(self.last_threads, latest_threads, force)
+        thread_ids = [(x['siteId'], x['threadId']) for x in threads]
+        # 更新新的tids
+        for i, t in manual_restore.items():
+            tids = [thread_ids.index((x['siteId'], x['threadId'])) for x in t]
+            self.superkeywords[i]['tids'] = tids
 
         ### 扫描数据，重新提取关键字
         favorites = [x['keyword'] for x in self.superkeywords if x['skType'] == SK_Type.Simple]
@@ -372,3 +380,23 @@ def keytext(superkeyword):
         return superkeyword['keyword']
     else:
         return superkeyword['author'][0] + ":" + superkeyword['keyword']
+
+from urllib.parse import urlparse, parse_qsl, unquote_plus
+
+def url_equals(u1, u2):
+    def __parse_parts(url):
+        parts = urlparse(url)
+        _query = frozenset(parse_qsl(parts.query))
+        _path = unquote_plus(parts.path)
+        parts = parts._replace(query=_query, path=_path)
+        return parts
+
+    parts1 = __parse_parts(u1)
+    parts2 = __parse_parts(u2)
+    return parts1 == parts2
+
+def url_in(u, urls):
+    for url in urls:
+        if url_equals(u, url):
+            return True
+    return False
