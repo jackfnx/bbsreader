@@ -139,7 +139,7 @@ def bbstcon(url, trace, indent, bypass_urls):
             save_article(new_thread, text)
             save_flag = True
             print('%s, Saved(for sub_threads).' % (logger))
-            new_threads += sub_threads
+        new_threads += sub_threads
 
     if not save_flag:
         print('%s, Not saved.' % (logger))
