@@ -62,13 +62,11 @@ def parse_title_str(title_str):
 
 def save_article(t, text):
     save_path = os.path.join(save_root_path, t['siteId'])
-
+    if not os.path.isdir(save_path):
+        os.makedirs(save_path)
     txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
-    if not os.path.exists(txtpath):
-        if not os.path.isdir(save_path):
-            os.makedirs(save_path)
-        with open(txtpath, 'w', encoding='utf-8') as f:
-            f.write(text)
+    with open(txtpath, 'w', encoding='utf-8') as f:
+        f.write(text)
 
 def verify_url(url):
     o = urllib.parse.urlparse(url)

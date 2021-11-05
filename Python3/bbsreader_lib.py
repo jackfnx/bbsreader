@@ -202,9 +202,6 @@ class MetaData:
         thread_ids = [(x['siteId'], x['threadId']) for x in threads]
         # 更新新的tids
         for i, x in manual_threads.items():
-            for t in x:
-                if (t['siteId'], t['threadId']) not in thread_ids:
-                    print(t)
             tids = [thread_ids.index((t['siteId'], t['threadId'])) for t in x]
             self.superkeywords[i]['tids'] = tids
 
