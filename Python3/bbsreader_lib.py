@@ -395,7 +395,7 @@ def url_equals(u1, u2):
         parts = urlparse(url)
         _query = frozenset(parse_qsl(parts.query))
         _path = unquote_plus(parts.path)
-        parts = parts._replace(query=_query, path=_path)
+        parts = parts._replace(scheme='https', query=_query, path=_path)
         return parts
 
     parts1 = __parse_parts(u1)
