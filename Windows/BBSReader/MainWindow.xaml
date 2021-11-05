@@ -107,7 +107,7 @@
                     <Setter Property="Control.Background" Value="LightSalmon" />
                 </MultiDataTrigger>
                 <DataTrigger Binding="{Binding Path=SKType}" Value="Manual">
-                    <Setter Property="Control.Background" Value="DarkBlue" />
+                    <Setter Property="Control.Background" Value="DarkCyan" />
                 </DataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>

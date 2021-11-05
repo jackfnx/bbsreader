@@ -286,10 +286,11 @@ class MetaData:
             tags[keyword].sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
 
         for superkeyword in self.superkeywords:
-            tids = superkeyword['tids']
-            tids = list(set(tids))
-            tids.sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
-            superkeyword['tids'] = tids
+            if superkeyword['skType'] != SK_Type.Manual:
+                tids = superkeyword['tids']
+                tids = list(set(tids))
+                tids.sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
+                superkeyword['tids'] = tids
 
         self.tags = tags
         self.last_threads = threads
