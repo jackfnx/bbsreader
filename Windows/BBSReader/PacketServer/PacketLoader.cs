@@ -44,7 +44,8 @@ namespace BBSReader.PacketServer
                     ch.timestamp = Utils.GetTimestamp(example.postTime);
                     packet.chapters.Add(ch);
                 }
-                packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
+                if (sk.skType != SKType.Manual)
+                    packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
                 packet.timestamp = packet.chapters[0].timestamp;
                 packet.key = Utils.CalcKey(packet.title, packet.author, sk.skType == SKType.Simple);
                 packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.skType == SKType.Simple, packet.chapters, null);
