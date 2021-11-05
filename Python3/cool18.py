@@ -102,6 +102,7 @@ def bbscon(url, fwd_link=False):
     postTime = time.strftime('%Y-%m-%d', time.strptime(postTime, '%Y-%m-%d %H:%M'))
 
     pre = soup.select('td.show_content > pre')[0]
+    [x.decompose() for x in pre.select('font[color="#E6E6DD"]')]
     [x.decompose() for x in pre.select('font[color="E6E6DD"]')]
     [x.replace_with(x.text + '\n') for x in pre.find_all(['br', 'p'])]
     text = pre.text
