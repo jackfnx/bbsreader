@@ -139,7 +139,7 @@ namespace BBSReader
             Packet packet = new Packet();
             packet.title = BookTitle.Text;
             packet.author = BookAuthor.Text;
-            packet.skType = SKType.Manual;
+            packet.simple = false;
             packet.chapters = new List<Chapter>();
             foreach (dynamic tch in contents)
             {

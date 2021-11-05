@@ -10,7 +10,7 @@ namespace BBSReader.Data
         [JsonProperty]
         public string author;
         [JsonProperty]
-        public string skType;
+        public bool simple;
         [JsonProperty]
         public string key;
         [JsonProperty]

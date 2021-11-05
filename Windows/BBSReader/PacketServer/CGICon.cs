@@ -53,10 +53,15 @@ namespace BBSReader.PacketServer
                     {
                         sw.Write(contentJson);
                     }
+                    List<string> files = new List<string>();
                     foreach (Chapter ch in packet.chapters)
                     {
-                        ZipArchiveEntry zae = zip.CreateEntry(ch.savePath);
                         string src = string.Format("{0}/{1}.txt", Constants.LOCAL_PATH, ch.savePath);
+                        if (files.Contains(src))
+                            continue;
+                        else
+                            files.Add(src);
+                        ZipArchiveEntry zae = zip.CreateEntry(ch.savePath);
                         using (FileStream ins = new FileStream(src, FileMode.Open))
                         using (Stream outs = zae.Open())
                         {
