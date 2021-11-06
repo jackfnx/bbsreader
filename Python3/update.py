@@ -121,10 +121,11 @@ def download_article(t):
             print('Get [%s]: %s' % (t['link'], str(e)))
 
 for superkeyword in meta_data.superkeywords:
-    for i in superkeyword['tids']:
-        t = meta_data.last_threads[i]
-        download_article(t)
-    print('superkeyword [%s] saved.' % keytext(superkeyword))
+    if superkeyword['skType'] != SK_Type.Manual:
+        for i in superkeyword['tids']:
+            t = meta_data.last_threads[i]
+            download_article(t)
+        print('superkeyword [%s] saved.' % keytext(superkeyword))
 
 meta_data.last_timestamp = time.time()
 meta_data.save_meta_data()
