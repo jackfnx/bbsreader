@@ -750,5 +750,26 @@ namespace BBSReader
             PacketWindow dialog = new PacketWindow();
             dialog.ShowDialog();
         }
+
+        private void ManualAddTagContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            ManualAddTagDialog dialog = new ManualAddTagDialog()
+            {
+                TitleText = item.Title
+            };
+            if (dialog.ShowDialog() ?? false)
+            {
+                string titleText = item.Title;
+                string tag = dialog.Tag.Text;
+                if (!metaData.manualTags.ContainsKey(titleText))
+                {
+                    metaData.manualTags[titleText] = new List<string>();
+                }
+                metaData.manualTags[titleText].Add(tag);
+                MetaDataLoader.Save(this.metaData);
+            }
+        }
     }
 }

@@ -167,6 +167,10 @@ class MetaData:
             blacklist_json = os.path.join(self.meta_data_path, 'blacklist.json')
             with open(blacklist_json, encoding='utf-8') as f:
                 self.blacklist = json.load(f)
+            
+            manualtags_json = os.path.join(self.meta_data_path, 'manualtags.json')
+            with open(manualtags_json, encoding='utf-8') as f:
+                self.manualtags = json.load(f)
         ### 如果不存在json，初始化空数据
         else:
             self.last_timestamp = 0
@@ -174,6 +178,7 @@ class MetaData:
             self.tags = {}
             self.superkeywords = []
             self.blacklist = []
+            self.manualtags = {}
 
     def merge_threads(self, latest_threads, force=False):
 
@@ -243,6 +248,8 @@ class MetaData:
             keywords = [x for x in keywords if not re.match('^大?结局$', x)]
             keywords = [x for x in keywords if not re.match('^代友?发$', x)]
             keywords = [x.strip() for x in keywords]
+            if title in self.manualtags:
+                keywords += self.manualtags[title]
             return keywords
 
         tags = {}

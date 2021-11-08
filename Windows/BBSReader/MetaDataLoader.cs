@@ -62,6 +62,13 @@ namespace BBSReader
                 metaData.blacklist = JsonConvert.DeserializeObject<List<string>>(json);
             }
 
+            string manualTagsPath = metaPath + "manualtags.json";
+            using (StreamReader sr = new StreamReader(manualTagsPath, Encoding.UTF8))
+            {
+                string json = sr.ReadToEnd();
+                metaData.manualTags = JsonConvert.DeserializeObject<Dictionary<string, List<string>>>(json);
+            }
+
             Grouper.GroupingSuperKeyword(metaData);
             return metaData;
         }
@@ -79,6 +86,13 @@ namespace BBSReader
             using (StreamWriter sw = new StreamWriter(blacklistPath, false, new UTF8Encoding(false)))
             {
                 string json = JsonConvert.SerializeObject(metaData.blacklist);
+                sw.Write(json);
+            }
+
+            string manualTagsPath = Constants.LOCAL_PATH + "meta/manualtags.json";
+            using (StreamWriter sw = new StreamWriter(manualTagsPath, false, new UTF8Encoding(false)))
+            {
+                string json = JsonConvert.SerializeObject(metaData.manualTags);
                 sw.Write(json);
             }
         }
