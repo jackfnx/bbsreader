@@ -36,6 +36,11 @@ namespace BBSReader
                 {
                     AuthorList.Add("*");
                 }
+                for (int i = AuthorList.Count - 1; i >= 0; i--)
+                {
+                    if (AuthorList[i] == null)
+                        AuthorList.RemoveAt(i);
+                }
                 this.DialogResult = true;
             }
         }

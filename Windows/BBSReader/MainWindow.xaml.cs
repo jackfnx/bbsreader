@@ -587,36 +587,69 @@ namespace BBSReader
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
-            string title = item.Title;
-            string author = item.Author;
-
+            int FavoriteId;
+            string title;
+            List<string> authors = new List<string>();
+            if (item.SKType == SKType.Simple)
+            {
+                FavoriteId = -1;
+                title = item.Title;
+                authors.Add(item.Author);
+            }
+            else if (item.SKType == SKType.Advanced)
+            {
+                FavoriteId = item.FavoriteId;
+                SuperKeyword sk = metaData.superKeywords[FavoriteId];
+                title = sk.keyword;
+                authors = sk.authors;
+            }
+            else if (item.SKType == SKType.Manual)
+            {
+                return;
+            }
+            else
+            {
+                return;
+            }
             var dialog = new AdvancedKeywordDialog
             {
                 Owner = this,
-                Keyword = title,
-                DefaultAuthor = author
+                Keyword = title
             };
+            authors.ForEach(x => dialog.AuthorList.Add(x));
             var dr = dialog.ShowDialog() ?? false;
             if (dr)
             {
-                SuperKeyword superKeyword = new SuperKeyword
+                if (FavoriteId != -1)
                 {
-                    skType = SKType.Advanced,
-                    keyword = dialog.Keyword,
-                    authors = new List<string>(dialog.AuthorList),
-                    tids = new List<int>(),
-                    read = -1,
-                    groups = new List<List<string>>(),
-                    groupedTids = new List<Group>()
-                };
-                if (!metaData.superKeywords.Contains(superKeyword))
-                {
-                    metaData.superKeywords.Add(superKeyword);
-                    MetaDataLoader.Save(this.metaData);
-                    currentState = AppState.TOPICS;
-                    ReloadTopics();
-                    UpdateView();
+                    SuperKeyword superKeyword = metaData.superKeywords[FavoriteId];
+                    superKeyword.skType = SKType.Advanced;
+                    superKeyword.keyword = dialog.Keyword;
+                    superKeyword.authors = new List<string>(dialog.AuthorList);
+                    superKeyword.tids = new List<int>();
+                    superKeyword.read = -1;
+                    superKeyword.groups = new List<List<string>>();
+                    superKeyword.groupedTids = new List<Group>();
+                    metaData.superKeywords[FavoriteId] = superKeyword;
                 }
+                else
+                {
+                    SuperKeyword superKeyword = new SuperKeyword
+                    {
+                        skType = SKType.Advanced,
+                        keyword = dialog.Keyword,
+                        authors = new List<string>(dialog.AuthorList),
+                        tids = new List<int>(),
+                        read = -1,
+                        groups = new List<List<string>>(),
+                        groupedTids = new List<Group>()
+                    };
+                    metaData.superKeywords.Add(superKeyword);
+                }
+                MetaDataLoader.Save(this.metaData);
+                currentState = AppState.TOPICS;
+                ReloadTopics();
+                UpdateView();
             }
         }
 
