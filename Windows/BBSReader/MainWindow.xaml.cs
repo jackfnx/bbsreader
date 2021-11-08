@@ -265,7 +265,7 @@ namespace BBSReader
                         Source = siteName,
                         SiteId = t.siteId,
                         Favorite = false,
-                        Simple = true,
+                        SKType = SKType.Simple,
                         FavoriteId = -1,
                         IsFolder = false,
                         Downloaded = downloaded,
@@ -657,7 +657,7 @@ namespace BBSReader
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
-            if (!item.Simple)
+            if (item.SKType == SKType.Advanced)
             {
                 int FavoriteId = item.FavoriteId;
                 metaData.superKeywords.RemoveAt(FavoriteId);
