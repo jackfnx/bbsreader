@@ -32,7 +32,7 @@ def parse_title_str(title_str):
     if '【' in title_str and '】' in title_str:
         s = title_str.index('【')
         e = title_str.index('】')
-        title = title_str[s+1:e]
+        title = title_str[s+1:e].strip()
 
         if '作者：' in title_str:
             c = title_str.index('作者：')
@@ -45,7 +45,7 @@ def parse_title_str(title_str):
     elif '《' in title_str and '》' in title_str:
         s = title_str.index('《')
         e = title_str.index('》')
-        title = title_str[s+1:e]
+        title = title_str[s+1:e].strip()
 
         if '作者：' in title_str:
             c = title_str.index('作者：')
@@ -57,7 +57,14 @@ def parse_title_str(title_str):
             author = '*'
     else:
         title = title_str
-        author = '*'
+        if '作者：' in title_str:
+            c = title_str.index('作者：')
+            author = title_str[c+3:].strip()
+        elif '作者:' in title_str:
+            c = title_str.index('作者:')
+            author = title_str[c+3:].strip()
+        else:
+            author = '*'
     return title, author
 
 def save_article(t, text):
@@ -130,7 +137,7 @@ def bbstcon(url, trace, indent, bypass_urls):
 
         print('%sGet: [%s], OK.' % (' '*indent, url))
         logger = '%sTitle: [%s], Text: [%d], Poster: [%s]' % (' '*indent, title_str, len(text), poster)
-        if (len(text) > 1000):
+        if (len(text) > 1000) or indent == 0:
             new_threads.append(new_thread)
             save_article(new_thread, text)
             save_flag = True
