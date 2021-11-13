@@ -10,15 +10,15 @@ from bbsreader_lib import *
 
 ### 参数
 parser = argparse.ArgumentParser()
-parser.add_argument('threadid', type=int, help='<Thread ID>')
 parser.add_argument('bbsid', type=int, default=0, help='<BBS ID>')
+parser.add_argument('threadids', nargs='+', type=int, help='<Thread ID>')
 parser.add_argument('-u', '--updateindex', action='store_true', help='update index')
 parser.add_argument('-t', '--title', nargs='?', type=str, help='manual set title (when update index)')
 parser.add_argument('-a', '--author', nargs='?', type=str, help='manual set author (when update index)')
 parser.add_argument('-p', '--posttime', nargs='?', type=str, help='manual set post time (when update index)')
 args = parser.parse_args()
 
-threadId = str(args.threadid)
+threadIds = [str(x) for x in args.threadids]
 bbsId = args.bbsid
 updateIndex = args.updateindex
 
@@ -44,7 +44,7 @@ def bbstcon(html, page):
     if len(authors) > 0:
         author = authors[0].text
     else:
-        author = 'unknown'
+        author = '*'
 
     postinfos = soup.select('div.postinfo')
     if len(postinfos) > 0:
@@ -60,7 +60,7 @@ def bbstcon(html, page):
         if ' ' in postTime:
             postTime = postTime[:postTime.index(' ')]
     else:
-        postTime = '1970-1-1'
+        postTime = '1970-1-2'
 
     posts = soup.select('div[id^=postmessage_] div[id^=postmessage_]')
     if len(posts) > 0:
@@ -98,26 +98,29 @@ def getpage(crawler, threadId, page):
     return text, title, author, postTime, postUrl, page_num
 
 
-text, title, author, postTime, postUrl, page_num = getpage(crawler, threadId, 1)
-for page in range(2, page_num+1):
-    nextPage, _, _, postTime, _, _ = getpage(crawler, threadId, page)
-    text += '\n\n\n\n-------------------------------------------------\n\n\n\n'
-    text += nextPage
-save_path = os.path.join(save_root_path, crawler.siteId)
-txtpath = os.path.join(save_root_path, crawler.siteId, '%s.txt' % threadId)
-with open(txtpath, 'w', encoding='utf-8') as f:
-    f.write(text)
-print('[%s] saved, (%d bytes), %s' % (txtpath, len(text), title))
+new_threads = []
 
-if updateIndex:
+for threadId in threadIds:
+    text, title, author, postTime, postUrl, page_num = getpage(crawler, threadId, 1)
+    for page in range(2, page_num+1):
+        nextPage, _, _, postTime, _, _ = getpage(crawler, threadId, page)
+        text += '\n\n\n\n-------------------------------------------------\n\n\n\n'
+        text += nextPage
+    save_path = os.path.join(save_root_path, crawler.siteId)
+    txtpath = os.path.join(save_root_path, crawler.siteId, '%s.txt' % threadId)
+    with open(txtpath, 'w', encoding='utf-8') as f:
+        f.write(text)
+    print('[%s] saved, (%d bytes), %s' % (txtpath, len(text), title))
+
     if args.title:
         title = args.title
     if args.author:
         author = args.author
     if args.posttime:
         postTime = args.posttime
-    new_threads = [MakeThread(crawler.siteId, threadId, title, author, postTime, postUrl)]
+    new_threads.append(MakeThread(crawler.siteId, threadId, title, author, postTime, postUrl))
 
+if updateIndex:
     meta_data = MetaData(save_root_path)
     meta_data.merge_threads(new_threads, force=True)
     meta_data.save_meta_data()

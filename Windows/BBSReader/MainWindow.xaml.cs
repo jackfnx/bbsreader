@@ -724,7 +724,7 @@ namespace BBSReader
             int siteId = Constants.SITE_DEF[item.SiteId].id;
             long threadId = long.Parse(item.ThreadId);
 
-            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, threadId, siteId);
+            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, siteId, threadId);
             if (dialog.ShowDialog() ?? false)
             {
                 ReloadArticles();
