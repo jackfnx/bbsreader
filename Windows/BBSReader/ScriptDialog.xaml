@@ -10,5 +10,18 @@
         Foreground="{DynamicResource MaterialDesignFont}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Title="ScriptWindow" Height="450" Width="800" KeyUp="Window_KeyUp" Closing="Window_Closing">
-    <TextBox Name="ConsoleText" IsReadOnly="True" />
+    <Grid>
+        <ScrollViewer Name="Scroller" Margin="0">
+            <StackPanel>
+                <ItemsControl ItemsSource="{Binding ConsoleOutput, Mode=OneWay}">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Path=.}"/>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <TextBox Text="{Binding ConsoleInput, Mode=TwoWay}" Name="InputBlock" BorderBrush="{x:Null}" SelectionBrush="{x:Null}" />
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
 </Window>

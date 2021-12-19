@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Windows;
 using System.Windows.Input;
@@ -13,14 +15,25 @@ namespace BBSReader
     {
         private RunningStatus runningStatus;
 
-        enum RunningStatus {  RUNNING,   COMPLETE };
+        private enum RunningStatus { RUNNING, COMPLETE };
 
         private readonly string[] scripts_0 = { "-u E:/turboc/bbsreader/Python3/update.py --bbsid 0", "-u E:/turboc/bbsreader/Python3/update.py --bbsid 1", "-u E:/turboc/bbsreader/Python3/group.py" };
         private readonly string[] scripts_1 = { "-u E:/turboc/bbsreader/Python3/download_detail.py {0} {1}" };
+        private readonly ConsoleContent dc = new ConsoleContent();
+
+        public enum ScriptId
+        {
+            UPDATE_ALL,
+            DOWNLOAD_ONE_DETAIL
+        }
+
+        private readonly ScriptId scriptId;
+        private readonly object[] paras;
 
         public ScriptDialog(ScriptId scriptId, params object[] paras)
         {
             InitializeComponent();
+            DataContext = dc;
 
             this.scriptId = scriptId;
             this.paras = paras;
@@ -53,7 +66,7 @@ namespace BBSReader
                 proc.StartInfo.RedirectStandardError = true;
                 proc.StartInfo.CreateNoWindow = true;
                 proc.EnableRaisingEvents = true;
-                proc.OutputDataReceived += (s, ev) => this.Dispatcher.BeginInvoke(new Action<string>(OutputLine), ev.Data);
+                proc.OutputDataReceived += (s, ev) => this.Dispatcher.BeginInvoke(new Action<string>(dc.OutputLine), ev.Data);
                 procs.Add(proc);
             }
 
@@ -74,44 +87,76 @@ namespace BBSReader
                     procs[i].Exited += (s, ev) =>
                     {
                         this.runningStatus = RunningStatus.COMPLETE;
-                        this.Dispatcher.BeginInvoke(new Action<string>(OutputLine), "--- OK, press <any key> to continue. ---");
+                        this.Dispatcher.BeginInvoke(new Action<string>(dc.OutputLine), "--- OK, press <any key> to continue. ---");
                     };
                 }
             }
-            this.runningStatus = RunningStatus.RUNNING;
+            runningStatus = RunningStatus.RUNNING;
             procs[0].Start();
             procs[0].BeginOutputReadLine();
         }
         
-        private void OutputLine(string line)
-        {
-            ConsoleText.Text += line + "\n";
-            ConsoleText.ScrollToEnd();
-        }
-
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            if (this.runningStatus == RunningStatus.COMPLETE)
+            if (runningStatus == RunningStatus.COMPLETE)
             {
-                this.DialogResult = true;
+                DialogResult = true;
             }
         }
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            if (this.runningStatus == RunningStatus.COMPLETE)
+            if (runningStatus == RunningStatus.COMPLETE)
             {
-                this.DialogResult = true;
+                DialogResult = true;
             }
         }
 
-        public enum ScriptId
+        internal class ConsoleContent : INotifyPropertyChanged
         {
-            UPDATE_ALL,
-            DOWNLOAD_ONE_DETAIL
-        }
+            private string consoleInput = string.Empty;
+            private ObservableCollection<string> consoleOutput = new ObservableCollection<string> { "BBSReader Console" };
 
-        private ScriptId scriptId;
-        private object[] paras;
+            public string ConsoleInput
+            {
+                get
+                {
+                    return consoleInput;
+                }
+                set
+                {
+                    consoleInput = value;
+                    OnPropertyChanged("consoleInput");
+                }
+            }
+
+            public ObservableCollection<string> ConsoleOutput
+            {
+                get
+                {
+                    return consoleOutput;
+                }
+                set
+                {
+                    consoleOutput = value;
+                    OnPropertyChanged("consoleOutput");
+                }
+            }
+
+            public void OutputLine(string line)
+            {
+                ConsoleOutput.Add(line);
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+
+            private void OnPropertyChanged(string propertyName)
+            {
+                if (propertyName != null)
+                {
+                    PropertyChanged(this, new PropertyChangedEventArgs(propertyName));
+                }
+            }
+        }
     }
 }
