@@ -20,8 +20,8 @@ namespace BBSReader
     public partial class PacketWindow : Window
     {
         private const string REG_EX = "\\b第[\\d\\uFF10-\\uFF19一二三四五六七八九十百千零]+[部章节篇集卷]";
-        private ObservableCollection<object> files;
-        private ObservableCollection<object> contents;
+        private readonly ObservableCollection<object> files;
+        private readonly ObservableCollection<object> contents;
         private byte[] coverData;
 
         public PacketWindow()
