@@ -68,7 +68,7 @@ def bbstcon(html, page):
         else:
             raise IOError('load html error.')
 
-    postinfos = soup.select('div.postinfo')
+    postinfos = soup.select('div.postinfo:not(.postactions)')
     if len(postinfos) > 0 and len(floor_ids) > 0 and floor_ids[-1][0] >= 0 and floor_ids[-1][0] < len(postinfos):
         postinfo = postinfos[floor_ids[-1][0]]
         [x.decompose() for x in postinfo.select('strong')]
