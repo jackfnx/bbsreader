@@ -69,8 +69,8 @@ def bbstcon(html, page):
             raise IOError('load html error.')
 
     postinfos = soup.select('div.postinfo:not(.postactions)')
-    if len(postinfos) > 0 and len(floor_ids) > 0 and floor_ids[-1][0] >= 0 and floor_ids[-1][0] < len(postinfos):
-        postinfo = postinfos[floor_ids[-1][0]]
+    if len(postinfos) > 0:
+        postinfo = postinfos[0]
         [x.decompose() for x in postinfo.select('strong')]
         [x.decompose() for x in postinfo.select('em')]
         [x.decompose() for x in postinfo.select('a')]
@@ -116,9 +116,9 @@ new_threads = []
 
 for threadId in threadIds:
     text, title, author, postTime, postUrl, page_num, floors = getpage(crawler, threadId, 1)
-    print('thread: %s, page: %d/%d, new floors: %s.' % (threadId, 1, page_num, floors))
+    print('thread: %s, page: %d/%d, new floors: %s, postTime: %s.' % (threadId, 1, page_num, floors, postTime))
     for page in range(2, page_num+1):
-        nextPage, _, _, postTime, _, _, floors = getpage(crawler, threadId, page)
+        nextPage, _, _, _, _, _, floors = getpage(crawler, threadId, page)
         print('thread: %s, page: %d/%d, new floors: %s.' % (threadId, page, page_num, floors))
         text += '\n\n\n\n-------------------------------------------------\n\n\n\n'
         text += nextPage
