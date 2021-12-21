@@ -116,7 +116,7 @@ new_threads = []
 
 for threadId in threadIds:
     text, title, author, postTime, postUrl, page_num, floors = getpage(crawler, threadId, 1)
-    print('thread: %s, page: %d/%d, new floors: %s, postTime: %s.' % (threadId, 1, page_num, floors, postTime))
+    print('thread: %s, page: %d/%d, new floors: %s.' % (threadId, 1, page_num, floors))
     for page in range(2, page_num+1):
         nextPage, _, _, _, _, _, floors = getpage(crawler, threadId, page)
         print('thread: %s, page: %d/%d, new floors: %s.' % (threadId, page, page_num, floors))
@@ -135,6 +135,7 @@ for threadId in threadIds:
     if args.posttime:
         postTime = args.posttime
     new_threads.append(MakeThread(crawler.siteId, threadId, title, author, postTime, postUrl))
+    print(new_threads[-1])
 
 if updateIndex:
     meta_data = MetaData(save_root_path)
