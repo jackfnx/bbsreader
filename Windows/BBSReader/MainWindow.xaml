@@ -154,15 +154,29 @@
     </Window.Resources>
     <DockPanel>
         <DockPanel DockPanel.Dock="Top">
-            <Button x:Name="DownloadButton" Content=" Download " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="DownloadButton_Click" />
-            <Button x:Name="PacketButton" Content=" Packet " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="PacketButton_Click" />
-            <Ellipse x:Name="ServerInd" DockPanel.Dock="Right" Width="20" Height="20" Margin="1,3,10,3" Style="{StaticResource Indicator}" />
-            <Button x:Name="SearchButton" DockPanel.Dock="Right" Content=" Search " Width="Auto" Margin="1,3,10,3" HorizontalAlignment="Left" Click="SearchButton_Click" />
-            <TextBox x:Name="SearchBox" Margin="1,5,10,5" HorizontalAlignment="Stretch">
-                <TextBox.InputBindings>
-                    <KeyBinding Key="Return" Command="{Binding StartSearch}" CommandParameter="{Binding ElementName=SearchBox, Path=Text}" />
-                </TextBox.InputBindings>
-            </TextBox>
+            <Ellipse x:Name="ServerInd" DockPanel.Dock="Right" Width="20" Height="20" Margin="10,3,10,3" Style="{StaticResource Indicator}" />
+            <ToolBarTray DockPanel.Dock="Left" Style="{DynamicResource MaterialDesignToolBarTray}">
+                <ToolBar>
+                    <Button x:Name="DownloadButton" Content="Download" Click="DownloadButton_Click" />
+                    <Button x:Name="PacketButton" Content="Packet" Click="PacketButton_Click" />
+                    <Separator />
+                    <TextBox x:Name="SearchBox" Width="300">
+                        <TextBox.InputBindings>
+                            <KeyBinding Key="Return" Command="{Binding StartSearch}" CommandParameter="{Binding ElementName=SearchBox, Path=Text}" />
+                        </TextBox.InputBindings>
+                    </TextBox>
+                    <Button x:Name="SearchButton" Content="Search" Click="SearchButton_Click" />
+                </ToolBar>
+                <ToolBar HorizontalAlignment="Stretch" ToolBarTray.IsLocked="True">
+                    <ToolBar.Resources>
+                        <Style TargetType="{x:Type DockPanel}">
+                            <Setter Property="HorizontalAlignment" Value="Right" />
+                        </Style>
+                    </ToolBar.Resources>
+                    <DockPanel>
+                    </DockPanel>
+                </ToolBar>
+            </ToolBarTray>
         </DockPanel>
         <Grid>
             <ListView x:Name="TopicListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
