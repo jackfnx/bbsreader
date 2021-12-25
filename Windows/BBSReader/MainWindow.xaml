@@ -166,15 +166,7 @@
                         </TextBox.InputBindings>
                     </TextBox>
                     <Button x:Name="SearchButton" Content="Search" Click="SearchButton_Click" />
-                </ToolBar>
-                <ToolBar HorizontalAlignment="Stretch" ToolBarTray.IsLocked="True">
-                    <ToolBar.Resources>
-                        <Style TargetType="{x:Type DockPanel}">
-                            <Setter Property="HorizontalAlignment" Value="Right" />
-                        </Style>
-                    </ToolBar.Resources>
-                    <DockPanel>
-                    </DockPanel>
+                    <Button x:Name="ReloadButton" Content="Reload" Click="ReloadButton_Click" />
                 </ToolBar>
             </ToolBarTray>
         </DockPanel>

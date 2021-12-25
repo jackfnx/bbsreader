@@ -175,7 +175,7 @@ namespace BBSReader
                 if (x.skType == SKType.Simple)
                     item.Title = x.keyword;
                 else if (x.skType == SKType.Manual)
-                    item.Title = ("冻结：【" + keyword + "】");
+                    item.Title = ("静态：【" + keyword + "】");
                 else if (keyword == "*")
                     item.Title = ("【" + author + "】的作品集");
                 else if (author == "*")
@@ -770,6 +770,13 @@ namespace BBSReader
                 metaData.manualTags[titleText].Add(tag);
                 MetaDataLoader.Save(this.metaData);
             }
+        }
+
+        private void ReloadButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.metaData = MetaDataLoader.Load();
+            this.searchingKeyword = null;
+            ReloadTopics();
         }
     }
 }
