@@ -66,7 +66,16 @@ def bbstcon(html, page):
         if len(boxmsg) > 0:
             text = ''
         else:
-            raise IOError('load html error.')
+            voteposts = soup.select('div.postmessage')
+            if len(voteposts) > 0:
+                votepostobj = voteposts[0]                
+                [x.decompose() for x in votepostobj.select('strong')]
+                [x.decompose() for x in votepostobj.select('table')]
+                [x.decompose() for x in votepostobj.select('form#poll')]
+                [x.decompose() for x in votepostobj.select('fieldset')]
+                text = votepostobj.text
+            else:
+                raise IOError('load html error.')
 
     postinfos = soup.select('div.postinfo:not(.postactions)')
     if len(postinfos) > 0:

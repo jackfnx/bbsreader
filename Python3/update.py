@@ -77,7 +77,16 @@ def bbscon(html):
         if len(boxmsg) > 0:
             return ''
         else:
-            raise IOError('load html error.')
+            voteposts = soup.select('div.postmessage')
+            if len(voteposts) > 0:
+                votepostobj = voteposts[0]                
+                [x.decompose() for x in votepostobj.select('strong')]
+                [x.decompose() for x in votepostobj.select('table')]
+                [x.decompose() for x in votepostobj.select('form#poll')]
+                [x.decompose() for x in votepostobj.select('fieldset')]
+                return votepostobj.text
+            else:
+                raise IOError('load html error.')
 
 
 ### 读取新数据
@@ -113,12 +122,13 @@ def download_article(t):
     if not os.path.exists(txtpath):
         if not os.path.isdir(save_path):
             os.makedirs(save_path)
-        try:
+        # try:
+        if 1:
             chapter = bbscon(crawler.getUrl(t['link']))
             with open(txtpath, 'w', encoding='utf-8') as f:
                 f.write(chapter)
-        except Exception as e:
-            print('Get [%s]: %s' % (t['link'], str(e)))
+        # except Exception as e:
+        #     print('Get [%s]: %s' % (t['link'], str(e)))
 
 for superkeyword in meta_data.superkeywords:
     if superkeyword['skType'] != SK_Type.Manual:
