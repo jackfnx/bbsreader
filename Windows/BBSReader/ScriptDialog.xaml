@@ -11,7 +11,7 @@
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Title="ScriptWindow" Height="450" Width="800" KeyUp="Window_KeyUp" Closing="Window_Closing">
     <Grid>
-        <ScrollViewer Name="Scroller" Margin="0">
+        <ScrollViewer Name="Scroller" Margin="0" local:ScrollViewerExtensions.AlwaysScrollToEnd="True">
             <StackPanel>
                 <ItemsControl ItemsSource="{Binding ConsoleOutput, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>

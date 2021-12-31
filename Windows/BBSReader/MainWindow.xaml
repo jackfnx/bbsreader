@@ -3,6 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         xmlns:local="clr-namespace:BBSReader"
         mc:Ignorable="d"
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
@@ -193,6 +194,7 @@
                     </GridView>
                 </ListView.View>
             </ListView>
+            <fa:ImageAwesome x:Name="LoadingIcon" Icon="Refresh" Spin="True" Height="48" Width="48" Visibility="Hidden" />
             <Grid x:Name="ReaderView" Visibility="Hidden">
                 <ScrollViewer x:Name="ReaderScroll">
                     <TextBox x:Name="ReaderText" HorizontalAlignment="Left" VerticalAlignment="Top" TextWrapping="Wrap" FontSize="16" IsReadOnly="True" Background="Transparent" Foreground="LightGray"/>

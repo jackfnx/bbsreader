@@ -8,6 +8,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -39,7 +40,8 @@ namespace BBSReader
         {
             TOPICS,
             ARTICLES,
-            READER
+            READER,
+            LOADING
         }
 
         private struct ListItem
@@ -64,8 +66,6 @@ namespace BBSReader
         {
             InitializeComponent();
             
-            this.metaData = MetaDataLoader.Load();
-
             topics = new ObservableCollection<object>();
             TopicListView.DataContext = topics;
 
@@ -74,14 +74,12 @@ namespace BBSReader
 
             ServerInd.DataContext = MyServer.GetInstance();
 
-            searchingKeyword = null;
-            ReloadTopics();
-
-            currentState = AppState.TOPICS;
             currentId = -1;
 
             text = "";
-            UpdateView();
+
+            Thread thread = new Thread(Start_Loading);
+            thread.Start();
         }
 
         private void UpdateView()
@@ -91,6 +89,7 @@ namespace BBSReader
                 TopicListView.Visibility = Visibility.Visible;
                 ArticleListView.Visibility = Visibility.Hidden;
                 ReaderView.Visibility = Visibility.Hidden;
+                LoadingIcon.Visibility = Visibility.Hidden;
                 //TopicList.Focus();
             }
             else if (currentState == AppState.ARTICLES)
@@ -98,6 +97,7 @@ namespace BBSReader
                 TopicListView.Visibility = Visibility.Hidden;
                 ArticleListView.Visibility = Visibility.Visible;
                 ReaderView.Visibility = Visibility.Hidden;
+                LoadingIcon.Visibility = Visibility.Hidden;
                 //ArticleList.Focus();
                 readId = -1;
             }
@@ -106,13 +106,21 @@ namespace BBSReader
                 TopicListView.Visibility = Visibility.Hidden;
                 ArticleListView.Visibility = Visibility.Hidden;
                 ReaderView.Visibility = Visibility.Visible;
+                LoadingIcon.Visibility = Visibility.Hidden;
                 //ReaderView.Focus();
             }
+            else if (currentState == AppState.LOADING)
+            {
+                TopicListView.Visibility = Visibility.Hidden;
+                ArticleListView.Visibility = Visibility.Hidden;
+                ReaderView.Visibility = Visibility.Hidden;
+                LoadingIcon.Visibility = Visibility.Visible;
+            }
 
-            BackButton.IsEnabled = currentState != AppState.TOPICS || searchingKeyword != null;
+            BackButton.IsEnabled = (currentState != AppState.TOPICS && currentState == AppState.LOADING) || searchingKeyword != null;
         }
 
-        private void ReloadTopics()
+        private List<ListItem> ReloadTopics()
         {
             List<string> tags = new List<string>(metaData.tags.Keys);
             var superkeywords = new List<SuperKeyword>(metaData.superKeywords);
@@ -184,7 +192,7 @@ namespace BBSReader
                     item.Title = ("【" + keyword + "】系列");
                 item.Author = author;
 
-                BBSThread example = x.groupedTids.Count > 0 ?  metaData.threads[x.groupedTids[0].exampleId] : new BBSThread { postTime = "1970-01-01", threadId = "0" };
+                BBSThread example = x.groupedTids.Count > 0 ? metaData.threads[x.groupedTids[0].exampleId] : new BBSThread { postTime = "1970-01-01", threadId = "0" };
                 item.Time = example.postTime;
                 item.Url = example.link;
                 item.Source = "";
@@ -220,6 +228,11 @@ namespace BBSReader
                     return int.Parse(y.ThreadId) - int.Parse(x.ThreadId);
             });
 
+            return items;
+        }
+
+        private void UpdateTopics(List<ListItem> items)
+        {
             topics.Clear();
             items.ForEach(x =>
             {
@@ -312,7 +325,7 @@ namespace BBSReader
             else if (currentState == AppState.TOPICS && searchingKeyword != null)
             {
                 searchingKeyword = null;
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
             }
             UpdateView();
         }
@@ -342,7 +355,7 @@ namespace BBSReader
                     metaData.superKeywords[favoriteId] = sk;
                     MetaDataLoader.Save(this.metaData);
                     ReloadArticles();
-                    ReloadTopics();
+                    UpdateTopics(ReloadTopics());
                 }
                 readId = index;
             }
@@ -526,7 +539,7 @@ namespace BBSReader
                 MetaDataLoader.Save(this.metaData);
                 currentId = -1;
                 currentState = AppState.TOPICS;
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
                 UpdateView();
             }
         }
@@ -547,7 +560,7 @@ namespace BBSReader
                 MetaDataLoader.Save(this.metaData);
                 currentId = -1;
                 currentState = AppState.TOPICS;
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
                 UpdateView();
             }
         }
@@ -564,7 +577,7 @@ namespace BBSReader
                 MetaDataLoader.Save(this.metaData);
                 currentId = -1;
                 currentState = AppState.TOPICS;
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
                 UpdateView();
             }
         }
@@ -578,7 +591,7 @@ namespace BBSReader
                 currentId = -1;
                 searchingKeyword = null;
                 currentState = AppState.TOPICS;
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
                 UpdateView();
             }
         }
@@ -648,7 +661,7 @@ namespace BBSReader
                 }
                 MetaDataLoader.Save(this.metaData);
                 currentState = AppState.TOPICS;
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
                 UpdateView();
             }
         }
@@ -663,7 +676,7 @@ namespace BBSReader
                 metaData.superKeywords.RemoveAt(FavoriteId);
                 MetaDataLoader.Save(this.metaData);
                 currentState = AppState.TOPICS;
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
                 UpdateView();
             }
         }
@@ -710,7 +723,7 @@ namespace BBSReader
                         metaData.superKeywords[favoriteId] = sk;
                         MetaDataLoader.Save(this.metaData);
                         ReloadArticles();
-                        ReloadTopics();
+                        UpdateTopics(ReloadTopics());
                         UpdateView();
                     }
                 }
@@ -739,7 +752,7 @@ namespace BBSReader
                 searchingKeyword = SearchBox.Text;
 
             if (currentState == AppState.TOPICS)
-                ReloadTopics();
+                UpdateTopics(ReloadTopics());
             else if (currentState == AppState.ARTICLES)
                 ReloadArticles();
             UpdateView();
@@ -762,7 +775,7 @@ namespace BBSReader
             if (dialog.ShowDialog() ?? false)
             {
                 string titleText = item.Title;
-                string tag = dialog.Tag.Text;
+                string tag = dialog.TagWord.Text;
                 if (!metaData.manualTags.ContainsKey(titleText))
                 {
                     metaData.manualTags[titleText] = new List<string>();
@@ -774,9 +787,26 @@ namespace BBSReader
 
         private void ReloadButton_Click(object sender, RoutedEventArgs e)
         {
+            Thread thread = new Thread(Start_Loading);
+            thread.Start();
+        }
+
+        private void Start_Loading()
+        {
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                currentState = AppState.LOADING;
+                UpdateView();
+            }));
             this.metaData = MetaDataLoader.Load();
             this.searchingKeyword = null;
-            ReloadTopics();
+            var topicsItems = ReloadTopics();
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                UpdateTopics(topicsItems);
+                currentState = AppState.TOPICS;
+                UpdateView();
+            }));
         }
     }
 }

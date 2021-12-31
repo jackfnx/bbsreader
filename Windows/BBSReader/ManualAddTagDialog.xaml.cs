@@ -17,7 +17,7 @@ namespace BBSReader
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
             TitleHint.Content = TitleText;
-            Tag.Text = TitleText;
+            TagWord.Text = TitleText;
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
