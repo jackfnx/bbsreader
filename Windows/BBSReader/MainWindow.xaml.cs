@@ -74,8 +74,6 @@ namespace BBSReader
 
             ServerInd.DataContext = MyServer.GetInstance();
 
-            currentId = -1;
-
             text = "";
 
             Thread thread = new Thread(Start_Loading);
@@ -587,12 +585,8 @@ namespace BBSReader
             ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.UPDATE_ALL);
             if (dialog.ShowDialog() ?? false)
             {
-                this.metaData = MetaDataLoader.Load();
-                currentId = -1;
-                searchingKeyword = null;
-                currentState = AppState.TOPICS;
-                UpdateTopics(ReloadTopics());
-                UpdateView();
+                Thread thread = new Thread(Start_Loading);
+                thread.Start();
             }
         }
 
@@ -799,6 +793,7 @@ namespace BBSReader
                 UpdateView();
             }));
             this.metaData = MetaDataLoader.Load();
+            this.currentId = -1;
             this.searchingKeyword = null;
             var topicsItems = ReloadTopics();
             this.Dispatcher.Invoke(new Action(() =>
