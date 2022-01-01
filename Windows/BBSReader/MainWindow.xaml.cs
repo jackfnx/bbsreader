@@ -115,7 +115,7 @@ namespace BBSReader
                 LoadingIcon.Visibility = Visibility.Visible;
             }
 
-            BackButton.IsEnabled = (currentState != AppState.TOPICS && currentState == AppState.LOADING) || searchingKeyword != null;
+            BackButton.IsEnabled = (currentState != AppState.TOPICS && currentState != AppState.LOADING) || searchingKeyword != null;
         }
 
         private List<ListItem> ReloadTopics()
