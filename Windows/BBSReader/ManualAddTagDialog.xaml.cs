@@ -20,7 +20,7 @@ namespace BBSReader
             TagWord.Text = TitleText;
         }
 
-        private void OkButton_Click(object sender, RoutedEventArgs e)
+        private void OKButton_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
         }

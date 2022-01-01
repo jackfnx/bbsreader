@@ -111,6 +111,9 @@
     <Compile Include="ManualAddTagDialog.xaml.cs">
       <DependentUpon>ManualAddTagDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ManualDownloadDialog.xaml.cs">
+      <DependentUpon>ManualDownloadDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="MetaDataLoader.cs" />
     <Compile Include="PacketServer\CGI404.cs" />
     <Compile Include="PacketServer\CGICon.cs" />
@@ -141,6 +144,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="ManualAddTagDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="ManualDownloadDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

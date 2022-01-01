@@ -163,7 +163,8 @@ def main():
 
     if keywordId < 0:
         for superkeyword in superkeywords:
-            do_grouping(threads, superkeyword, save_root_path, silence=True)
+            if superkeyword['skType'] != SK_Type.Manual:
+                do_grouping(threads, superkeyword, save_root_path, silence=True)
     elif keywordId > len(superkeywords):
         sys.stderr.write('ERROR: The keywordId is NOT FOUND.\n')
         sys.exit(0)

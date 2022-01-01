@@ -20,7 +20,10 @@ namespace BBSReader.PacketServer
                 if (sk.skType == SKType.Simple)
                     packet.title = sk.keyword;
                 else if (sk.skType == SKType.Manual)
-                    packet.title = string.Format("静态：【{0}】", sk.keyword);
+                    if (sk.keyword == "Singles")
+                        packet.title = "《独立篇章合集》";
+                    else
+                        packet.title = string.Format("静态：【{0}】", sk.keyword);
                 else if (sk.keyword == "*")
                     packet.title = string.Format("【{0}】的作品集", sk.authors[0]);
                 else if (sk.authors[0] == "*")

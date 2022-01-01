@@ -2,6 +2,7 @@
 # coding: utf-8
 import os
 import sys
+from typing import NewType
 from bs4 import BeautifulSoup
 import argparse
 
@@ -13,6 +14,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('bbsid', type=int, default=0, help='<BBS ID>')
 parser.add_argument('threadids', nargs='+', type=int, help='<Thread ID>')
 parser.add_argument('-u', '--updateindex', action='store_true', help='update index')
+parser.add_argument('-s', '--assingles', action='store_true', help='as singles topic')
 parser.add_argument('-t', '--title', nargs='?', type=str, help='manual set title (when update index)')
 parser.add_argument('-a', '--author', nargs='?', type=str, help='manual set author (when update index)')
 parser.add_argument('-p', '--posttime', nargs='?', type=str, help='manual set post time (when update index)')
@@ -21,6 +23,7 @@ args = parser.parse_args()
 threadIds = [str(x) for x in args.threadids]
 bbsId = args.bbsid
 updateIndex = args.updateindex
+asSingles = args.assingles
 
 
 crawler = Crawler.getCrawler(bbsId)
@@ -149,4 +152,16 @@ for threadId in threadIds:
 if updateIndex:
     meta_data = MetaData(save_root_path)
     meta_data.merge_threads(new_threads, force=True)
+    if asSingles:
+        sk = [x for x in meta_data.superkeywords if x['skType'] == SK_Type.Manual and x['keyword'] == 'Singles'][0]
+        lastIds = [(x['siteId'], x['threadId']) for x in meta_data.last_threads]
+        assert len(new_threads) == 1
+        tid = lastIds.index((new_threads[0]['siteId'], new_threads[0]['threadId']))
+        if tid not in sk['tids']:
+            sk['tids'].append(tid)
+            sk['groups'].append((tid,))
+            ret = 'new'
+        else:
+            ret = 'existed'
+        print(sk, ret)
     meta_data.save_meta_data()

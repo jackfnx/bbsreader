@@ -65,7 +65,7 @@ namespace BBSReader
         public MainWindow()
         {
             InitializeComponent();
-            
+
             topics = new ObservableCollection<object>();
             TopicListView.DataContext = topics;
 
@@ -76,8 +76,7 @@ namespace BBSReader
 
             text = "";
 
-            Thread thread = new Thread(Start_Loading);
-            thread.Start();
+            StartReloadData();
         }
 
         private void UpdateView()
@@ -181,7 +180,10 @@ namespace BBSReader
                 if (x.skType == SKType.Simple)
                     item.Title = x.keyword;
                 else if (x.skType == SKType.Manual)
-                    item.Title = ("静态：【" + keyword + "】");
+                    if (keyword == "Singles")
+                        item.Title = ("《独立篇章合集》");
+                    else
+                        item.Title = ("静态：【" + keyword + "】");
                 else if (keyword == "*")
                     item.Title = ("【" + author + "】的作品集");
                 else if (author == "*")
@@ -365,7 +367,7 @@ namespace BBSReader
             {
                 return;
             }
-            
+
             if (e.Key == System.Windows.Input.Key.Space)
             {
                 if (currentState == AppState.READER)
@@ -477,12 +479,12 @@ namespace BBSReader
                 cfg.Dispatcher = Application.Current.Dispatcher;
             });
         }
-        
+
         private void Window_Unloaded(object sender, RoutedEventArgs e)
         {
             notifier.Dispose();
         }
-        
+
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             MyServer.GetInstance().Stop();
@@ -535,10 +537,7 @@ namespace BBSReader
                 };
                 metaData.superKeywords.Add(superKeyword);
                 MetaDataLoader.Save(this.metaData);
-                currentId = -1;
-                currentState = AppState.TOPICS;
-                UpdateTopics(ReloadTopics());
-                UpdateView();
+                StartResetUI();
             }
         }
 
@@ -556,10 +555,7 @@ namespace BBSReader
                 metaData.superKeywords.Remove(superKeyword);
                 metaData.tags[keyword] = tids;
                 MetaDataLoader.Save(this.metaData);
-                currentId = -1;
-                currentState = AppState.TOPICS;
-                UpdateTopics(ReloadTopics());
-                UpdateView();
+                StartResetUI();
             }
         }
 
@@ -573,20 +569,16 @@ namespace BBSReader
                 metaData.blacklist.Add(title);
                 metaData.tags.Remove(title);
                 MetaDataLoader.Save(this.metaData);
-                currentId = -1;
-                currentState = AppState.TOPICS;
-                UpdateTopics(ReloadTopics());
-                UpdateView();
+                StartResetUI();
             }
         }
 
-        private void DownloadButton_Click(object sender, RoutedEventArgs e)
+        private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
             ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.UPDATE_ALL);
             if (dialog.ShowDialog() ?? false)
             {
-                Thread thread = new Thread(Start_Loading);
-                thread.Start();
+                StartReloadData();
             }
         }
 
@@ -654,9 +646,7 @@ namespace BBSReader
                     metaData.superKeywords.Add(superKeyword);
                 }
                 MetaDataLoader.Save(this.metaData);
-                currentState = AppState.TOPICS;
-                UpdateTopics(ReloadTopics());
-                UpdateView();
+                StartResetUI();
             }
         }
 
@@ -669,9 +659,7 @@ namespace BBSReader
                 int FavoriteId = item.FavoriteId;
                 metaData.superKeywords.RemoveAt(FavoriteId);
                 MetaDataLoader.Save(this.metaData);
-                currentState = AppState.TOPICS;
-                UpdateTopics(ReloadTopics());
-                UpdateView();
+                StartResetUI();
             }
         }
 
@@ -781,11 +769,16 @@ namespace BBSReader
 
         private void ReloadButton_Click(object sender, RoutedEventArgs e)
         {
-            Thread thread = new Thread(Start_Loading);
+            StartReloadData();
+        }
+
+        private void StartReloadData()
+        {
+            Thread thread = new Thread(ReloadData);
             thread.Start();
         }
 
-        private void Start_Loading()
+        private void ReloadData()
         {
             this.Dispatcher.Invoke(new Action(() =>
             {
@@ -802,6 +795,70 @@ namespace BBSReader
                 currentState = AppState.TOPICS;
                 UpdateView();
             }));
+        }
+
+        private void StartResetUI()
+        {
+            Thread thread = new Thread(ResetUI);
+            thread.Start();
+        }
+
+        private void ResetUI()
+        {
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                currentState = AppState.LOADING;
+                UpdateView();
+            }));
+            this.currentId = -1;
+            this.searchingKeyword = null;
+            var topicsItems = ReloadTopics();
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                UpdateTopics(topicsItems);
+                currentState = AppState.TOPICS;
+                UpdateView();
+            }));
+        }
+
+        private void CollectSingleArticle_Click(object sender, RoutedEventArgs e)
+        {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+
+            int FavoriteId = metaData.superKeywords.FindIndex(x => x.keyword == "Singles");
+            if (FavoriteId == -1)
+            {
+                SuperKeyword superKeyword = new SuperKeyword
+                {
+                    skType = SKType.Manual,
+                    keyword = "Singles",
+                    authors = new List<string>() { "*" },
+                    tids = new List<int>(),
+                    read = -1,
+                    groups = new List<List<string>>(),
+                    groupedTids = new List<Group>()
+                };
+                metaData.superKeywords.Add(superKeyword);
+                FavoriteId = metaData.superKeywords.Count - 1;
+            }
+
+            string ThreadId = item.ThreadId;
+            string SiteId = item.SiteId;
+            int tid = metaData.threads.FindIndex(x => (x.siteId == SiteId) && (x.threadId == ThreadId));
+
+            SuperKeyword sk = metaData.superKeywords[FavoriteId];
+            sk.tids.Add(tid);
+            sk.groupedTids.Add(new Group { exampleId = tid, tooltips = "" });
+            metaData.superKeywords[FavoriteId] = sk;
+
+            MetaDataLoader.Save(metaData);
+            StartResetUI();
+        }
+
+        private void DownloadButton_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }
