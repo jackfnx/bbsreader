@@ -2,6 +2,7 @@
 # coding: utf-8
 import os
 import sys
+import copy
 from typing import NewType
 from bs4 import BeautifulSoup
 import argparse
@@ -163,5 +164,8 @@ if updateIndex:
             ret = 'new'
         else:
             ret = 'existed'
-        print(sk, ret)
+        sk['tids'].sort(key=lambda x: meta_data.last_threads[x]['postTime'], reverse=True)
+        sk_p = copy.deepcopy(sk)
+        sk_p['tids'] = '<%d>' % len(sk_p['tids'])
+        print(sk_p, ret)
     meta_data.save_meta_data()

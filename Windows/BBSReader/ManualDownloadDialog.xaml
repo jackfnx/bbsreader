@@ -11,15 +11,38 @@
         ShowInTaskbar="False"
         mc:Ignorable="d"
         Title="ManualDownloadDialog" Height="450" Width="800">
-    <Grid>
-        <Label Name="BBS" Grid.Column="1"/>
-        <TextBox Name="BBSId" Grid.Column="1" Grid.Row="1" MinWidth="250"/>
-        <Label Name="Thread" Grid.Column="1"/>
-        <TextBox Name="ThreadId" Grid.Column="1" Grid.Row="1" MinWidth="250"/>
+    <Grid Margin="15">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="auto"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <ComboBox x:Name="BBSSelector" MinWidth="100" Margin="10" Grid.Column="0" Grid.Row="0" materialDesign:HintAssist.Hint="BBS"/>
+        <TextBox x:Name="ThreadIdText" MinWidth="200" Margin="10" Grid.Column="1" Grid.Row="0" materialDesign:HintAssist.Hint="ThreadId" />
+        
+        <CheckBox x:Name="AddTo" Content="Add To Singles Topic" Margin="10" Grid.ColumnSpan="2" Grid.Row="1" />
 
-        <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button IsDefault="True" Name="OKButton" Click="OKButton_Click"  MinWidth="60" Margin="0,0,10,0">_OK</Button>
-            <Button IsCancel="True" MinWidth="60">_Cancel</Button>
+        <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="10">
+            <Button IsDefault="True" x:Name="OKButton" Content="_OK" Click="OKButton_Click"  MinWidth="60" Margin="0,0,10,0">
+                <Button.Style>
+                    <Style TargetType="{x:Type Button}">
+                        <Style.Triggers>
+                            <MultiDataTrigger>
+                                <MultiDataTrigger.Conditions>
+                                    <Condition Binding="{Binding ElementName=BBSSelector, Path=SelectedIndex, Mode=OneWay}" Value="-1" />
+                                    <Condition Binding="{Binding ElementName=ThreadIdText, Path=Text.Length, Mode=OneWay}" Value="0" />
+                                </MultiDataTrigger.Conditions>
+                                <Setter Property="IsEnabled" Value="False" />
+                            </MultiDataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+            </Button>
+            <Button IsCancel="True" Content="_Cancel" MinWidth="60"></Button>
         </WrapPanel>
     </Grid>
 </Window>

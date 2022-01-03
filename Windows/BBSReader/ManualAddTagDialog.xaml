@@ -13,7 +13,6 @@
         Title="Manual Add Tag" Height="450" Width="800" MinHeight="450" MinWidth="800" Loaded="Window_Loaded">
     <Grid Margin="15">
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
         <Grid.RowDefinitions>
@@ -22,12 +21,12 @@
             <RowDefinition Height="Auto" />
         </Grid.RowDefinitions>
 
-        <Label Name="TitleHint" Grid.Column="1"/>
-        <TextBox Name="TagWord" Grid.Column="1" Grid.Row="1" MinWidth="250"/>
+        <Label x:Name="TitleHint" Grid.Column="0" Grid.Row="0" Margin="10" />
+        <TextBox x:Name="TagWord" Grid.Column="0" Grid.Row="1" MinWidth="250" Margin="10"/>
 
-        <WrapPanel Grid.Row="2" Grid.ColumnSpan="2" HorizontalAlignment="Right" Margin="0,15,0,0">
-            <Button IsDefault="True" Name="btnDialogOk" Click="OKButton_Click" MinWidth="60" Margin="0,0,10,0">_OK</Button>
-            <Button IsCancel="True" MinWidth="60">_Cancel</Button>
+        <WrapPanel Grid.Row="2" Grid.Column="0" HorizontalAlignment="Right" Margin="15">
+            <Button IsDefault="True" x:Name="OKButton" Content="_OK" Click="OKButton_Click" MinWidth="60" Margin="0,0,10,0"></Button>
+            <Button IsCancel="True" Content="_Cancel" MinWidth="60"></Button>
         </WrapPanel>
     </Grid>
 </Window>

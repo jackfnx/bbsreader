@@ -575,7 +575,7 @@ namespace BBSReader
 
         private void UpdateButton_Click(object sender, RoutedEventArgs e)
         {
-            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.UPDATE_ALL);
+            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.UPDATE_ALL) { Owner = this };
             if (dialog.ShowDialog() ?? false)
             {
                 StartReloadData();
@@ -719,7 +719,7 @@ namespace BBSReader
             int siteId = Constants.SITE_DEF[item.SiteId].id;
             long threadId = long.Parse(item.ThreadId);
 
-            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, siteId, threadId);
+            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, siteId, threadId, "", "") { Owner = this };
             if (dialog.ShowDialog() ?? false)
             {
                 ReloadArticles();
@@ -742,7 +742,7 @@ namespace BBSReader
 
         private void PacketButton_Click(object sender, RoutedEventArgs e)
         {
-            PacketWindow dialog = new PacketWindow();
+            PacketWindow dialog = new PacketWindow() { Owner = this };
             dialog.ShowDialog();
         }
 
@@ -752,6 +752,7 @@ namespace BBSReader
             dynamic item = cmi.DataContext;
             ManualAddTagDialog dialog = new ManualAddTagDialog()
             {
+                Owner = this,
                 TitleText = item.Title
             };
             if (dialog.ShowDialog() ?? false)
@@ -848,8 +849,12 @@ namespace BBSReader
             int tid = metaData.threads.FindIndex(x => (x.siteId == SiteId) && (x.threadId == ThreadId));
 
             SuperKeyword sk = metaData.superKeywords[FavoriteId];
-            sk.tids.Add(tid);
-            sk.groupedTids.Add(new Group { exampleId = tid, tooltips = "" });
+            if (!sk.tids.Contains(tid))
+            {
+                sk.tids.Add(tid);
+                sk.groupedTids.Add(new Group { exampleId = tid, tooltips = "" });
+            }
+            sk.tids.Sort((x,y) => metaData.threads[x].postTime.CompareTo(metaData.threads[y].postTime) );
             metaData.superKeywords[FavoriteId] = sk;
 
             MetaDataLoader.Save(metaData);
@@ -858,7 +863,19 @@ namespace BBSReader
 
         private void DownloadButton_Click(object sender, RoutedEventArgs e)
         {
-
+            ManualDownloadDialog dialog = new ManualDownloadDialog() { Owner = this };
+            if (dialog.ShowDialog() ?? false)
+            {
+                string siteId = dialog.BBSId.ToString();
+                string threadId = dialog.ThreadId;
+                string u = "-u";
+                string addTo = dialog.AddToSinglesTopic ? "-s" : "";
+                ScriptDialog dialog2 = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, siteId, threadId, u, addTo) { Owner = this };
+                if (dialog2.ShowDialog() ?? false)
+                {
+                    StartReloadData();
+                }
+            }
         }
     }
 }

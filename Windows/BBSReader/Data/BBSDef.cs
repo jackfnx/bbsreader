@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace BBSReader.Data
+﻿namespace BBSReader.Data
 {
     public struct BBSDef
     {
@@ -12,5 +6,6 @@ namespace BBSReader.Data
         public string siteName;
         public string siteHost;
         public int id;
+        public bool onlineUpdate;
     }
 }
