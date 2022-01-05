@@ -19,12 +19,14 @@ parser.add_argument('-s', '--assingles', action='store_true', help='as singles t
 parser.add_argument('-t', '--title', nargs='?', type=str, help='manual set title (when update index)')
 parser.add_argument('-a', '--author', nargs='?', type=str, help='manual set author (when update index)')
 parser.add_argument('-p', '--posttime', nargs='?', type=str, help='manual set post time (when update index)')
+parser.add_argument('-m', '--maxpage', nargs='?', type=int, help='max page')
 args = parser.parse_args()
 
 threadIds = [str(x) for x in args.threadids]
 bbsId = args.bbsid
 updateIndex = args.updateindex
 asSingles = args.assingles
+maxPage = args.maxpage
 
 
 crawler = Crawler.getCrawler(bbsId)
@@ -130,7 +132,8 @@ new_threads = []
 for threadId in threadIds:
     text, title, author, postTime, postUrl, page_num, floors = getpage(crawler, threadId, 1)
     print('thread: %s, page: %d/%d, new floors: %s.' % (threadId, 1, page_num, floors))
-    for page in range(2, page_num+1):
+    page_num2 = page_num if maxPage is None else maxPage
+    for page in range(2, page_num2+1):
         nextPage, _, _, _, _, _, floors = getpage(crawler, threadId, page)
         print('thread: %s, page: %d/%d, new floors: %s.' % (threadId, page, page_num, floors))
         text += '\n\n\n\n-------------------------------------------------\n\n\n\n'
@@ -167,5 +170,6 @@ if updateIndex:
         sk['tids'].sort(key=lambda x: meta_data.last_threads[x]['postTime'], reverse=True)
         sk_p = copy.deepcopy(sk)
         sk_p['tids'] = '<%d>' % len(sk_p['tids'])
+        sk_p['groups'] = '<%d>' % len(sk_p['groups'])
         print(sk_p, ret)
     meta_data.save_meta_data()
