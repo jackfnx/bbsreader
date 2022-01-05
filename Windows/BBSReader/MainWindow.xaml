@@ -93,7 +93,7 @@
                     <Setter Property="Control.Background" Value="DeepSkyBlue" />
                 </MultiDataTrigger>
                 <DataTrigger Binding="{Binding Path=SKType}" Value="Advanced">
-                    <Setter Property="Control.Background" Value="DarkSalmon" />
+                    <Setter Property="Control.Background" Value="CornflowerBlue" />
                 </DataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
@@ -105,26 +105,26 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=SKType}" Value="Advanced" />
-                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Control.Background" Value="LightSalmon" />
-                </MultiDataTrigger>
-                <DataTrigger Binding="{Binding Path=SKType}" Value="Manual">
-                    <Setter Property="Control.Background" Value="DarkCyan" />
-                </DataTrigger>
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=SKType}" Value="Manual" />
-                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Control.Background" Value="Magenta" />
-                </MultiDataTrigger>
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=SKType}" Value="Manual" />
                         <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Control.Background" Value="LightBlue" />
+                </MultiDataTrigger>
+                <DataTrigger Binding="{Binding Path=SKType}" Value="Manual">
+                    <Setter Property="Control.Background" Value="DimGray" />
+                </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=SKType}" Value="Manual" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="Magenta" />
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=SKType}" Value="Manual" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="CadetBlue" />
                 </MultiDataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
