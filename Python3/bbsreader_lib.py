@@ -226,6 +226,7 @@ class MetaData:
             keywords += [re.sub('【.*?】', '', title)]
             keywords = list(set(keywords))
             keywords += re.findall('【(.*?)】', title)
+            keywords += re.findall('【(.*?)番外篇.*?】', title)
             keywords_no_kh = [re.sub('(?:（|\\()(.*?)(?:\\)|）)', '', x) for x in keywords if re.search('(?:（|\\()(.*?)(?:\\)|）)', x)]
             keywords_in_kh = []
             for x in keywords:
