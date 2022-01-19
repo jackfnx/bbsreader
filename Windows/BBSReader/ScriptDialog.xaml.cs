@@ -67,6 +67,7 @@ namespace BBSReader
                 proc.StartInfo.CreateNoWindow = true;
                 proc.EnableRaisingEvents = true;
                 proc.OutputDataReceived += (s, ev) => this.Dispatcher.BeginInvoke(new Action<string>(dc.OutputLine), ev.Data);
+                proc.ErrorDataReceived += (s, ev) => this.Dispatcher.BeginInvoke(new Action<string>(dc.OutputLine), ev.Data);
                 procs.Add(proc);
             }
 
