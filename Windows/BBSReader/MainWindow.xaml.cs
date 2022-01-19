@@ -854,7 +854,7 @@ namespace BBSReader
                 sk.tids.Add(tid);
                 sk.groupedTids.Add(new Group { exampleId = tid, tooltips = "" });
             }
-            sk.tids.Sort((x,y) => metaData.threads[x].postTime.CompareTo(metaData.threads[y].postTime) );
+            sk.tids.Sort((x,y) => -metaData.threads[x].postTime.CompareTo(metaData.threads[y].postTime) );
             metaData.superKeywords[FavoriteId] = sk;
 
             MetaDataLoader.Save(metaData);
