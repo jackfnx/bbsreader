@@ -81,13 +81,6 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=Favorite}" Value="True" />
-                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Control.Background" Value="Magenta" />
-                </MultiDataTrigger>
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=Favorite}" Value="True" />
                         <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Control.Background" Value="DeepSkyBlue" />
@@ -95,13 +88,6 @@
                 <DataTrigger Binding="{Binding Path=SKType}" Value="Advanced">
                     <Setter Property="Control.Background" Value="CornflowerBlue" />
                 </DataTrigger>
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=SKType}" Value="Advanced" />
-                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Control.Background" Value="Magenta" />
-                </MultiDataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=SKType}" Value="Advanced" />
@@ -115,13 +101,6 @@
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=SKType}" Value="Author" />
-                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Control.Background" Value="Magenta" />
-                </MultiDataTrigger>
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=SKType}" Value="Author" />
                         <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Control.Background" Value="BlueViolet" />
@@ -129,13 +108,6 @@
                 <DataTrigger Binding="{Binding Path=SKType}" Value="Manual">
                     <Setter Property="Control.Background" Value="DimGray" />
                 </DataTrigger>
-                <MultiDataTrigger>
-                    <MultiDataTrigger.Conditions>
-                        <Condition Binding="{Binding Path=SKType}" Value="Manual" />
-                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
-                    </MultiDataTrigger.Conditions>
-                    <Setter Property="Control.Background" Value="Magenta" />
-                </MultiDataTrigger>
                 <MultiDataTrigger>
                     <MultiDataTrigger.Conditions>
                         <Condition Binding="{Binding Path=SKType}" Value="Manual" />
