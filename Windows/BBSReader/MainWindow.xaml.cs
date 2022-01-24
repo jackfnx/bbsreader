@@ -180,16 +180,21 @@ namespace BBSReader
                 if (x.skType == SKType.Simple)
                     item.Title = x.keyword;
                 else if (x.skType == SKType.Manual)
-                    if (keyword == "Singles")
+                {
+                    if (keyword == "*")
                         item.Title = ("《独立篇章合集》");
                     else
                         item.Title = ("静态：【" + keyword + "】");
-                else if (keyword == "*")
+                }
+                else if (x.skType == SKType.Author)
                     item.Title = ("【" + author + "】的作品集");
-                else if (author == "*")
-                    item.Title = ("专题：【" + keyword + "】");
-                else
-                    item.Title = ("【" + keyword + "】系列");
+                else if (x.skType == SKType.Advanced)
+                {
+                    if (author == "*")
+                        item.Title = ("专题：【" + keyword + "】");
+                    else
+                        item.Title = ("【" + keyword + "】系列");
+                }
                 item.Author = author;
 
                 BBSThread example = x.groupedTids.Count > 0 ? metaData.threads[x.groupedTids[0].exampleId] : new BBSThread { postTime = "1970-01-01", threadId = "0" };
@@ -530,7 +535,9 @@ namespace BBSReader
                     skType = SKType.Simple,
                     keyword = title,
                     authors = new List<string> { item.Author },
+                    alias = new List<string>(),
                     tids = tids,
+                    kws = new List<List<int>>(),
                     read = -1,
                     groups = new List<List<string>>(),
                     groupedTids = tids.ConvertAll(x => new Group { exampleId = x, tooltips = "" })
@@ -619,13 +626,16 @@ namespace BBSReader
             var dr = dialog.ShowDialog() ?? false;
             if (dr)
             {
+                string skType = dialog.Keyword == "*" ? SKType.Author : SKType.Advanced;
                 if (FavoriteId != -1)
                 {
                     SuperKeyword superKeyword = metaData.superKeywords[FavoriteId];
-                    superKeyword.skType = SKType.Advanced;
+                    superKeyword.skType = skType;
                     superKeyword.keyword = dialog.Keyword;
                     superKeyword.authors = new List<string>(dialog.AuthorList);
+                    superKeyword.alias = new List<string>();
                     superKeyword.tids = new List<int>();
+                    superKeyword.kws = new List<List<int>>();
                     superKeyword.read = -1;
                     superKeyword.groups = new List<List<string>>();
                     superKeyword.groupedTids = new List<Group>();
@@ -635,10 +645,12 @@ namespace BBSReader
                 {
                     SuperKeyword superKeyword = new SuperKeyword
                     {
-                        skType = SKType.Advanced,
+                        skType = skType,
                         keyword = dialog.Keyword,
                         authors = new List<string>(dialog.AuthorList),
+                        alias = new List<string>(),
                         tids = new List<int>(),
+                        kws = new List<List<int>>(),
                         read = -1,
                         groups = new List<List<string>>(),
                         groupedTids = new List<Group>()
@@ -654,7 +666,7 @@ namespace BBSReader
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
-            if (item.SKType == SKType.Advanced)
+            if (item.SKType == SKType.Advanced || item.SKType == SKType.Author)
             {
                 int FavoriteId = item.FavoriteId;
                 metaData.superKeywords.RemoveAt(FavoriteId);
@@ -719,7 +731,7 @@ namespace BBSReader
             int siteId = Constants.SITE_DEF[item.SiteId].id;
             long threadId = long.Parse(item.ThreadId);
 
-            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, siteId, threadId, "", "") { Owner = this };
+            ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, siteId, threadId, "-u", "") { Owner = this };
             if (dialog.ShowDialog() ?? false)
             {
                 ReloadArticles();
@@ -746,24 +758,27 @@ namespace BBSReader
             dialog.ShowDialog();
         }
 
-        private void ManualAddTagContextMenu_Click(object sender, RoutedEventArgs e)
+        private void EditKeywordAliasContextMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
-            ManualAddTagDialog dialog = new ManualAddTagDialog()
+            if (item.SKType != SKType.Simple)
+            {
+                return;
+            }
+            int FavoriteId = item.FavoriteId;
+            SuperKeyword sk = metaData.superKeywords[FavoriteId];
+            AliasEditDialog dialog = new AliasEditDialog()
             {
                 Owner = this,
-                TitleText = item.Title
+                Keyword = sk.keyword
             };
+            sk.alias.ForEach(x => dialog.Aliases.Add(x));
             if (dialog.ShowDialog() ?? false)
             {
-                string titleText = item.Title;
-                string tag = dialog.TagWord.Text;
-                if (!metaData.manualTags.ContainsKey(titleText))
-                {
-                    metaData.manualTags[titleText] = new List<string>();
-                }
-                metaData.manualTags[titleText].Add(tag);
+                SuperKeyword superKeyword = metaData.superKeywords[FavoriteId];
+                superKeyword.alias = new List<string>(dialog.Aliases);
+                metaData.superKeywords[FavoriteId] = superKeyword;
                 MetaDataLoader.Save(this.metaData);
             }
         }
@@ -827,15 +842,17 @@ namespace BBSReader
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
 
-            int FavoriteId = metaData.superKeywords.FindIndex(x => x.keyword == "Singles");
+            int FavoriteId = metaData.superKeywords.FindIndex(x => x.keyword == "*");
             if (FavoriteId == -1)
             {
                 SuperKeyword superKeyword = new SuperKeyword
                 {
                     skType = SKType.Manual,
-                    keyword = "Singles",
+                    keyword = "*",
                     authors = new List<string>() { "*" },
+                    alias = new List<string>(),
                     tids = new List<int>(),
+                    kws = new List<List<int>>(),
                     read = -1,
                     groups = new List<List<string>>(),
                     groupedTids = new List<Group>()
@@ -852,7 +869,6 @@ namespace BBSReader
             if (!sk.tids.Contains(tid))
             {
                 sk.tids.Add(tid);
-                sk.groupedTids.Add(new Group { exampleId = tid, tooltips = "" });
             }
             sk.tids.Sort((x,y) => -metaData.threads[x].postTime.CompareTo(metaData.threads[y].postTime) );
             metaData.superKeywords[FavoriteId] = sk;

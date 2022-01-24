@@ -15,8 +15,6 @@ namespace BBSReader.Data
         public List<SuperKeyword> superKeywords;
         [JsonProperty("blacklist")]
         public List<string> blacklist;
-        [JsonProperty("manualTags")]
-        public Dictionary<string, List<string>> manualTags;
     }
 
 }

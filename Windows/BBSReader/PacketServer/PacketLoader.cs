@@ -20,18 +20,23 @@ namespace BBSReader.PacketServer
                 if (sk.skType == SKType.Simple)
                     packet.title = sk.keyword;
                 else if (sk.skType == SKType.Manual)
-                    if (sk.keyword == "Singles")
+                {
+                    if (sk.keyword == "*")
                         packet.title = "《独立篇章合集》";
                     else
                         packet.title = string.Format("静态：【{0}】", sk.keyword);
-                else if (sk.keyword == "*")
+                }
+                else if (sk.skType == SKType.Author)
                     packet.title = string.Format("【{0}】的作品集", sk.authors[0]);
-                else if (sk.authors[0] == "*")
-                    packet.title = string.Format("专题：【{0}】", sk.keyword);
-                else
-                    packet.title = string.Format("【{0}】系列", sk.keyword);
+                else if (sk.skType == SKType.Advanced)
+                {
+                    if (sk.authors[0] == "*")
+                        packet.title = string.Format("专题：【{0}】", sk.keyword);
+                    else
+                        packet.title = string.Format("【{0}】系列", sk.keyword);
+                }
                 packet.author = sk.authors[0];
-                packet.simple = sk.skType == SKType.Simple;
+                packet.simple = sk.skType != SKType.Author;
                 packet.chapters = new List<Chapter>();
                 foreach (Group g in sk.groupedTids)
                 {
@@ -46,11 +51,10 @@ namespace BBSReader.PacketServer
                     ch.timestamp = Utils.GetTimestamp(example.postTime);
                     packet.chapters.Add(ch);
                 }
-                if (sk.skType != SKType.Manual)
-                    packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
+                packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
                 packet.timestamp = packet.chapters[0].timestamp;
-                packet.key = Utils.CalcKey(packet.title, packet.author, sk.skType == SKType.Simple);
-                packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.skType == SKType.Simple, packet.chapters, null);
+                packet.key = Utils.CalcKey(packet.title, packet.author, sk.skType != SKType.Author);
+                packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.skType != SKType.Author, packet.chapters, null);
                 packet.source = "Forum";
                 list.Add(packet);
             }

@@ -11,8 +11,12 @@ namespace BBSReader.Data
         public string keyword;
         [JsonProperty("author")]
         public List<string> authors;
+        [JsonProperty("alias")]
+        public List<string> alias;
         [JsonProperty("tids")]
         public List<int> tids;
+        [JsonProperty("kws")]
+        public List<List<int>> kws;
         [JsonProperty("read")]
         public int read;
         [JsonProperty("groups")]

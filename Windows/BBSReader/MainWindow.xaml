@@ -60,12 +60,12 @@
             <MenuItem Header="download multi-floors .txt" Name="DownloadDetailContextMenu" Click="DownloadDetailContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="delete downloaded .txt" Name="DeleteTxtContextMenu" Click="DeleteTxtContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
+            <MenuItem Header="edit keyword alias" Name="EditKeywordAliasContextMenu" Click="EditKeywordAliasContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
             <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
             <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
             <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnSimple}"/>
             <MenuItem Header="collect the single article" Name="CollectSingleArticle" Click="CollectSingleArticle_Click" Style="{StaticResource DisableOnBeFolder}"/>
-            <MenuItem Header="manual add tag" Name="ManualAddTagContextMenu" Click="ManualAddTagContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
         </ContextMenu>
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MaterialDesignGridViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />
@@ -108,6 +108,23 @@
                         <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
                     </MultiDataTrigger.Conditions>
                     <Setter Property="Control.Background" Value="LightBlue" />
+                </MultiDataTrigger>
+                <DataTrigger Binding="{Binding Path=SKType}" Value="Author">
+                    <Setter Property="Control.Background" Value="DarkSlateBlue" />
+                </DataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=SKType}" Value="Author" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsSelected}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="Magenta" />
+                </MultiDataTrigger>
+                <MultiDataTrigger>
+                    <MultiDataTrigger.Conditions>
+                        <Condition Binding="{Binding Path=SKType}" Value="Author" />
+                        <Condition Binding="{Binding RelativeSource={RelativeSource Mode=Self}, Path=IsMouseOver}" Value="True"/>
+                    </MultiDataTrigger.Conditions>
+                    <Setter Property="Control.Background" Value="BlueViolet" />
                 </MultiDataTrigger>
                 <DataTrigger Binding="{Binding Path=SKType}" Value="Manual">
                     <Setter Property="Control.Background" Value="DimGray" />

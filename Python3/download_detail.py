@@ -157,19 +157,17 @@ if updateIndex:
     meta_data = MetaData(save_root_path)
     meta_data.merge_threads(new_threads, force=True)
     if asSingles:
-        sk = [x for x in meta_data.superkeywords if x['skType'] == SK_Type.Manual and x['keyword'] == 'Singles'][0]
+        sk = [x for x in meta_data.superkeywords if x['skType'] == SK_Type.Manual and x['keyword'] == '*'][0]
         lastIds = [(x['siteId'], x['threadId']) for x in meta_data.last_threads]
         assert len(new_threads) == 1
         tid = lastIds.index((new_threads[0]['siteId'], new_threads[0]['threadId']))
         if tid not in sk['tids']:
             sk['tids'].append(tid)
-            sk['groups'].append((tid,))
             ret = 'new'
         else:
             ret = 'existed'
         sk['tids'].sort(key=lambda x: meta_data.last_threads[x]['postTime'], reverse=True)
         sk_p = copy.deepcopy(sk)
         sk_p['tids'] = '<%d>' % len(sk_p['tids'])
-        sk_p['groups'] = '<%d>' % len(sk_p['groups'])
         print(sk_p, ret)
     meta_data.save_meta_data()

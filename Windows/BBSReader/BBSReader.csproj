@@ -108,8 +108,8 @@
     <Compile Include="Data\SKType.cs" />
     <Compile Include="Data\SuperKeyword.cs" />
     <Compile Include="Grouper.cs" />
-    <Compile Include="ManualAddTagDialog.xaml.cs">
-      <DependentUpon>ManualAddTagDialog.xaml</DependentUpon>
+    <Compile Include="AliasEditDialog.xaml.cs">
+      <DependentUpon>AliasEditDialog.xaml</DependentUpon>
     </Compile>
     <Compile Include="ManualDownloadDialog.xaml.cs">
       <DependentUpon>ManualDownloadDialog.xaml</DependentUpon>
@@ -143,7 +143,7 @@
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>
-    <Page Include="ManualAddTagDialog.xaml">
+    <Page Include="AliasEditDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

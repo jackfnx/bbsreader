@@ -21,6 +21,7 @@ else:
 class SK_Type(str, enum.Enum):
     Simple = 'Simple'
     Advanced = 'Advanced'
+    Author = 'Author'
     Manual = 'Manual'
 
 class SexInSex_Login:
@@ -167,10 +168,7 @@ class MetaData:
             blacklist_json = os.path.join(self.meta_data_path, 'blacklist.json')
             with open(blacklist_json, encoding='utf-8') as f:
                 self.blacklist = json.load(f)
-            
-            manualtags_json = os.path.join(self.meta_data_path, 'manualtags.json')
-            with open(manualtags_json, encoding='utf-8') as f:
-                self.manualtags = json.load(f)
+
         ### 如果不存在json，初始化空数据
         else:
             self.last_timestamp = 0
@@ -178,7 +176,6 @@ class MetaData:
             self.tags = {}
             self.superkeywords = []
             self.blacklist = []
-            self.manualtags = {}
 
     def merge_threads(self, latest_threads, force=False):
 
@@ -216,6 +213,7 @@ class MetaData:
         for superkeyword in self.superkeywords:
             if superkeyword['skType'] != SK_Type.Manual:
                 superkeyword['tids'] = []
+                superkeyword['kws'] = []
 
         def find_keywords(title):
             keywords = [title]
@@ -227,11 +225,16 @@ class MetaData:
             keywords = list(set(keywords))
             keywords += re.findall('【(.*?)】', title)
             keywords += re.findall('【(.*?)番外篇.*?】', title)
+            keywords += re.findall('【(.*?)第?[ 0-9\\-]+[部章卷篇].*?】', title)
+            keywords += re.findall('【(.*?)第?[ 0-9\\-]+[部章卷篇].*?】', title)
+            keywords += re.findall('【(.*?)第?[零一二三四五六七八九十百千万]+[部章卷篇].*?】', title)
             keywords_no_kh = [re.sub('(?:（|\\()(.*?)(?:\\)|）)', '', x) for x in keywords if re.search('(?:（|\\()(.*?)(?:\\)|）)', x)]
             keywords_in_kh = []
             for x in keywords:
                 if re.search('(?:（|\\()(.*?)(?:\\)|）)', x):
                     keywords_in_kh += re.findall('(?:（|\\()(.*?)(?:\\)|）)', x)
+                    keywords_in_kh += re.findall('(?:（|『)(.*?)(?:』|）)', x)
+                    keywords_in_kh += re.findall('(?:（|「)(.*?)(?:」|）)', x)
             keywords += keywords_no_kh
             keywords += keywords_in_kh
             keywords = [x for x in keywords if not re.match('^【.*?】$', x)]
@@ -241,16 +244,14 @@ class MetaData:
             keywords = [x for x in keywords if not re.match('^（.*?）$', x)]
             keywords = list(set(keywords))
             keywords = [x for x in keywords if not re.match('^[ 　]+$', x)]
-            keywords = [x for x in keywords if not re.match('^第?[ 0-9\\-]+[章卷篇]?$', x)]
-            keywords = [x for x in keywords if not re.match('^第?[ ０１２３４５６７８９]+[章卷篇]?$', x)]
-            keywords = [x for x in keywords if not re.match('^第?[零一二三四五六七八九十百千万]+[章卷篇]?$', x)]
+            keywords = [x for x in keywords if not re.match('^第?[ 0-9\\-]+[部章卷篇]?$', x)]
+            keywords = [x for x in keywords if not re.match('^第?[ ０１２３４５６７８９]+[部章卷篇]?$', x)]
+            keywords = [x for x in keywords if not re.match('^第?[零一二三四五六七八九十百千万]+[部章卷篇]?$', x)]
             keywords = [x for x in keywords if not re.match('^[上中下终][章卷篇]?$', x)]
             keywords = [x for x in keywords if not re.match('^[续完]$', x)]
             keywords = [x for x in keywords if not re.match('^大?结局$', x)]
             keywords = [x for x in keywords if not re.match('^代友?发$', x)]
             keywords = [x.strip() for x in keywords]
-            if title in self.manualtags:
-                keywords += self.manualtags[title]
             return keywords
 
         tags = {}
@@ -269,13 +270,22 @@ class MetaData:
             for superkeyword in self.superkeywords:
                 keyword = superkeyword['keyword']
                 authors = superkeyword['author']
+                aliases = superkeyword['alias']
                 if superkeyword['skType'] == SK_Type.Simple:
                     if keyword in keywords:
                         superkeyword['tids'].append(i)
+                    for alias in aliases:
+                        if alias in keywords:
+                            superkeyword['tids'].append(i)
                 elif superkeyword['skType'] == SK_Type.Advanced:
-                    if keyword == '*' or keyword in title:
+                    if keyword in title:
                         if authors[0] == '*' or authors.count(author) > 0:
                             superkeyword['tids'].append(i)
+                elif superkeyword['skType'] == SK_Type.Author:
+                    if authors.count(author) > 0:
+                        superkeyword['tids'].append(i)
+                        kws = tuple([j for j, x in enumerate(aliases) if x in title])
+                        superkeyword['kws'].append(kws)
                 elif superkeyword['skType'] == SK_Type.Manual:
                     pass
                 else:
