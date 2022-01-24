@@ -837,7 +837,7 @@ namespace BBSReader
             }));
         }
 
-        private void CollectSingleArticle_Click(object sender, RoutedEventArgs e)
+        private void CollectSingleArticleContextMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
@@ -892,6 +892,11 @@ namespace BBSReader
                     StartReloadData();
                 }
             }
+        }
+
+        private void EditAuthorBookContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+
         }
     }
 }

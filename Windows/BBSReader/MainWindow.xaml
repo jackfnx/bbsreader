@@ -12,6 +12,7 @@
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         Title="MainWindow" Height="600" Width="1024" KeyUp="Window_KeyUp" Loaded="Window_Loaded" Unloaded="Window_Unloaded" Closing="Window_Closing" SizeChanged="Window_SizeChanged">
     <Window.Resources>
+        <local:SKTypeToBooleanConverter x:Key="SKTypeToBooleanConverter"/>
         <Style x:Key="DisableOnBeFolder" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource MaterialDesignMenuItem}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=IsFolder}" Value="True">
@@ -47,6 +48,20 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="DisableOnNotSimple" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFavorite}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Converter={StaticResource SKTypeToBooleanConverter}, ConverterParameter=Simple}" Value="False">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DisableOnNotAuthor" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFavorite}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Converter={StaticResource SKTypeToBooleanConverter}, ConverterParameter=Author}" Value="False">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
         <Style x:Key="DisableOnUnread" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnBeFolder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=Read}" Value="False">
@@ -60,12 +75,13 @@
             <MenuItem Header="download multi-floors .txt" Name="DownloadDetailContextMenu" Click="DownloadDetailContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="delete downloaded .txt" Name="DeleteTxtContextMenu" Click="DeleteTxtContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
-            <MenuItem Header="edit keyword alias" Name="EditKeywordAliasContextMenu" Click="EditKeywordAliasContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
-            <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotBeFavorite}"/>
+            <MenuItem Header="edit keyword alias" Name="EditKeywordAliasContextMenu" Click="EditKeywordAliasContextMenu_Click" Style="{StaticResource DisableOnNotSimple}"/>
+            <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotSimple}"/>
             <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
             <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
             <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnSimple}"/>
-            <MenuItem Header="collect the single article" Name="CollectSingleArticle" Click="CollectSingleArticle_Click" Style="{StaticResource DisableOnBeFolder}"/>
+            <MenuItem Header="collect the single article" Name="CollectSingleArticleContextMenu" Click="CollectSingleArticleContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
+            <MenuItem Header="edit author books" Name="EditAuthorBookContextMenu" Click="EditAuthorBookContextMenu_Click" Style="{StaticResource DisableOnNotAuthor}"/>
         </ContextMenu>
         <Style x:Key="lv" TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MaterialDesignGridViewItem}">
             <EventSetter Event="MouseDoubleClick" Handler="HandleDoubleClick" />

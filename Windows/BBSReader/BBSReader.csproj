@@ -138,6 +138,7 @@
       <DependentUpon>ReaderWindow.xaml</DependentUpon>
     </Compile>
     <Compile Include="ScrollViewerExtensions.cs" />
+    <Compile Include="SKTypeToBooleanConverter.cs" />
     <Compile Include="Utils.cs" />
     <Page Include="CoverDownloader.xaml">
       <SubType>Designer</SubType>
