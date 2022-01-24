@@ -898,5 +898,15 @@ namespace BBSReader
         {
 
         }
+
+        private void FollowAuthorContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void UnfollowAuthorContextMenu_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }
