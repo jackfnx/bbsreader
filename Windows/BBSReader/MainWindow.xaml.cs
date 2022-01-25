@@ -626,11 +626,10 @@ namespace BBSReader
             var dr = dialog.ShowDialog() ?? false;
             if (dr)
             {
-                string skType = dialog.Keyword == "*" ? SKType.Author : SKType.Advanced;
                 if (FavoriteId != -1)
                 {
                     SuperKeyword superKeyword = metaData.superKeywords[FavoriteId];
-                    superKeyword.skType = skType;
+                    superKeyword.skType = SKType.Advanced;
                     superKeyword.keyword = dialog.Keyword;
                     superKeyword.authors = new List<string>(dialog.AuthorList);
                     superKeyword.alias = new List<string>();
@@ -645,7 +644,7 @@ namespace BBSReader
                 {
                     SuperKeyword superKeyword = new SuperKeyword
                     {
-                        skType = skType,
+                        skType = SKType.Advanced,
                         keyword = dialog.Keyword,
                         authors = new List<string>(dialog.AuthorList),
                         alias = new List<string>(),
@@ -894,19 +893,64 @@ namespace BBSReader
             }
         }
 
-        private void EditAuthorBookContextMenu_Click(object sender, RoutedEventArgs e)
+        private void EditAuthorFollowupContextMenu_Click(object sender, RoutedEventArgs e)
         {
 
         }
 
         private void FollowAuthorContextMenu_Click(object sender, RoutedEventArgs e)
         {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string author = item.Author;
+            if (item.SKType == SKType.Author)
+            {
+                return;
+            }
 
+            if (metaData.superKeywords.Any(x => (x.skType == SKType.Author) && x.authors.Contains(author)))
+            {
+                return;
+            }
+
+            SuperKeyword superKeyword = new SuperKeyword
+            {
+                skType = SKType.Author,
+                keyword = "*",
+                authors = new List<string>() { author },
+                alias = new List<string>(),
+                tids = new List<int>(),
+                kws = new List<List<int>>(),
+                read = -1,
+                groups = new List<List<string>>(),
+                groupedTids = new List<Group>()
+            };
+            metaData.superKeywords.Add(superKeyword);
+            MetaDataLoader.Save(this.metaData);
+            UpdateTopics(ReloadTopics());
+            UpdateView();
         }
 
         private void UnfollowAuthorContextMenu_Click(object sender, RoutedEventArgs e)
         {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            string author = item.Author;
+            if (item.SKType != SKType.Author)
+            {
+                return;
+            }
 
+            int superKeywordId = metaData.superKeywords.FindIndex(x => (x.skType == SKType.Author) && x.authors.Contains(author));
+            if (superKeywordId < 0)
+            {
+                return;
+            }
+
+            metaData.superKeywords.RemoveAt(superKeywordId);
+            MetaDataLoader.Save(this.metaData);
+            UpdateTopics(ReloadTopics());
+            UpdateView();
         }
     }
 }

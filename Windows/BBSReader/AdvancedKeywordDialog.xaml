@@ -47,7 +47,7 @@
         </Grid.RowDefinitions>
         <GroupBox Grid.Row="0" Header="Keyword">
             <DockPanel>
-                <CheckBox DockPanel.Dock="Right" Name="UseKeyword" Content="Use" HorizontalAlignment="Center" VerticalAlignment="Center" Width="60" IsChecked="True" Margin="10,10,10,10" Checked="UseKeyword_Changed" Unchecked="UseKeyword_Changed"/>
+                <CheckBox DockPanel.Dock="Right" Name="UseKeyword" Content="Use" HorizontalAlignment="Center" VerticalAlignment="Center" Width="60" IsChecked="True" Margin="10,10,10,10" Checked="UseKeyword_Changed" Unchecked="UseKeyword_Changed" IsEnabled="False"/>
                 <TextBox Name="KeywordTextBox" HorizontalAlignment="Stretch" VerticalAlignment="Center" Height="Auto" Margin="10,10,10,10"/>
             </DockPanel>
         </GroupBox>

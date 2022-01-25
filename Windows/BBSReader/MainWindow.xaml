@@ -92,7 +92,7 @@
             <Separator/>
             <MenuItem Header="follow author" Name="FollowAuthorContextMenu" Click="FollowAuthorContextMenu_Click" Style="{StaticResource DisableOnAuthor}"/>
             <MenuItem Header="unfollow author" Name="UnfollowAuthorContextMenu" Click="UnfollowAuthorContextMenu_Click" Style="{StaticResource DisableOnNotAuthor}"/>
-            <MenuItem Header="edit author books" Name="EditAuthorBookContextMenu" Click="EditAuthorBookContextMenu_Click" Style="{StaticResource DisableOnNotAuthor}"/>
+            <MenuItem Header="edit author follow up" Name="EditAuthorFollowupContextMenu" Click="EditAuthorFollowupContextMenu_Click" Style="{StaticResource DisableOnNotAuthor}"/>
             <Separator/>
             <MenuItem Header="collect the single article" Name="CollectSingleArticleContextMenu" Click="CollectSingleArticleContextMenu_Click" Style="{StaticResource DisableOnBeFolder}"/>
         </ContextMenu>
