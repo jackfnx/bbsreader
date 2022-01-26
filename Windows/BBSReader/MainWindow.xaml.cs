@@ -895,7 +895,25 @@ namespace BBSReader
 
         private void EditAuthorFollowupContextMenu_Click(object sender, RoutedEventArgs e)
         {
+            MenuItem cmi = sender as MenuItem;
+            dynamic item = cmi.DataContext;
+            if (item.SKType != SKType.Author)
+            {
+                return;
+            }
 
+            int FavoriteId = item.FavoriteId;
+            SuperKeyword sk = metaData.superKeywords[FavoriteId];
+            AuthorEditDialog dialog = new AuthorEditDialog() { Owner = this };
+            dialog.Initialize(sk.authors, sk.alias, sk.tids.ConvertAll(x => metaData.threads[x].title));
+
+            if (dialog.ShowDialog() ?? false)
+            {
+                sk.authors = new List<string>(dialog.Authors);
+                sk.alias = new List<string>(dialog.Keywords);
+                metaData.superKeywords[FavoriteId] = sk;
+                MetaDataLoader.Save(this.metaData);
+            }
         }
 
         private void FollowAuthorContextMenu_Click(object sender, RoutedEventArgs e)
@@ -935,19 +953,13 @@ namespace BBSReader
         {
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
-            string author = item.Author;
             if (item.SKType != SKType.Author)
             {
                 return;
             }
 
-            int superKeywordId = metaData.superKeywords.FindIndex(x => (x.skType == SKType.Author) && x.authors.Contains(author));
-            if (superKeywordId < 0)
-            {
-                return;
-            }
-
-            metaData.superKeywords.RemoveAt(superKeywordId);
+            int FavoriteId = item.FavoriteId;
+            metaData.superKeywords.RemoveAt(FavoriteId);
             MetaDataLoader.Save(this.metaData);
             UpdateTopics(ReloadTopics());
             UpdateView();

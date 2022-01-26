@@ -1,0 +1,135 @@
+﻿<Window x:Class="BBSReader.AuthorEditDialog"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:BBSReader"
+        mc:Ignorable="d"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        Background="{DynamicResource MaterialDesignPaper}"
+        Foreground="{DynamicResource MaterialDesignBody}"
+        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Title="Author Editor" Height="760" Width="1200">
+    <Window.Resources>
+        <Style x:Key="AddNameButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="60" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="10,10,10,10" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=AuthorEditBox, Path=Text}" Value="">
+                    <Setter Property="Button.IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RemoveNameButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="60" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="10,10,10,10" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=AuthorsBox, Path=SelectedIndex}" Value="-1">
+                    <Setter Property="Button.IsEnabled" Value="False"/>
+                </DataTrigger>
+                <DataTrigger Binding="{Binding ElementName=AuthorsBox, Path=SelectedIndex}" Value="0">
+                    <Setter Property="Button.IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="AddKeywordButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="60" />
+            <Setter Property="FontSize" Value="13" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="10,10,10,10" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=KeywordEditBox, Path=Text}" Value="">
+                    <Setter Property="Button.IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="RemoveKeywordButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
+            <Setter Property="HorizontalContentAlignment" Value="Center" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="Width" Value="60" />
+            <Setter Property="FontSize" Value="11" />
+            <Setter Property="Padding" Value="0" />
+            <Setter Property="Margin" Value="10,10,10,10" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding ElementName=KeywordsBox, Path=SelectedIndex}" Value="-1">
+                    <Setter Property="Button.IsEnabled" Value="False"/>
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="preview" TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MaterialDesignListBoxItem}">
+            <Setter Property="Control.Background" Value="{DynamicResource MaterialDesignLightBackground}" />
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=Match}" Value="True">
+                    <Setter Property="Control.Background" Value="Gray" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+    </Window.Resources>
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="3*" />
+            <RowDefinition Height="3*" />
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="4*" />
+        </Grid.RowDefinitions>
+        <GroupBox Grid.Row="0" Header="Author Alias">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <Button x:Name="RemoveNameButton" Content="Remove" Click="RemoveNameButton_Click" Style="{StaticResource RemoveNameButton}"/>
+                    <Button x:Name="AddNameButton" Content="Add" Click="AddNameButton_Click" Style="{StaticResource AddNameButton}"/>
+                </StackPanel>
+                <DockPanel>
+                    <TextBox x:Name="AuthorEditBox" Margin="10" DockPanel.Dock="Bottom" />
+                    <ListView x:Name="AuthorsBox">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListView>
+                </DockPanel>
+            </DockPanel>
+        </GroupBox>
+        <GroupBox Grid.Row="1" Header="Keywords">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center">
+                    <Button x:Name="RemoveKeywordButton" Content="Remove" Click="RemoveKeywordButton_Click" Style="{StaticResource RemoveKeywordButton}"/>
+                    <Button x:Name="AddKeywordButton" Content="Add" Click="AddKeywordButton_Click" Style="{StaticResource AddKeywordButton}"/>
+                </StackPanel>
+                <DockPanel DockPanel.Dock="Left">
+                    <TextBox x:Name="KeywordEditBox" Margin="10" DockPanel.Dock="Bottom" />
+                    <ListView x:Name="KeywordsBox">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" />
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListView>
+                </DockPanel>
+            </DockPanel>
+        </GroupBox>
+        <WrapPanel Grid.Row="2" HorizontalAlignment="Right">
+            <Button IsDefault="True" x:Name="OkButton" Content="_OK" Click="OkButton_Click" MinWidth="60" Margin="0,15,10,15"></Button>
+            <Button IsCancel="True" Content="_Cancel" MinWidth="60" Margin="0, 15, 15, 15"></Button>
+        </WrapPanel>
+        <GroupBox Grid.Row="3" Header="Articles Preview">
+            <ListView x:Name="ArticlesBox" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource preview}" Margin="5,10,5,5">
+                <ListView.ItemTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="{Binding Path=Title}" Foreground="{DynamicResource MaterialDesignLightForeground}"/>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </GroupBox>
+    </Grid>
+</Window>

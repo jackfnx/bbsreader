@@ -94,6 +94,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AuthorEditDialog.xaml.cs">
+      <DependentUpon>AuthorEditDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="Constants.cs" />
     <Compile Include="CoverDownloader.xaml.cs">
       <DependentUpon>CoverDownloader.xaml</DependentUpon>
@@ -140,6 +143,10 @@
     <Compile Include="ScrollViewerExtensions.cs" />
     <Compile Include="SKTypeToBooleanConverter.cs" />
     <Compile Include="Utils.cs" />
+    <Page Include="AuthorEditDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="CoverDownloader.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
