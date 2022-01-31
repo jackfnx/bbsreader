@@ -27,21 +27,28 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnBeFavorite" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+        <Style x:Key="DisableManualForFolder" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+            <Style.Triggers>
+                <DataTrigger Binding="{Binding Path=ManualDisabled}" Value="True">
+                    <Setter Property="IsEnabled" Value="False" />
+                </DataTrigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="DisableOnBeFavorite" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableManualForFolder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=Favorite}" Value="True">
                     <Setter Property="IsEnabled" Value="False" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnNotBeFavorite" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+        <Style x:Key="DisableOnNotBeFavorite" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableManualForFolder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=Favorite}" Value="False">
                     <Setter Property="IsEnabled" Value="False" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnSimple" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+        <Style x:Key="DisableOnSimple" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableManualForFolder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=SKType}" Value="Simple">
                     <Setter Property="IsEnabled" Value="False" />
@@ -55,7 +62,7 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="DisableOnAuthor" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableOnNotBeFolder}">
+        <Style x:Key="DisableOnAuthor" TargetType="{x:Type MenuItem}" BasedOn="{StaticResource DisableManualForFolder}">
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Path=SKType}" Value="Author">
                     <Setter Property="IsEnabled" Value="False" />
@@ -85,9 +92,9 @@
             <MenuItem Header="add keyword to favorites" Name="AddFavoritesContextMenu" Click="AddFavoritesContextMenu_Click" Style="{StaticResource DisableOnBeFavorite}"/>
             <MenuItem Header="edit keyword alias" Name="EditKeywordAliasContextMenu" Click="EditKeywordAliasContextMenu_Click" Style="{StaticResource DisableOnNotSimple}"/>
             <MenuItem Header="remove keyword from favorites" Name="RemoveFavoritesContextMenu" Click="RemoveFavoritesContextMenu_Click" Style="{StaticResource DisableOnNotSimple}"/>
-            <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
+            <MenuItem Header="add keyword to black list" Name="BlackContextMenu" Click="BlackContextMenu_Click" Style="{StaticResource DisableManualForFolder}"/>
             <Separator/>
-            <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnNotBeFolder}"/>
+            <MenuItem Header="set advanced keyword" Name="SetAdvancedContextMenu" Click="SetAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableManualForFolder}"/>
             <MenuItem Header="cancel advanced keyword" Name="CancelAdvancedContextMenu" Click="CancelAdvancedKeywordContextMenu_Click" Style="{StaticResource DisableOnSimple}"/>
             <Separator/>
             <MenuItem Header="follow author" Name="FollowAuthorContextMenu" Click="FollowAuthorContextMenu_Click" Style="{StaticResource DisableOnAuthor}"/>
@@ -193,6 +200,17 @@
         </DockPanel>
         <Grid>
             <ListView x:Name="TopicListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0">
+                <ListView.View>
+                    <GridView>
+                        <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>
+                        <GridViewColumn Header="Author" Width="100" DisplayMemberBinding="{Binding Path=Author}"/>
+                        <GridViewColumn Header="Time" Width="100" DisplayMemberBinding="{Binding Path=Time}"/>
+                        <GridViewColumn Header="Url" Width="160" DisplayMemberBinding="{Binding Path=Url}"/>
+                        <GridViewColumn Header="Source" Width="80" DisplayMemberBinding="{Binding Path=Source}"/>
+                    </GridView>
+                </ListView.View>
+            </ListView>
+            <ListView x:Name="CorpusListView" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource lv}" BorderThickness="0" Visibility="Hidden">
                 <ListView.View>
                     <GridView>
                         <GridViewColumn Header="Title" Width="500" DisplayMemberBinding="{Binding Path=Title}"/>

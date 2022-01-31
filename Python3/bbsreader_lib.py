@@ -274,13 +274,16 @@ class MetaData:
                 if superkeyword['skType'] == SK_Type.Simple:
                     if keyword in keywords:
                         superkeyword['tids'].append(i)
+                        superkeyword['kws'].append(())
                     for alias in aliases:
                         if alias in keywords:
                             superkeyword['tids'].append(i)
+                            superkeyword['kws'].append(())
                 elif superkeyword['skType'] == SK_Type.Advanced:
                     if keyword in title:
                         if authors[0] == '*' or authors.count(author) > 0:
                             superkeyword['tids'].append(i)
+                            superkeyword['kws'].append(())
                 elif superkeyword['skType'] == SK_Type.Author:
                     if authors.count(author) > 0:
                         superkeyword['tids'].append(i)
@@ -302,10 +305,12 @@ class MetaData:
 
         for superkeyword in self.superkeywords:
             if superkeyword['skType'] != SK_Type.Manual:
-                tids = superkeyword['tids']
-                tids = list(set(tids))
-                tids.sort(key=lambda x: (getPostTime(x), threads[x]['threadId']), reverse=True)
+                tids_kws = list(zip(superkeyword['tids'], superkeyword['kws']))
+                tids_kws = unique_tuple(tids_kws, key=lambda x: x[0])
+                tids_kws.sort(key=lambda x: (getPostTime(x[0]), threads[x[0]]['threadId']), reverse=True)
+                tids, kws = zip(*tids_kws)
                 superkeyword['tids'] = tids
+                superkeyword['kws'] = kws
 
         self.tags = tags
         self.last_threads = threads
@@ -402,6 +407,18 @@ def keytext(superkeyword):
         return superkeyword['keyword']
     else:
         return superkeyword['author'][0] + ":" + superkeyword['keyword']
+
+
+def unique_tuple(l, key):
+    key_helper = []
+    l2 = []
+    for t in l:
+        k = key(t)
+        if k not in key_helper:
+            key_helper.append(k)
+            l2.append(t)
+    return l2
+
 
 from urllib.parse import urlparse, parse_qsl, unquote_plus
 

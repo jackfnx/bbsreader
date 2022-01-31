@@ -27,21 +27,90 @@ namespace BBSReader
     {
         //private ReaderWindow readerWindow;
         public ObservableCollection<object> topics;
+        public ObservableCollection<object> corpus;
         public ObservableCollection<object> articles;
         private MetaData metaData;
-        private int currentId;
-        private int readId;
-        private string searchingKeyword;
+        private StateStack currPath;
+        private bool isLoading;
         private string text;
-        private AppState currentState;
         private Notifier notifier;
 
-        public enum AppState
+        private class StateStack
         {
-            TOPICS,
-            ARTICLES,
-            READER,
-            LOADING
+            internal enum State
+            {
+                TOPICS,
+                CORPUS,
+                ARTICLES,
+                SEARCHING,
+                READER,
+                LOADING
+            }
+
+            internal class StateDesc
+            {
+                public State state;
+                public int itemId;
+                public string searchingKeyword;
+            }
+
+            internal List<StateDesc> stack;
+
+            internal StateStack()
+            {
+                stack = new List<StateDesc>();
+                Push(State.TOPICS);
+            }
+
+            internal void Push(State state, int itemId = -1, string searchingKeyword = null)
+            {
+                stack.Add(new StateDesc() { state = state, itemId = itemId, searchingKeyword = searchingKeyword });
+            }
+
+            internal StateDesc Pop()
+            {
+                StateDesc state = stack[stack.Count - 1];
+                stack.RemoveAt(stack.Count - 1);
+                return state;
+            }
+
+            internal void Clear()
+            {
+                stack.RemoveRange(1, stack.Count - 1);
+            }
+
+            internal StateDesc GetCurrState()
+            {
+                StateDesc state = stack[stack.Count - 1];
+                return state;
+            }
+
+            internal StateDesc GetPrevState(StateDesc currState)
+            {
+                int i = stack.IndexOf(currState);
+                StateDesc state = stack[i - 1];
+                return state;
+            }
+
+            internal StateDesc FindLastState(State state)
+            {
+                for (int i = stack.Count - 1; i >= 0; i--)
+                {
+                    if (stack[i].state == state)
+                    {
+                        return stack[i];
+                    }
+                }
+                return null;
+            }
+
+            internal void UpdateCurrState(int itemId = -1, string searchingKeyword = null)
+            {
+                if (itemId >= 0)
+                    stack[stack.Count - 1].itemId = itemId;
+                if (searchingKeyword != null)
+                    stack[stack.Count - 1].searchingKeyword = searchingKeyword;
+            }
         }
 
         private struct ListItem
@@ -54,6 +123,7 @@ namespace BBSReader
             internal string SiteId;
             internal string ThreadId;
             internal bool Favorite;
+            internal bool ManualDisabled;
             internal string SKType;
             internal int FavoriteId;
             internal bool IsFolder;
@@ -69,52 +139,117 @@ namespace BBSReader
             topics = new ObservableCollection<object>();
             TopicListView.DataContext = topics;
 
+            corpus = new ObservableCollection<object>();
+            CorpusListView.DataContext = corpus;
+
             articles = new ObservableCollection<object>();
             ArticleListView.DataContext = articles;
 
             ServerInd.DataContext = MyServer.GetInstance();
+
+            currPath = new StateStack();
 
             text = "";
 
             StartReloadData();
         }
 
+        private void StartReloadData()
+        {
+            Thread thread = new Thread(ReloadData);
+            thread.Start();
+        }
+
+        private void ReloadData()
+        {
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                isLoading = true;
+                UpdateView();
+            }));
+            this.metaData = MetaDataLoader.Load();
+            var topicsItems = ReloadTopics();
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                UpdateTopics(topicsItems);
+                isLoading = false;
+                currPath.Clear();
+                UpdateView();
+            }));
+        }
+
+        private void StartResetUI()
+        {
+            Thread thread = new Thread(ResetUI);
+            thread.Start();
+        }
+
+        private void ResetUI()
+        {
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                isLoading = true;
+                UpdateView();
+            }));
+            var topicsItems = ReloadTopics();
+            this.Dispatcher.Invoke(new Action(() =>
+            {
+                UpdateTopics(topicsItems);
+                isLoading = false;
+                currPath.Clear();
+                UpdateView();
+            }));
+        }
+
         private void UpdateView()
         {
-            if (currentState == AppState.TOPICS)
-            {
-                TopicListView.Visibility = Visibility.Visible;
-                ArticleListView.Visibility = Visibility.Hidden;
-                ReaderView.Visibility = Visibility.Hidden;
-                LoadingIcon.Visibility = Visibility.Hidden;
-                //TopicList.Focus();
-            }
-            else if (currentState == AppState.ARTICLES)
+            if (isLoading)
             {
                 TopicListView.Visibility = Visibility.Hidden;
-                ArticleListView.Visibility = Visibility.Visible;
-                ReaderView.Visibility = Visibility.Hidden;
-                LoadingIcon.Visibility = Visibility.Hidden;
-                //ArticleList.Focus();
-                readId = -1;
-            }
-            else if (currentState == AppState.READER)
-            {
-                TopicListView.Visibility = Visibility.Hidden;
-                ArticleListView.Visibility = Visibility.Hidden;
-                ReaderView.Visibility = Visibility.Visible;
-                LoadingIcon.Visibility = Visibility.Hidden;
-                //ReaderView.Focus();
-            }
-            else if (currentState == AppState.LOADING)
-            {
-                TopicListView.Visibility = Visibility.Hidden;
+                CorpusListView.Visibility = Visibility.Hidden;
                 ArticleListView.Visibility = Visibility.Hidden;
                 ReaderView.Visibility = Visibility.Hidden;
                 LoadingIcon.Visibility = Visibility.Visible;
+                BackButton.IsEnabled = false;
             }
+            else
+            {
+                var currState = currPath.GetCurrState();
+                if (currState.state == StateStack.State.TOPICS)
+                {
+                    TopicListView.Visibility = Visibility.Visible;
+                    CorpusListView.Visibility = Visibility.Hidden;
+                    ArticleListView.Visibility = Visibility.Hidden;
+                    ReaderView.Visibility = Visibility.Hidden;
+                    LoadingIcon.Visibility = Visibility.Hidden;
+                }
+                else if (currState.state == StateStack.State.CORPUS)
+                {
+                    TopicListView.Visibility = Visibility.Hidden;
+                    CorpusListView.Visibility = Visibility.Visible;
+                    ArticleListView.Visibility = Visibility.Hidden;
+                    ReaderView.Visibility = Visibility.Hidden;
+                    LoadingIcon.Visibility = Visibility.Hidden;
+                }
+                else if (currState.state == StateStack.State.ARTICLES)
+                {
+                    TopicListView.Visibility = Visibility.Hidden;
+                    CorpusListView.Visibility = Visibility.Hidden;
+                    ArticleListView.Visibility = Visibility.Visible;
+                    ReaderView.Visibility = Visibility.Hidden;
+                    LoadingIcon.Visibility = Visibility.Hidden;
+                }
+                else if (currState.state == StateStack.State.READER)
+                {
+                    TopicListView.Visibility = Visibility.Hidden;
+                    CorpusListView.Visibility = Visibility.Hidden;
+                    ArticleListView.Visibility = Visibility.Hidden;
+                    ReaderView.Visibility = Visibility.Visible;
+                    LoadingIcon.Visibility = Visibility.Hidden;
+                }
 
-            BackButton.IsEnabled = (currentState != AppState.TOPICS && currentState != AppState.LOADING) || searchingKeyword != null;
+                BackButton.IsEnabled = currPath.stack.Count > 1;
+            }
         }
 
         private List<ListItem> ReloadTopics()
@@ -122,22 +257,23 @@ namespace BBSReader
             List<string> tags = new List<string>(metaData.tags.Keys);
             var superkeywords = new List<SuperKeyword>(metaData.superKeywords);
 
-            if (searchingKeyword != null)
+            var currState = currPath.GetCurrState();
+            if (currState.searchingKeyword != null)
             {
                 tags.RemoveAll(x =>
                 {
-                    if (x.Contains(searchingKeyword))
+                    if (x.Contains(currState.searchingKeyword))
                         return false;
                     BBSThread exampleX = metaData.threads[metaData.tags[x][0]];
-                    return !exampleX.author.Contains(searchingKeyword);
+                    return !exampleX.author.Contains(currState.searchingKeyword);
                 });
                 superkeywords.RemoveAll(x =>
                 {
-                    if (x.keyword.Contains(searchingKeyword))
+                    if (x.keyword.Contains(currState.searchingKeyword))
                         return false;
                     foreach (string author in x.authors)
                     {
-                        if (author.Contains(searchingKeyword))
+                        if (author.Contains(currState.searchingKeyword))
                             return false;
                     }
                     return true;
@@ -161,6 +297,7 @@ namespace BBSReader
                 item.SiteId = example.siteId;
                 item.ThreadId = example.threadId;
                 item.Favorite = false;
+                item.ManualDisabled = false;
                 item.SKType = SKType.Simple;
                 item.FavoriteId = -1;
                 item.IsFolder = true;
@@ -204,11 +341,19 @@ namespace BBSReader
                 item.SiteId = example.siteId;
                 item.ThreadId = example.threadId;
                 item.Favorite = true;
+                item.ManualDisabled = false;
                 item.SKType = x.skType;
                 item.FavoriteId = metaData.superKeywords.IndexOf(x);
                 item.IsFolder = true;
                 item.Downloaded = false;
-                item.Read = x.groupedTids.Count <= x.read + 1;
+                if (x.skType == SKType.Author)
+                {
+                    item.Read = x.subSKs.All(y => y.groupedTids.Count <= y.read + 1) && (x.noSKGTids.Count <= x.read + 1);
+                }
+                else
+                {
+                    item.Read = x.groupedTids.Count <= x.read + 1;
+                }
                 item.Tooltip = null;
 
                 items.Add(item);
@@ -241,26 +386,139 @@ namespace BBSReader
             topics.Clear();
             items.ForEach(x =>
             {
-                topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.SKType, x.FavoriteId, x.IsFolder, x.Downloaded, x.Read, x.Tooltip });
+                topics.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.ManualDisabled, x.SKType, x.FavoriteId, x.IsFolder, x.Downloaded, x.Read, x.Tooltip });
+            });
+        }
+
+        private void ReloadCorpus()
+        {
+            var corpusState = currPath.FindLastState(StateStack.State.CORPUS);
+            if (corpusState == null)
+            {
+                return;
+            }
+            dynamic item = topics[corpusState.itemId];
+            SuperKeyword sk = metaData.superKeywords[item.FavoriteId];
+
+            List<ListItem> items = new List<ListItem>();
+            var list1 = sk.subSKs;
+            list1.ForEach(x =>
+            {
+                int i = list1.IndexOf(x);
+
+                string author = x.authors[0];
+                string keyword = x.keyword;
+
+                BBSThread example = x.groupedTids.Count > 0 ? metaData.threads[x.groupedTids[0].exampleId] : new BBSThread { postTime = "1970-01-01", threadId = "0" };
+                string tooltip = null;
+
+                items.Add(new ListItem()
+                {
+                    Title = keyword,
+                    Author = author,
+                    Time = example.postTime,
+                    Url = example.link,
+                    ThreadId = example.threadId,
+                    Source = "",
+                    SiteId = example.siteId,
+                    Favorite = true,
+                    ManualDisabled = true,
+                    SKType = SKType.Simple,
+                    FavoriteId = i,
+                    IsFolder = true,
+                    Downloaded = false,
+                    Read = x.groupedTids.Count <= x.read + 1,
+                    Tooltip = tooltip
+                }) ;
+            });
+            List<Group> list2 = sk.noSKGTids;
+            list2.ForEach(x =>
+            {
+                int i = list2.Count - list2.IndexOf(x) - 1;
+                BBSThread t = metaData.threads[x.exampleId];
+                string siteName = Constants.SITE_DEF[t.siteId].siteName;
+                string fPath = Constants.LOCAL_PATH + t.siteId + "/" + t.threadId + ".txt";
+                bool downloaded = File.Exists(fPath);
+                items.Add(new ListItem()
+                {
+                    Title = t.title,
+                    Author = t.author,
+                    Time = t.postTime,
+                    Url = t.link,
+                    ThreadId = t.threadId,
+                    Source = siteName,
+                    SiteId = t.siteId,
+                    Favorite = false,
+                    ManualDisabled = false,
+                    SKType = SKType.Simple,
+                    FavoriteId = -1,
+                    IsFolder = false,
+                    Downloaded = downloaded,
+                    Read = i <= sk.read,
+                    Tooltip = x.tooltips
+                });
+            });
+            items.Sort((x, y) =>
+            {
+                if (x.IsFolder && !y.IsFolder)
+                {
+                    return -1;
+                }
+                else if (!x.IsFolder && y.IsFolder)
+                {
+                    return 1;
+                }
+                DateTime xdate = DateTime.ParseExact(x.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
+                DateTime ydate = DateTime.ParseExact(y.Time, "yyyy-M-d", CultureInfo.InvariantCulture);
+                int dc = DateTime.Compare(ydate, xdate);
+                if (dc != 0)
+                    return dc;
+                else
+                    return int.Parse(y.ThreadId) - int.Parse(x.ThreadId);
+            });
+
+            corpus.Clear();
+            items.ForEach(x =>
+            {
+                corpus.Add(new { x.Title, x.Author, x.Time, x.Url, x.ThreadId, x.Source, x.SiteId, x.Favorite, x.ManualDisabled, x.SKType, x.FavoriteId, x.IsFolder, x.Downloaded, x.Read, x.Tooltip });
             });
         }
 
         private void ReloadArticles()
         {
-            dynamic item = topics[currentId];
+            var articlesState = currPath.FindLastState(StateStack.State.ARTICLES);
+            if (articlesState == null)
+            {
+                return;
+            }
+            var prevState = currPath.GetPrevState(articlesState);
+            dynamic item;
             List<Group> list;
             int read;
-            if (item.Favorite)
+            if (prevState.state == StateStack.State.CORPUS)
             {
-                SuperKeyword sk = metaData.superKeywords[item.FavoriteId];
-                list = sk.groupedTids;
-                read = sk.read;
+                item = corpus[articlesState.itemId];
+                dynamic topicItem = topics[prevState.itemId];
+                SuperKeyword sk = metaData.superKeywords[topicItem.FavoriteId];
+                SuperKeyword subSK = sk.subSKs[item.FavoriteId];
+                list = subSK.groupedTids;
+                read = subSK.read;
             }
             else
             {
-                string title = item.Title;
-                list = metaData.tags[title].ConvertAll(x => new Group { exampleId = x, tooltips = "Not Download." });
-                read = list.Count;
+                item = topics[articlesState.itemId];
+                if (item.Favorite)
+                {
+                    SuperKeyword sk = metaData.superKeywords[item.FavoriteId];
+                    list = sk.groupedTids;
+                    read = sk.read;
+                }
+                else
+                {
+                    string title = item.Title;
+                    list = metaData.tags[title].ConvertAll(x => new Group { exampleId = x, tooltips = "Not Download." });
+                    read = list.Count;
+                }
             }
 
             articles.Clear();
@@ -268,7 +526,7 @@ namespace BBSReader
             {
                 int i = list.Count - list.IndexOf(x) - 1;
                 BBSThread t = metaData.threads[x.exampleId];
-                if (searchingKeyword == null || t.title.Contains(searchingKeyword))
+                if (articlesState.searchingKeyword == null || t.title.Contains(articlesState.searchingKeyword))
                 {
                     string siteName = Constants.SITE_DEF[t.siteId].siteName;
                     string fPath = Constants.LOCAL_PATH + t.siteId + "/" + t.threadId + ".txt";
@@ -283,6 +541,7 @@ namespace BBSReader
                         Source = siteName,
                         SiteId = t.siteId,
                         Favorite = false,
+                        ManualDisabled = false,
                         SKType = SKType.Simple,
                         FavoriteId = -1,
                         IsFolder = false,
@@ -303,11 +562,16 @@ namespace BBSReader
         {
             ListViewItem lvi = sender as ListViewItem;
             dynamic item = lvi.Content;
-            if (currentState == AppState.TOPICS)
+            var currState = currPath.GetCurrState();
+            if (currState.state == StateStack.State.TOPICS)
             {
                 ForwardAtTopics(item);
             }
-            else if (currentState == AppState.ARTICLES)
+            else if (currState.state == StateStack.State.CORPUS)
+            {
+                ForwardAtCorpus(item);
+            }
+            else if (currState.state == StateStack.State.ARTICLES)
             {
                 ForwardAtArticles(item);
             }
@@ -315,22 +579,34 @@ namespace BBSReader
 
         private void ForwardAtTopics(dynamic item)
         {
-            currentId = topics.IndexOf(item);
-            currentState = AppState.ARTICLES;
-            ReloadArticles();
+            int topicId = topics.IndexOf(item);
+            int FavoriteId = item.FavoriteId;
+            var currState = currPath.GetCurrState();
+            if (FavoriteId >= 0 && (metaData.superKeywords[FavoriteId].skType == SKType.Author))
+            {
+                currPath.Push(StateStack.State.CORPUS, topicId, currState.searchingKeyword);
+                ReloadCorpus();
+            }
+            else
+            {
+                currPath.Push(StateStack.State.ARTICLES, topicId, currState.searchingKeyword);
+                ReloadArticles();
+            }
             UpdateView();
         }
 
-        private void Backward()
+        private void ForwardAtCorpus(dynamic item)
         {
-            if (currentState == AppState.READER)
-                currentState = AppState.ARTICLES;
-            else if (currentState == AppState.ARTICLES)
-                currentState = AppState.TOPICS;
-            else if (currentState == AppState.TOPICS && searchingKeyword != null)
+            int corpusId = corpus.IndexOf(item);
+            var currState = currPath.GetCurrState();
+            if (item.IsFolder)
             {
-                searchingKeyword = null;
-                UpdateTopics(ReloadTopics());
+                currPath.Push(StateStack.State.ARTICLES, corpusId, currState.searchingKeyword);
+                ReloadArticles();
+            }
+            else
+            {
+                ForwardAtArticles(item);
             }
             UpdateView();
         }
@@ -340,49 +616,113 @@ namespace BBSReader
             string fPath = Constants.LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
             if (File.Exists(fPath))
             {
+                var currState = currPath.GetCurrState();
+                var prevState = currPath.GetPrevState(currState);
+
                 using (StreamReader sr = new StreamReader(fPath, new UTF8Encoding(false)))
                 {
                     text = sr.ReadToEnd();
-                    currentState = AppState.READER;
+                    currPath.Push(StateStack.State.READER);
                     ReaderText.Text = text;
                     ReaderScroll.ScrollToHome();
                     UpdateView();
                 }
 
-                dynamic topic = topics[currentId];
-                int favoriteId = topic.FavoriteId;
-                int index = articles.IndexOf(item);
-                var sk = metaData.superKeywords[favoriteId];
-                int i = sk.groupedTids.Count - index - 1;
-                if (i > sk.read)
+                if (prevState.state == StateStack.State.TOPICS)
                 {
-                    sk.read = i;
-                    metaData.superKeywords[favoriteId] = sk;
-                    MetaDataLoader.Save(this.metaData);
-                    ReloadArticles();
-                    UpdateTopics(ReloadTopics());
+                    dynamic topic = topics[currState.itemId];
+                    int FavoriteId = topic.FavoriteId;
+                    var sk = metaData.superKeywords[FavoriteId];
+                    int index;
+                    int i;
+                    if (currState.state != StateStack.State.CORPUS)
+                    {
+                        index = articles.IndexOf(item);
+                        i = sk.groupedTids.Count - index - 1;
+                    }
+                    else
+                    {
+                        index = corpus.IndexOf(item);
+                        i = sk.subSKs.Count + sk.noSKGTids.Count - index - 1;
+                    }
+                    currPath.UpdateCurrState(index);
+                    if (i > sk.read)
+                    {
+                        sk.read = i;
+                        metaData.superKeywords[FavoriteId] = sk;
+                        MetaDataLoader.Save(this.metaData);
+
+                        if (currState.state != StateStack.State.CORPUS)
+                        {
+                            ReloadArticles();
+                        }
+                        else
+                        {
+                            ReloadCorpus();
+                        }
+                        UpdateTopics(ReloadTopics());
+                    }
                 }
-                readId = index;
+                else if (prevState.state == StateStack.State.CORPUS)
+                {
+                    dynamic topic = topics[prevState.itemId];
+                    int FavoriteId = topic.FavoriteId;
+                    dynamic corpusItem = corpus[currState.itemId];
+                    int subFavId = corpusItem.FavoriteId;
+                    int index = articles.IndexOf(item);
+                    var sk = metaData.superKeywords[FavoriteId];
+                    var subSK = sk.subSKs[subFavId];
+                    int i = subSK.groupedTids.Count - index - 1;
+                    currPath.UpdateCurrState(index);
+                    if (i > subSK.read)
+                    {
+                        subSK.read = i;
+                        sk.subReads[subFavId] = i;
+                        sk.subSKs[subFavId] = subSK;
+                        metaData.superKeywords[FavoriteId] = sk;
+                        MetaDataLoader.Save(this.metaData);
+                        ReloadArticles();
+                        ReloadCorpus();
+                        UpdateTopics(ReloadTopics());
+                    }
+                }
             }
+        }
+
+        private void Backward()
+        {
+            var currState = currPath.GetCurrState();
+            var prevState = currPath.GetPrevState(currState);
+            currPath.Pop();
+            if (currState.searchingKeyword != null && prevState.searchingKeyword == null)
+            {
+                UpdateTopics(ReloadTopics());
+            }
+            UpdateView();
         }
 
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
             if (SearchBox.IsFocused)
             {
+                if (e.Key == Key.Enter)
+                {
+                    DoSearch();
+                }
                 return;
             }
 
-            if (e.Key == System.Windows.Input.Key.Space)
+            var currState = currPath.GetCurrState();
+            if (e.Key == Key.Space)
             {
-                if (currentState == AppState.READER)
+                if (currState.state == StateStack.State.READER)
                 {
                     ReaderScroll.PageDown();
                     //ReaderScroll.LineUp();
                     //ReaderScroll.LineUp();
                     ReaderScroll.Focus();
                 }
-                else if (currentState == AppState.ARTICLES)
+                else if (currState.state == StateStack.State.ARTICLES)
                 {
                     int i = ArticleListView.SelectedIndex;
                     if (i < 0)
@@ -392,7 +732,17 @@ namespace BBSReader
                     if (ArticleListView.ItemContainerGenerator.ContainerFromIndex(ArticleListView.SelectedIndex) is ListViewItem item)
                         item.Focus();
                 }
-                else if (currentState == AppState.TOPICS)
+                else if (currState.state == StateStack.State.CORPUS)
+                {
+                    int i = CorpusListView.SelectedIndex;
+                    if (i < 0)
+                    {
+                        CorpusListView.SelectedIndex = 0;
+                    }
+                    if (CorpusListView.ItemContainerGenerator.ContainerFromIndex(CorpusListView.SelectedIndex) is ListViewItem item)
+                        item.Focus();
+                }
+                else if (currState.state == StateStack.State.TOPICS)
                 {
                     int i = TopicListView.SelectedIndex;
                     if (i < 0)
@@ -405,7 +755,7 @@ namespace BBSReader
             }
             else if (e.Key == Key.Right || e.Key == Key.Enter || e.Key == Key.R)
             {
-                if (currentState == AppState.TOPICS)
+                if (currState.state == StateStack.State.TOPICS)
                 {
                     dynamic item = TopicListView.SelectedItem;
                     if (item == null)
@@ -416,7 +766,18 @@ namespace BBSReader
                         ForwardAtTopics(item);
                     }
                 }
-                else if (currentState == AppState.ARTICLES)
+                else if (currState.state == StateStack.State.CORPUS)
+                {
+                    dynamic item = CorpusListView.SelectedIndex;
+                    if (item == null)
+                        CorpusListView.SelectedIndex = 0;
+                    item = CorpusListView.SelectedItem;
+                    if (item != null)
+                    {
+                        ForwardAtCorpus(item);
+                    }
+                }
+                else if (currState.state == StateStack.State.ARTICLES)
                 {
                     dynamic item = ArticleListView.SelectedItem;
                     if (item == null)
@@ -433,11 +794,11 @@ namespace BBSReader
             }
             else if (e.Key == Key.J)
             {
-                if (currentState == AppState.READER)
+                if (currState.state == StateStack.State.READER)
                 {
-                    if (readId > 0)
+                    if (currState.itemId > 0)
                     {
-                        dynamic nextItem = articles[readId - 1];
+                        dynamic nextItem = articles[currState.itemId - 1];
                         ForwardAtArticles(nextItem);
                     }
                     else
@@ -448,11 +809,11 @@ namespace BBSReader
             }
             else if (e.Key == Key.K)
             {
-                if (currentState == AppState.READER)
+                if (currState.state == StateStack.State.READER)
                 {
-                    if (readId + 1 < articles.Count())
+                    if (currState.itemId + 1 < articles.Count())
                     {
-                        dynamic prevItem = articles[readId + 1];
+                        dynamic prevItem = articles[currState.itemId + 1];
                         ForwardAtArticles(prevItem);
                     }
                     else
@@ -539,6 +900,7 @@ namespace BBSReader
                     tids = tids,
                     kws = new List<List<int>>(),
                     read = -1,
+                    subReads = new List<int>(),
                     groups = new List<List<string>>(),
                     groupedTids = tids.ConvertAll(x => new Group { exampleId = x, tooltips = "" })
                 };
@@ -651,6 +1013,7 @@ namespace BBSReader
                         tids = new List<int>(),
                         kws = new List<List<int>>(),
                         read = -1,
+                        subReads = new List<int>(),
                         groups = new List<List<string>>(),
                         groupedTids = new List<Group>()
                     };
@@ -693,8 +1056,11 @@ namespace BBSReader
 
             string fPath = Constants.LOCAL_PATH + item.SiteId + "/" + item.ThreadId + ".txt";
             File.Delete(fPath);
-            if (currentState == AppState.ARTICLES)
+            var currState = currPath.GetCurrState();
+            if (currState.state == StateStack.State.ARTICLES)
                 ReloadArticles();
+            else if (currState.state == StateStack.State.CORPUS)
+                ReloadCorpus();
         }
 
         private void UnreadContextMenu_Click(object sender, RoutedEventArgs e)
@@ -703,21 +1069,70 @@ namespace BBSReader
             dynamic item = cmi.DataContext;
             if (!item.IsFolder)
             {
-                dynamic topic = topics[currentId];
-                if (topic.Favorite)
+                var currState = currPath.GetCurrState();
+                var prevState = currPath.GetPrevState(currState);
+
+                if (prevState.state == StateStack.State.TOPICS)
                 {
-                    int favoriteId = topic.FavoriteId;
-                    int index = articles.IndexOf(item) + 1;
-                    var sk = metaData.superKeywords[favoriteId];
-                    int i = sk.groupedTids.Count - index - 1;
-                    if (i <= sk.read)
+                    dynamic topic = topics[currState.itemId];
+                    if (topic.Favorite)
                     {
-                        sk.read = i;
-                        metaData.superKeywords[favoriteId] = sk;
-                        MetaDataLoader.Save(this.metaData);
-                        ReloadArticles();
-                        UpdateTopics(ReloadTopics());
-                        UpdateView();
+                        int FavoriteId = topic.FavoriteId;
+                        var sk = metaData.superKeywords[FavoriteId];
+                        int index;
+                        int i;
+                        if (currState.state != StateStack.State.CORPUS)
+                        {
+                            index = articles.IndexOf(item);
+                            i = sk.groupedTids.Count - index - 1;
+                        }
+                        else
+                        {
+                            index = corpus.IndexOf(item);
+                            i = sk.subSKs.Count + sk.noSKGTids.Count - index - 1;
+                        }
+                        if ((i - 1) <= sk.read)
+                        {
+                            sk.read = i - 1;
+                            metaData.superKeywords[FavoriteId] = sk;
+                            MetaDataLoader.Save(this.metaData);
+                            if (currState.state != StateStack.State.CORPUS)
+                            {
+                                ReloadArticles();
+                            }
+                            else
+                            {
+                                ReloadCorpus();
+                            }
+                            UpdateTopics(ReloadTopics());
+                            UpdateView();
+                        }
+                    }
+                }
+                else if (prevState.state == StateStack.State.CORPUS)
+                {
+                    dynamic topic = topics[prevState.itemId];
+                    if (topic.Favorite)
+                    {
+                        int FavoriteId = topic.FavoriteId;
+                        dynamic corpusItem = corpus[currState.itemId];
+                        int subFavId = corpusItem.FavoriteId;
+                        int index = articles.IndexOf(item);
+                        var sk = metaData.superKeywords[FavoriteId];
+                        var subSK = sk.subSKs[subFavId];
+                        int i = subSK.groupedTids.Count - index - 1;
+                        if ((i - 1) <= subSK.read)
+                        {
+                            subSK.read = i - 1;
+                            sk.subReads[subFavId] = i - 1;
+                            sk.subSKs[subFavId] = subSK;
+                            metaData.superKeywords[FavoriteId] = sk;
+                            MetaDataLoader.Save(this.metaData);
+                            ReloadArticles();
+                            ReloadCorpus();
+                            UpdateTopics(ReloadTopics());
+                            UpdateView();
+                        }
                     }
                 }
             }
@@ -733,20 +1148,40 @@ namespace BBSReader
             ScriptDialog dialog = new ScriptDialog(ScriptDialog.ScriptId.DOWNLOAD_ONE_DETAIL, siteId, threadId, "-u", "") { Owner = this };
             if (dialog.ShowDialog() ?? false)
             {
-                ReloadArticles();
+                var currState = currPath.GetCurrState();
+                if (currState.state == StateStack.State.ARTICLES)
+                    ReloadArticles();
+                else if (currState.state == StateStack.State.CORPUS)
+                    ReloadCorpus();
             }
         }
 
         private void SearchButton_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrWhiteSpace(SearchBox.Text))
-                searchingKeyword = null;
-            else
-                searchingKeyword = SearchBox.Text;
+            DoSearch();
+        }
 
-            if (currentState == AppState.TOPICS)
+        private void DoSearch()
+        {
+            var currState = currPath.GetCurrState();
+            if (string.IsNullOrWhiteSpace(SearchBox.Text))
+            {
+                while (currState.searchingKeyword != null)
+                {
+                    currPath.Pop();
+                    currState = currPath.GetCurrState();
+                }
+            }
+            else
+            {
+                currPath.Push(currState.state, -1, SearchBox.Text);
+            }
+
+            if (currState.state == StateStack.State.TOPICS)
                 UpdateTopics(ReloadTopics());
-            else if (currentState == AppState.ARTICLES)
+            else if (currState.state == StateStack.State.CORPUS)
+                ReloadCorpus();
+            else if (currState.state == StateStack.State.ARTICLES)
                 ReloadArticles();
             UpdateView();
         }
@@ -787,55 +1222,6 @@ namespace BBSReader
             StartReloadData();
         }
 
-        private void StartReloadData()
-        {
-            Thread thread = new Thread(ReloadData);
-            thread.Start();
-        }
-
-        private void ReloadData()
-        {
-            this.Dispatcher.Invoke(new Action(() =>
-            {
-                currentState = AppState.LOADING;
-                UpdateView();
-            }));
-            this.metaData = MetaDataLoader.Load();
-            this.currentId = -1;
-            this.searchingKeyword = null;
-            var topicsItems = ReloadTopics();
-            this.Dispatcher.Invoke(new Action(() =>
-            {
-                UpdateTopics(topicsItems);
-                currentState = AppState.TOPICS;
-                UpdateView();
-            }));
-        }
-
-        private void StartResetUI()
-        {
-            Thread thread = new Thread(ResetUI);
-            thread.Start();
-        }
-
-        private void ResetUI()
-        {
-            this.Dispatcher.Invoke(new Action(() =>
-            {
-                currentState = AppState.LOADING;
-                UpdateView();
-            }));
-            this.currentId = -1;
-            this.searchingKeyword = null;
-            var topicsItems = ReloadTopics();
-            this.Dispatcher.Invoke(new Action(() =>
-            {
-                UpdateTopics(topicsItems);
-                currentState = AppState.TOPICS;
-                UpdateView();
-            }));
-        }
-
         private void CollectSingleArticleContextMenu_Click(object sender, RoutedEventArgs e)
         {
             MenuItem cmi = sender as MenuItem;
@@ -853,8 +1239,11 @@ namespace BBSReader
                     tids = new List<int>(),
                     kws = new List<List<int>>(),
                     read = -1,
+                    subReads = new List<int>(),
                     groups = new List<List<string>>(),
-                    groupedTids = new List<Group>()
+                    groupedTids = new List<Group>(),
+                    subSKs = new List<SuperKeyword>(),
+                    noSKGTids = new List<Group>()
                 };
                 metaData.superKeywords.Add(superKeyword);
                 FavoriteId = metaData.superKeywords.Count - 1;
@@ -911,6 +1300,7 @@ namespace BBSReader
             {
                 sk.authors = new List<string>(dialog.Authors);
                 sk.alias = new List<string>(dialog.Keywords);
+                sk.subReads = sk.alias.ConvertAll(x => -1);
                 metaData.superKeywords[FavoriteId] = sk;
                 MetaDataLoader.Save(this.metaData);
             }
@@ -940,6 +1330,7 @@ namespace BBSReader
                 tids = new List<int>(),
                 kws = new List<List<int>>(),
                 read = -1,
+                subReads = new List<int>(),
                 groups = new List<List<string>>(),
                 groupedTids = new List<Group>()
             };
