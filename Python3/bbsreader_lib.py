@@ -120,6 +120,7 @@ class Crawler:
 
 ### Thread对象
 def MakeThread(siteId, threadId, title, author, postTime, link):
+    postTime = time.strftime('%Y-%m-%d', time.strptime(postTime, '%Y-%m-%d'))
     dic = {
         'siteId': siteId,
         'threadId': threadId,
