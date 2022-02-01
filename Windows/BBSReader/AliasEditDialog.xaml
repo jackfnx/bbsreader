@@ -10,7 +10,7 @@
         Foreground="{DynamicResource MaterialDesignFont}"
         TextElement.Foreground="{DynamicResource MaterialDesignBody}"
         ShowInTaskbar="False"
-        Title="Favorite Set Alias" Height="450" Width="800" MinHeight="450" MinWidth="800" Loaded="Window_Loaded">
+        Title="Alias Editor" Height="450" Width="800" MinHeight="450" MinWidth="800" Loaded="Window_Loaded">
     <Window.Resources>
         <Style x:Key="AddButton" TargetType="{x:Type Button}" BasedOn="{StaticResource MaterialDesignRaisedButton}">
             <Setter Property="HorizontalContentAlignment" Value="Center" />
@@ -39,23 +39,22 @@
             </Style.Triggers>
         </Style>
     </Window.Resources>
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="2*" />
-            <RowDefinition Height="4*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
-        <GroupBox Grid.Row="0" Header="Keyword">
-            <Label x:Name="TagWord" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="10" />
+    <DockPanel>
+        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Right" Margin="15">
+            <Button IsDefault="True" x:Name="OkButton" Content="_OK" Click="OkButton_Click" MinWidth="60" Margin="0,0,10,0"></Button>
+            <Button IsCancel="True" Content="_Cancel" MinWidth="60"></Button>
+        </WrapPanel>
+        <GroupBox DockPanel.Dock="Top" Header="Keyword" x:Name="FixedKeywordArea">
+            <Label x:Name="FixedWord" HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="10" />
         </GroupBox>
-        <GroupBox Grid.Row="1" Header="Alias">
+        <GroupBox Header="Alias Edit">
             <DockPanel>
                 <StackPanel DockPanel.Dock="Right" VerticalAlignment="Center">
                     <Button x:Name="RemoveButton" Content="Remove" Click="RemoveButton_Click" Style="{StaticResource RemoveButton}"/>
                     <Button x:Name="AddButton" Content="Add" Click="AddButton_Click" Style="{StaticResource AddButton}"/>
                 </StackPanel>
                 <DockPanel>
-                    <ListView Name="AliasBox" DockPanel.Dock="Left">
+                    <ListView Name="AliasBox" DockPanel.Dock="Top">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
                                 <TextBlock Text="{Binding}" />
@@ -66,9 +65,5 @@
                 </DockPanel>
             </DockPanel>
         </GroupBox>
-        <WrapPanel Grid.Row="2" HorizontalAlignment="Right" Margin="15">
-            <Button IsDefault="True" x:Name="OkButton" Content="_OK" Click="OkButton_Click" MinWidth="60" Margin="0,0,10,0"></Button>
-            <Button IsCancel="True" Content="_Cancel" MinWidth="60"></Button>
-        </WrapPanel>
-    </Grid>
+    </DockPanel>
 </Window>

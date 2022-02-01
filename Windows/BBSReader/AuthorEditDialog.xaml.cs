@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Windows;
+using System.Windows.Controls;
 
 namespace BBSReader
 {
@@ -11,7 +12,7 @@ namespace BBSReader
     public partial class AuthorEditDialog : Window
     {
         public ObservableCollection<string> Authors { get; set; }
-        public ObservableCollection<string> Keywords { get; set; }
+        public ObservableCollection<object> Keywords { get; set; }
         public ObservableCollection<object> Articles { get; set; }
 
         public AuthorEditDialog()
@@ -21,18 +22,32 @@ namespace BBSReader
             Authors = new ObservableCollection<string>();
             AuthorsBox.ItemsSource = Authors;
 
-            Keywords = new ObservableCollection<string>();
-            KeywordsBox.ItemsSource = Keywords;
+            Keywords = new ObservableCollection<object>();
+            KeywordsBox.DataContext = Keywords;
 
             Articles = new ObservableCollection<object>();
             ArticlesBox.DataContext = Articles;
         }
 
-        public void Initialize(List<string> authors, List<string> alias, List<string> titles)
+        public void Initialize(List<string> authors, List<List<string>> subKeywords, List<int> subReads, List<string> titles)
         {
+            Authors.Clear();
+            Keywords.Clear();
+            Articles.Clear();
             authors.ForEach(x => Authors.Add(x));
-            alias.ForEach(x => Keywords.Add(x));
-            titles.ForEach(x => Articles.Add(new { Title = x, Match = alias.FindIndex(y => x.Contains(y)) != -1 }));
+            for (int i = 0; i < subKeywords.Count; i++)
+            {
+                var subKw = subKeywords[i];
+                var subRead = subReads[i];
+                var tooltip = MakeTooltip(subKw, subRead);
+                Keywords.Add(new { Title = subKw[0], SubKeywords = subKw, SubRead = subRead, Tooltip = tooltip });
+            }
+            titles.ForEach(x => Articles.Add(new { Title = x, Match = subKeywords.FindIndex(y => !y.TrueForAll(z=> !x.Contains(z))) != -1 }));
+        }
+
+        private string MakeTooltip(List<string> subKeywords, int subRead)
+        {
+            return string.Format("{0}\nUnread:\t{1}", string.Join("\n", subKeywords.ConvertAll(x => string.Format("* {0}", x))), subRead);
         }
 
         private void RemoveNameButton_Click(object sender, RoutedEventArgs e)
@@ -64,9 +79,9 @@ namespace BBSReader
             {
                 return;
             }
-            string kw = Keywords[KeywordsBox.SelectedIndex];
+            dynamic kw = Keywords[KeywordsBox.SelectedIndex];
             Keywords.RemoveAt(KeywordsBox.SelectedIndex);
-            UpdatePreview(null, kw);
+            UpdatePreview(null, kw.Title);
         }
 
         private void AddKeywordButton_Click(object sender, RoutedEventArgs e)
@@ -74,7 +89,14 @@ namespace BBSReader
             string line = KeywordEditBox.Text;
             if (!Keywords.Contains(line))
             {
-                Keywords.Add(line);
+                List<string> subKeywords = new List<string>() { line };
+                Keywords.Add(new
+                {
+                    Title = line,
+                    SubKeywords = subKeywords,
+                    SubRead = -1,
+                    Tooltip = MakeTooltip(subKeywords, -1)
+                });
                 KeywordEditBox.Text = "";
                 UpdatePreview(line, null);
             }
@@ -84,7 +106,7 @@ namespace BBSReader
             }
         }
 
-        private void UpdatePreview(string add, string remove)
+        private void UpdatePreview(dynamic add, dynamic remove)
         {
             for (int i = 0; i < Articles.Count; i++)
             {
@@ -109,6 +131,34 @@ namespace BBSReader
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
             this.DialogResult = true;
+        }
+
+        private void ListViewItem_MouseDoubleClick(object sender, System.Windows.Input.MouseButtonEventArgs e)
+        {
+            ListViewItem lvi = sender as ListViewItem;
+            dynamic item = lvi.Content;
+            List<string> oldSubKeywords = new List<string>(item.SubKeywords);
+            int subRead = item.SubRead;
+            AliasEditDialog dialog = new AliasEditDialog()
+            {
+                Owner = this,
+                Keyword = "*"
+            };
+            oldSubKeywords.ForEach(x => dialog.Aliases.Add(x));
+            if (dialog.ShowDialog() ?? false)
+            {
+                int i = Keywords.IndexOf(item);
+                List<string> newSubKeywords = new List<string>(dialog.Aliases);
+                oldSubKeywords.ForEach(x => UpdatePreview(null, x));
+                newSubKeywords.ForEach(x => UpdatePreview(x, null));
+                Keywords[i] = new
+                {
+                    Title = dialog.Aliases[0],
+                    SubKeywords = newSubKeywords,
+                    SubRead = subRead,
+                    Tooltip = MakeTooltip(item.SubKeywords, subRead)
+                };
+            }
         }
     }
 }

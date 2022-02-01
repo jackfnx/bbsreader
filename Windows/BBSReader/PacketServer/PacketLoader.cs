@@ -13,7 +13,7 @@ namespace BBSReader.PacketServer
         {
             List<Packet> list = new List<Packet>();
             MetaData metaData = MetaDataLoader.Load();
-            Grouper.GroupingSuperKeyword(metaData);
+            Grouper.GroupingSuperKeywords(metaData);
             foreach (SuperKeyword sk in metaData.superKeywords)
             {
                 Packet packet = new Packet();

@@ -254,6 +254,15 @@ class MetaData:
             keywords = [x.strip() for x in keywords]
             return keywords
 
+        def find_sub_keywords(title, sub_keywords):
+            res = []
+            for j, skws in enumerate(sub_keywords):
+                for skw in skws:
+                    if skw in title:
+                        res.append(j)
+                        break
+            return tuple(res)
+
         tags = {}
         for i, t in enumerate(threads):
             if t['siteId'] not in bbsdef_ids:
@@ -271,6 +280,7 @@ class MetaData:
                 keyword = superkeyword['keyword']
                 authors = superkeyword['author']
                 aliases = superkeyword['alias']
+                sub_keywords = superkeyword['subKeywords']
                 if superkeyword['skType'] == SK_Type.Simple:
                     if keyword in keywords:
                         superkeyword['tids'].append(i)
@@ -287,7 +297,7 @@ class MetaData:
                 elif superkeyword['skType'] == SK_Type.Author:
                     if authors.count(author) > 0:
                         superkeyword['tids'].append(i)
-                        kws = tuple([j for j, x in enumerate(aliases) if x in title])
+                        kws = find_sub_keywords(title, sub_keywords)
                         superkeyword['kws'].append(kws)
                 elif superkeyword['skType'] == SK_Type.Manual:
                     pass

@@ -62,7 +62,7 @@ namespace BBSReader
                 metaData.blacklist = JsonConvert.DeserializeObject<List<string>>(json);
             }
 
-            Grouper.GroupingSuperKeyword(metaData);
+            Grouper.GroupingSuperKeywords(metaData);
             return metaData;
         }
 

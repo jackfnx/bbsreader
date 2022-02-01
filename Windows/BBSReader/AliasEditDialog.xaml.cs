@@ -4,7 +4,7 @@ using System.Windows;
 namespace BBSReader
 {
     /// <summary>
-    /// ManualAddTagDialog.xaml 的交互逻辑
+    /// AliasEditDialog.xaml 的交互逻辑
     /// </summary>
     public partial class AliasEditDialog : Window
     {
@@ -22,11 +22,16 @@ namespace BBSReader
 
         private void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            TagWord.Content = Keyword;
+            FixedWord.Content = Keyword;
+            FixedKeywordArea.Visibility = Keyword == "*" ? Visibility.Collapsed : Visibility.Visible;
         }
 
         private void OkButton_Click(object sender, RoutedEventArgs e)
         {
+            if (Keyword == "*" && Aliases.Count == 0)
+            {
+                return;
+            }
             this.DialogResult = true;
         }
 

@@ -66,6 +66,9 @@
                 </DataTrigger>
             </Style.Triggers>
         </Style>
+        <Style x:Key="keyword" TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MaterialDesignListBoxItem}">
+            <EventSetter Event="MouseDoubleClick" Handler="ListViewItem_MouseDoubleClick" />
+        </Style>
         <Style x:Key="preview" TargetType="{x:Type ListViewItem}" BasedOn="{StaticResource MaterialDesignListBoxItem}">
             <Setter Property="Control.Background" Value="{DynamicResource MaterialDesignLightBackground}" />
             <Style.Triggers>
@@ -108,10 +111,10 @@
                 </StackPanel>
                 <DockPanel DockPanel.Dock="Left">
                     <TextBox x:Name="KeywordEditBox" Margin="10" DockPanel.Dock="Bottom" />
-                    <ListView x:Name="KeywordsBox">
+                    <ListView x:Name="KeywordsBox" ItemsSource="{Binding}" ItemContainerStyle="{StaticResource keyword}">
                         <ListBox.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" />
+                                <TextBlock Text="{Binding Path=Title}" ToolTip="{Binding Path=Tooltip}"/>
                             </DataTemplate>
                         </ListBox.ItemTemplate>
                     </ListView>

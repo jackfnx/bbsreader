@@ -1294,13 +1294,14 @@ namespace BBSReader
             int FavoriteId = item.FavoriteId;
             SuperKeyword sk = metaData.superKeywords[FavoriteId];
             AuthorEditDialog dialog = new AuthorEditDialog() { Owner = this };
-            dialog.Initialize(sk.authors, sk.alias, sk.tids.ConvertAll(x => metaData.threads[x].title));
+            dialog.Initialize(sk.authors, sk.subKeywords, sk.subReads, sk.tids.ConvertAll(x => metaData.threads[x].title));
 
             if (dialog.ShowDialog() ?? false)
             {
+                List<dynamic> kwObjs = new List<dynamic>(dialog.Keywords);
                 sk.authors = new List<string>(dialog.Authors);
-                sk.alias = new List<string>(dialog.Keywords);
-                sk.subReads = sk.alias.ConvertAll(x => -1);
+                sk.subKeywords = kwObjs.ConvertAll<List<string>>(x => x.SubKeywords);
+                sk.subReads = kwObjs.ConvertAll<int>(x => x.SubRead);
                 metaData.superKeywords[FavoriteId] = sk;
                 MetaDataLoader.Save(this.metaData);
             }
