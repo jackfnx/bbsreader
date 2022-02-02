@@ -1,6 +1,5 @@
 import sys
 import argparse
-from typing import NewType
 import requests
 import urllib
 from bs4 import BeautifulSoup

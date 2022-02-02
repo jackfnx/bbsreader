@@ -16,7 +16,7 @@
                 <ItemsControl ItemsSource="{Binding ConsoleOutput, Mode=OneWay}">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <TextBlock Text="{Binding Path=.}"/>
+                            <TextBlock Text="{Binding Path=.}" TextWrapping="Wrap"/>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

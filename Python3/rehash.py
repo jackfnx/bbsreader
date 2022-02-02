@@ -1,8 +1,69 @@
 import sys
 import urllib
+import argparse
 from bs4 import BeautifulSoup
 
 from bbsreader_lib import *
+
+
+def main():
+    ### 参数
+    parser = argparse.ArgumentParser()
+    parser.add_argument('bbsid', type=int, default=0, help='<BBS ID>')
+    parser.add_argument('threadids', nargs='+', type=int, default=[], help='<Thread ID>')
+    parser.add_argument('--url', nargs='?', type=str, help='<URL>')
+    parser.add_argument('--sk', nargs='?', type=int, default=-1, help='<Superkeyword ID>')
+    parser.add_argument('--printonly', '-P', action='store_true', help='print superkeyword id only.')
+    parser.add_argument('--title', nargs='?', type=str, help='manual set title (when update index)')
+    parser.add_argument('--author', nargs='?', type=str, help='manual set author (when update index)')
+    parser.add_argument('--trace', default=1, type=int, help='manual set trace step')
+    args = parser.parse_args()
+
+    meta_data = MetaData(save_root_path)
+
+    if args.printonly:
+        if 0 <= args.sk < len(meta_data.superkeywords):
+            sk = meta_data.superkeywords[args.sk]
+            for tid in sk['tids']:
+                t = meta_data.last_threads[tid]
+                if '【' not in t['title'] and '】' not in t['title']:
+                    print(t)
+        else:
+            for i, sk in enumerate(meta_data.superkeywords):
+                print(i, sk['skType'], sk['author'][0], sk['keyword'])
+        sys.exit(0)
+
+    if 0 <= args.sk < len(meta_data.superkeywords):
+        ts = []
+        sk = meta_data.superkeywords[args.sk]
+        for tid in sk['tids']:
+            t = meta_data.last_threads[tid]
+            if '【' not in t['title'] and '】' not in t['title']:
+                bbsId = bbsdef_ids.index(t['siteId'])
+                threadId = t['threadId']
+                postUrl = 'thread-%s-%d-1.html' % (threadId, 1)
+                ts.append((bbsId, threadId, postUrl))
+    elif args.bbsid < 0:
+        bbsId, threadId, postUrl = parse_url(args.url)
+        ts = [(bbsId, threadId, postUrl)]
+    else:
+        ts = [(args.bbsid, str(t), 'thread-%s-%d-1.html' % (t, 1)) for t in args.threadids]
+
+    new_threads = []
+    for bbsId, threadId, postUrl in ts:
+
+        crawler = Crawler.getCrawler(bbsId)
+
+        html = crawler.getUrl(postUrl)
+
+        title, author, postTime = bbscon(html)
+
+        t = MakeThread(crawler.siteId, threadId, title, author, postTime, postUrl)
+        print(t)
+        new_threads.append(t)
+
+    meta_data.merge_threads(new_threads, force=True)
+    meta_data.save_meta_data()
 
 
 def parse_url(url):
@@ -55,19 +116,6 @@ def bbscon(html):
 
     return title, author, postTime
 
-url = sys.argv[1]
 
-bbsId, threadId, postUrl = parse_url(url)
-
-crawler = Crawler.getCrawler(bbsId)
-
-html = crawler.getUrl(postUrl)
-
-title, author, postTime = bbscon(html)
-
-new_threads = [MakeThread(crawler.siteId, threadId, title, author, postTime, postUrl)]
-print(new_threads)
-
-meta_data = MetaData(save_root_path)
-meta_data.merge_threads(new_threads, force=True)
-meta_data.save_meta_data()
+if __name__=='__main__':
+    main()
