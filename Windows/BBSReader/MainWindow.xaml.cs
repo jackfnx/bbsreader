@@ -171,9 +171,9 @@ namespace BBSReader
             var topicsItems = ReloadTopics();
             this.Dispatcher.Invoke(new Action(() =>
             {
+                currPath.Clear();
                 UpdateTopics(topicsItems);
                 isLoading = false;
-                currPath.Clear();
                 UpdateView();
             }));
         }
@@ -194,9 +194,9 @@ namespace BBSReader
             var topicsItems = ReloadTopics();
             this.Dispatcher.Invoke(new Action(() =>
             {
+                currPath.Clear();
                 UpdateTopics(topicsItems);
                 isLoading = false;
-                currPath.Clear();
                 UpdateView();
             }));
         }
