@@ -170,6 +170,14 @@ class MetaData:
             with open(blacklist_json, encoding='utf-8') as f:
                 self.blacklist = json.load(f)
 
+            self.manual_topics = {}
+            manual_topics_dir = os.path.join(self.meta_data_path, 'manual_topics')
+            for manual_topic in os.listdir(manual_topics_dir):
+                mt_json = os.path.join(manual_topics_dir, manual_topic)
+                with open(mt_json, encoding='utf-8') as f:
+                    mt = json.load(f)
+                self.manual_topics[mt['id']] = mt
+
         ### 如果不存在json，初始化空数据
         else:
             self.last_timestamp = 0
@@ -177,6 +185,7 @@ class MetaData:
             self.tags = {}
             self.superkeywords = []
             self.blacklist = []
+            self.manual_topics = {}
 
     def merge_threads(self, latest_threads, force=False):
 
@@ -412,6 +421,25 @@ class MetaData:
         with open(blacklist_json, 'w', encoding='utf-8') as f:
             json.dump(self.blacklist, f)
 
+        manual_topics_dir = os.path.join(self.meta_data_path, 'manual_topics')
+        if not os.path.exists(manual_topics_dir):
+            os.makedirs(manual_topics_dir)
+
+        mts_rm = [os.path.join(manual_topics_dir, x) for x in os.listdir(manual_topics_dir) if x[:-len('.json')] not in self.manual_topics]
+        for t in mts_rm:
+            os.unlink(t)
+
+        for manual_topic in self.manual_topics.values():
+            mt_json_s = json.dumps(manual_topic, indent=2)
+            mt_json = os.path.join(manual_topics_dir, manual_topic['id'] + '.json')
+            if os.path.exists(mt_json):
+                with open(mt_json, encoding='utf-8') as f:
+                    s = f.read()
+            else:
+                s = ''
+            if s != mt_json_s:
+                with open(mt_json, 'w', encoding='utf-8') as f:
+                    f.write(mt_json_s)
 
 def keytext(superkeyword):
     if superkeyword['skType'] == SK_Type.Simple:
