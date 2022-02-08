@@ -76,6 +76,10 @@ namespace BBSReader
 
             internal void Clear()
             {
+                if (stack.Count > 2 && stack[1].state == State.TOPICS && stack[1].searchingKeyword != null)
+                {
+                    stack.RemoveRange(2, stack.Count - 2);
+                }
                 stack.RemoveRange(1, stack.Count - 1);
             }
 
@@ -1174,7 +1178,7 @@ namespace BBSReader
             }
             else
             {
-                currPath.Push(currState.state, -1, SearchBox.Text);
+                currPath.Push(currState.state, currState.itemId, SearchBox.Text);
             }
 
             if (currState.state == StateStack.State.TOPICS)
