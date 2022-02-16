@@ -456,6 +456,28 @@ class MetaData:
                 with open(mt_json, 'w', encoding='utf-8') as f:
                     f.write(mt_json_s)
 
+    def __manual_topic_id(self, sk):
+        return '%s_%s' % (sk['author'][0], sk['keyword']) if sk['author'][0] != '*' else sk['keyword']
+
+    def load_mts(self, siteId):
+        mts = []
+        for i, sk in enumerate(self.superkeywords):
+            if sk['skType'] == SK_Type.Manual and sk['keyword'] != '*':
+                mt = self.manual_topics[self.__manual_topic_id(sk)]
+                if mt['siteId'] == siteId:
+                    mts.append((i, mt))
+        return mts
+    
+    def find_mt(self, sk):
+        if sk['skType'] == SK_Type.Manual and sk['keyword'] != '*':
+            mtId = self.__manual_topic_id(sk)
+            if mtId in self.manual_topics:
+                return mtId, self.manual_topics[mtId]
+            else:
+                return mtId, None
+        else:
+            return None, None
+
 def keytext(superkeyword):
     if superkeyword['skType'] == SK_Type.Simple:
         return superkeyword['keyword']

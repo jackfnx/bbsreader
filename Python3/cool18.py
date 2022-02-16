@@ -7,6 +7,43 @@ from bs4 import BeautifulSoup
 from bbsreader_lib import *
 
 
+class UrlCache:
+    def __init__(self, threads=[], cached_urls=[], force=False):
+        self.threads = threads
+        self.tkeys = [(t['siteId'], t['threadId']) for t in threads]
+        self.cached_urls = [] if force else cached_urls
+        self.new_urls = []
+
+    def url_in_cache(self, url, trace):
+        if trace != 0:
+            return False, None
+        
+        if not url_in(url, self.cached_urls):
+            return False, None
+
+        _, threadId = parse_url(url)
+        if ('cool18', threadId) not in self.tkeys:
+            return True, None
+        else:
+            tid = self.tkeys.index(('cool18', threadId))
+            return True, self.threads[tid]
+    
+    def append_url(self, new_url):
+        if url_in(new_url, self.cached_urls):
+            return
+        if url_in(new_url, self.new_urls):
+            return
+        self.new_urls.append(new_url)
+    
+    def export(self):
+        return self.cached_urls + self.new_urls
+
+def urls_to_entries(urls, default_closed=False):
+    return [{'url': u, 'closed': default_closed} for u in urls]
+
+def entries_to_urls(entries, only_open=False):
+    return [e['url'] for e in entries if not (only_open and e['closed'])]
+
 class Crawler:
     def __init__(self):
         self.head = {
@@ -127,48 +164,61 @@ def bbscon(url, fwd_link=False):
     new_thread = MakeThread(crawler.siteId, threadId, title_str, author, postTime, postUrl)
     return title_str, title, author, poster, links, text, new_thread
 
-def bbstcon(url, trace, indent, bypass_urls):
+def bbstcon(url, trace, indent, bypass_urls, url_cache):
     new_threads = []
 
-    try:
-        title_str, title, author, poster, links, text, new_thread = bbscon(url, fwd_link=(trace!=0))
-        bypass_urls.append(url)
-
-        print('%sGet: [%s], OK.' % (' '*indent, url))
-        logger = '%sTitle: [%s], Text: [%d], Poster: [%s]' % (' '*indent, title_str, len(text), poster)
-        if (len(text) > 1000) or indent == 0:
-            new_threads.append(new_thread)
-            save_article(new_thread, text)
-            save_flag = True
-            print('%s, Saved.' % (logger))
+    incache, cached_thread = url_cache.url_in_cache(url, trace)
+    if incache:
+        if cached_thread is not None:
+            title, author = cached_thread['title'], cached_thread['author']
+            new_threads.append(cached_thread)
+            print('Get: [%s], Title: [%s], Cached.' % (url, title))
         else:
-            save_flag = False
+            title, author = None, None
+            print('Get: [%s], Marked as empty.' % (url))
 
-    except Exception as e:
-        print('Get [%s]: %s' % (url, str(e)))
-        return None, None, new_threads
+    else:
+        try:
+            title_str, title, author, poster, links, text, new_thread = bbscon(url, fwd_link=(trace!=0))
+            bypass_urls.append(url)
+            url_cache.append_url(url)
 
-    for lnk in links:
-        if url_in(lnk, bypass_urls):
-            continue
-        _, _, sub_threads = bbstcon(lnk, trace-1, indent+1, bypass_urls=bypass_urls)
-        if not save_flag and len(sub_threads) > 0:
-            new_threads.append(new_thread)
-            save_article(new_thread, text)
-            save_flag = True
-            print('%s, Saved(for sub_threads).' % (logger))
-        new_threads += sub_threads
+            print('%sGet: [%s], OK.' % (' '*indent, url))
+            logger = '%sTitle: [%s], Text: [%d], Poster: [%s]' % (' '*indent, title_str, len(text), poster)
+            if (len(text) > 1000) or indent == 0:
+                new_threads.append(new_thread)
+                save_article(new_thread, text)
+                save_flag = True
+                print('%s, Saved.' % (logger))
+            else:
+                save_flag = False
 
-    if not save_flag:
-        print('%s, Not saved.' % (logger))
+        except Exception as e:
+            print('Get [%s]: %s' % (url, str(e)))
+            return None, None, new_threads
+
+        for lnk in links:
+            if url_in(lnk, bypass_urls):
+                continue
+            _, _, sub_threads = bbstcon(lnk, trace-1, indent+1, bypass_urls=bypass_urls, url_cache=url_cache)
+            if not save_flag and len(sub_threads) > 0:
+                new_threads.append(new_thread)
+                save_article(new_thread, text)
+                save_flag = True
+                print('%s, Saved(for sub_threads).' % (logger))
+            new_threads += sub_threads
+
+        if not save_flag:
+            print('%s, Not saved.' % (logger))
 
     return title, author, new_threads
 
-def main(urls, title, author, trace):
+def new_topic(urls, title, author, trace):
 
     new_threads = []
+    url_cache = UrlCache()
     for url in urls.copy():
-        t, a, ts = bbstcon(url, trace, 0, bypass_urls=urls)
+        t, a, ts = bbstcon(url, trace, 0, bypass_urls=urls, url_cache=url_cache)
         if title is None:
             title = t
         if author is None:
@@ -179,45 +229,108 @@ def main(urls, title, author, trace):
     meta_data = MetaData(save_root_path)
     meta_data.merge_threads(new_threads, force=True)
 
-    last_tids = [(t['siteId'], t['threadId']) for t in meta_data.last_threads]
-    new_tids = [last_tids.index((t['siteId'], t['threadId'])) for t in new_threads]
+    last_keys = [(t['siteId'], t['threadId']) for t in meta_data.last_threads]
+    new_tids = [last_keys.index((t['siteId'], t['threadId'])) for t in new_threads]
 
     exists_sks = [sk for sk in meta_data.superkeywords if sk['skType'] == SK_Type.Manual and sk['keyword'] == title]
     if len(exists_sks) != 0:
         superkeyword = exists_sks[0]
         superkeyword['author'] = [author]
         superkeyword['tids'] = new_tids
+        superkeyword['kws'] = [() for _ in new_tids]
     else:
         superkeyword = {
             'skType': SK_Type.Manual,
             'keyword': title,
             'author': [author],
             'tids': new_tids,
+            'kws': [() for _ in new_tids],
             'read': -1,
             'groups': [],
             'groupedTids': [],
         }
         meta_data.superkeywords.append(superkeyword)
     print('superkeyword [%s] saved.' % keytext(superkeyword))
+
+    mtId, mt = meta_data.find_mt(superkeyword)
+    if mt is None:
+        mt = {'id': mtId, 'siteId': 'cool18', 'entries': urls_to_entries(urls), 'cache': url_cache.export()}
+        meta_data.manual_topics[mtId] = mt
+    else:
+        mt['entries'] = urls_to_entries(urls)
+        mt['cache'] = url_cache.export()
+    print('manual_topic [%s] saved.' % mtId)
+
     meta_data.save_meta_data()
+
+def show_list():
+    meta_data = MetaData(save_root_path)
+    mts = meta_data.load_mts('cool18')
+    for i, mt in mts:
+        print(i, mt['id'])
+
+def refresh_topic(superkeywordId, force):
+    meta_data = MetaData(save_root_path)
+    superkeyword = meta_data.superkeywords[superkeywordId]
+    mtId, mt = meta_data.find_mt(superkeyword)
+
+    new_threads = []
+    urls = entries_to_urls(mt['entries'])
+    url_cache = UrlCache(meta_data.last_threads, mt['cache'], force)
+    for url in urls.copy():
+        _, _, ts = bbstcon(url, mt['trace'], 0, bypass_urls=urls, url_cache=url_cache)
+        new_threads += ts
+    new_threads = list(reversed(new_threads))
+
+    meta_data.merge_threads(new_threads, force=True)
+
+    last_keys = [(t['siteId'], t['threadId']) for t in meta_data.last_threads]
+    new_tids = [last_keys.index((t['siteId'], t['threadId'])) for t in new_threads]
+
+    superkeyword['tids'] = new_tids
+    superkeyword['kws'] = [() for _ in new_tids]
+    print('superkeyword [%s] saved.' % keytext(superkeyword))
+
+    mt['cache'] = url_cache.export()
+    print('manual_topic [%s] saved.' % mtId)
+
+    meta_data.save_meta_data()
+
+def update_topic(superKeywordId, title, author):
+    pass
 
 if __name__=='__main__':
     ### 参数
     parser = argparse.ArgumentParser()
-    parser.add_argument('urls', nargs='+', help='<urls>')
-    parser.add_argument('--title', nargs='?', type=str, help='manual set title (when update index)')
-    parser.add_argument('--author', nargs='?', type=str, help='manual set author (when update index)')
-    parser.add_argument('--trace', default=1, type=int, help='manual set trace step')
+    subparser = parser.add_subparsers(dest='subcmd', title='sub commands')
+    parser_new = subparser.add_parser('new', help='create a new topic (by urls)')
+    parser_new.add_argument('urls', nargs='+', help='<Urls>')
+    parser_new.add_argument('--title', nargs='?', type=str, help='manual set title')
+    parser_new.add_argument('--author', nargs='?', type=str, help='manual set author')
+    parser_new.add_argument('--trace', default=1, type=int, help='manual set trace step')
+    parser_list = subparser.add_parser('list', help='list all articles')
+    parser_refresh = subparser.add_parser('refresh', help='refresh topic')
+    parser_refresh.add_argument('superKeywordId', type=int, help='<SuperKeywordId>')
+    parser_refresh.add_argument('--force', '-f', action='store_true', help='force refresh')
+    parser_update = subparser.add_parser('update', help='update topic info')
+    parser_update.add_argument('superKeywordId', type=int, help='<SuperKeywordId>')
+    parser_update.add_argument('--title', nargs='?', type=str, help='manual set title')
+    parser_update.add_argument('--author', nargs='?', type=str, help='manual set author')
     args = parser.parse_args()
 
-    print(args.urls)
-
-    # urls = [
-    #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=70315',
-    #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=13869433',
-    #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=14014890',
-    # ]
-    # title = '六朝系列'
-    # author = '弄玉+龙璇'
-    # trace = 1
-    main(args.urls, args.title, args.author, args.trace)
+    if args.subcmd == 'new':
+        # urls = [
+        #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=70315',
+        #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=13869433',
+        #     'https://www.cool18.com/bbs4/index.php?app=forum&act=threadview&tid=14014890',
+        # ]
+        # title = '六朝系列'
+        # author = '弄玉+龙璇'
+        # trace = 1
+        new_topic(args.urls, args.title, args.author, args.trace)
+    elif args.subcmd == 'list':
+        show_list()
+    elif args.subcmd == 'refresh':
+        refresh_topic(args.superKeywordId, args.force)
+    elif args.subcmd == 'update':
+        update_topic(args.superKeywordId, args.title, args.author)
