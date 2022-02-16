@@ -314,6 +314,21 @@ class MetaData:
                 else:
                     pass
 
+        for superkeyword in self.superkeywords:
+            dup_ids = []
+            keys = []
+            for i, j in enumerate(superkeyword['tids']):
+                t = threads[j]
+                key = t['siteId'] + '/' + t['threadId']
+                if key not in keys:
+                    keys.append(key)
+                else:
+                    dup_ids.append(i)
+
+            for i in reversed(dup_ids):
+                del superkeyword['tids'][i]
+                del superkeyword['kws'][i]
+    
         ### 主题下，按照时间排序
         def getPostTime(x):
             timestr = threads[x]['postTime']

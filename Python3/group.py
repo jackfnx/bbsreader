@@ -24,8 +24,6 @@ def clean_punc(line):
 
 def do_grouping_func(threads, ids, groups, save_root_path):
 
-    dup_ids = []
-
     texts = {}
     for i in ids:
         t = threads[i]
@@ -36,13 +34,7 @@ def do_grouping_func(threads, ids, groups, save_root_path):
             with open(txtpath, 'rb') as f:
                 text = f.read().decode('gbk', 'ignore')
         key = t['siteId'] + '/' + t['threadId']
-        if key not in texts:
-            texts[key] = (t, text)
-        else:
-            dup_ids.append(i)
-
-    for i in dup_ids:
-        ids.remove(i)
+        texts[key] = (t, text)
     
     drop_gs = []
     for g in groups:
