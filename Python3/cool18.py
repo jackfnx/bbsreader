@@ -217,7 +217,8 @@ def new_topic(urls, title, author, trace):
 
     new_threads = []
     url_cache = UrlCache()
-    for url in urls.copy():
+    entry_urls = urls.copy()
+    for url in entry_urls:
         t, a, ts = bbstcon(url, trace, 0, bypass_urls=urls, url_cache=url_cache)
         if title is None:
             title = t
@@ -243,6 +244,8 @@ def new_topic(urls, title, author, trace):
             'skType': SK_Type.Manual,
             'keyword': title,
             'author': [author],
+            'alias': [],
+            'subKeywords': None,
             'tids': new_tids,
             'kws': [() for _ in new_tids],
             'read': -1,
@@ -254,10 +257,10 @@ def new_topic(urls, title, author, trace):
 
     mtId, mt = meta_data.find_mt(superkeyword)
     if mt is None:
-        mt = {'id': mtId, 'siteId': 'cool18', 'entries': urls_to_entries(urls), 'cache': url_cache.export()}
+        mt = {'id': mtId, 'siteId': 'cool18', 'entries': urls_to_entries(entry_urls), 'trace': trace, 'cache': url_cache.export()}
         meta_data.manual_topics[mtId] = mt
     else:
-        mt['entries'] = urls_to_entries(urls)
+        mt['entries'] = urls_to_entries(entry_urls)
         mt['cache'] = url_cache.export()
     print('manual_topic [%s] saved.' % mtId)
 
@@ -275,9 +278,10 @@ def refresh_topic(superkeywordId, force):
     mtId, mt = meta_data.find_mt(superkeyword)
 
     new_threads = []
-    urls = entries_to_urls(mt['entries'])
+    entry_urls = entries_to_urls(mt['entries'])
     url_cache = UrlCache(meta_data.last_threads, mt['cache'], force)
-    for url in urls.copy():
+    urls = entry_urls.copy()
+    for url in entry_urls:
         _, _, ts = bbstcon(url, mt['trace'], 0, bypass_urls=urls, url_cache=url_cache)
         new_threads += ts
     new_threads = list(reversed(new_threads))
@@ -297,7 +301,10 @@ def refresh_topic(superkeywordId, force):
     meta_data.save_meta_data()
 
 def update_topic(superKeywordId, title, author):
-    pass
+    meta_data = MetaData(save_root_path)
+    superkeyword = meta_data.superkeywords[superKeywordId]
+    mtId, mt = meta_data.find_mt(superkeyword)
+
 
 if __name__=='__main__':
     ### 参数
