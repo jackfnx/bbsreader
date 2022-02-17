@@ -54,7 +54,7 @@ class SexInSex_Login:
 ### BBS列表
 bbsdef = [
     ['第一会所', 'sis001', 'http://www.sis001.com/forum/', 'forum-%d-%d.html', None, 'utf-8', [383,322]],
-    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), 'gbk', [383,322,359]],
+    ['色中色', 'sexinsex', 'http://www.sexinsex.net/bbs/', 'forum-%d-%d.html', SexInSex_Login(save_root_path), 'gbk', [383,322,359,390]],
 ]
 bbsdef_ids = [x[1] for x in bbsdef]
 

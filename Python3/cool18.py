@@ -270,7 +270,7 @@ def show_list():
     meta_data = MetaData(save_root_path)
     mts = meta_data.load_mts('cool18')
     for i, mt in mts:
-        print(i, mt['id'])
+        print(i, mt['id'], len(mt['entries']), mt['trace'])
 
 def refresh_topic(superkeywordId, force):
     meta_data = MetaData(save_root_path)
