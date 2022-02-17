@@ -1231,7 +1231,7 @@ namespace BBSReader
             MenuItem cmi = sender as MenuItem;
             dynamic item = cmi.DataContext;
 
-            int FavoriteId = metaData.superKeywords.FindIndex(x => x.keyword == "*");
+            int FavoriteId = metaData.superKeywords.FindIndex(x => x.skType == SKType.Manual && x.keyword == "*");
             if (FavoriteId == -1)
             {
                 SuperKeyword superKeyword = new SuperKeyword
@@ -1261,6 +1261,7 @@ namespace BBSReader
             if (!sk.tids.Contains(tid))
             {
                 sk.tids.Add(tid);
+                sk.kws.Add(new List<int>());
             }
             sk.tids.Sort((x,y) => -metaData.threads[x].postTime.CompareTo(metaData.threads[y].postTime) );
             metaData.superKeywords[FavoriteId] = sk;
