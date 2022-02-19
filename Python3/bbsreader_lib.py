@@ -261,6 +261,8 @@ class MetaData:
             keywords = [x for x in keywords if not re.match('^[续完]$', x)]
             keywords = [x for x in keywords if not re.match('^大?结局$', x)]
             keywords = [x for x in keywords if not re.match('^代友?发$', x)]
+            keywords = sum([[x]+x.split('：') for x in keywords], [])
+            keywords = list(set(keywords))
             keywords = [x.strip() for x in keywords]
             return keywords
 
