@@ -14,10 +14,7 @@ class UrlCache:
         self.cached_urls = [] if force else cached_urls
         self.new_urls = []
 
-    def url_in_cache(self, url, trace):
-        if trace != 0:
-            return False, None
-        
+    def url_in_cache(self, url):
         if not url_in(url, self.cached_urls):
             return False, None
 
@@ -164,11 +161,12 @@ def bbscon(url, fwd_link=False):
     new_thread = MakeThread(crawler.siteId, threadId, title_str, author, postTime, postUrl)
     return title_str, title, author, poster, links, text, new_thread
 
-def bbstcon(url, trace, indent, bypass_urls, url_cache):
+def bbstcon(url, trace, indent, url_cache, bypass_urls):
     new_threads = []
 
-    incache, cached_thread = url_cache.url_in_cache(url, trace)
-    if incache:
+    incache, cached_thread = url_cache.url_in_cache(url)
+    if incache and (trace == 0):
+        bypass_urls.append(url)
         if cached_thread is not None:
             title, author = cached_thread['title'], cached_thread['author']
             new_threads.append(cached_thread)
@@ -200,7 +198,7 @@ def bbstcon(url, trace, indent, bypass_urls, url_cache):
         for lnk in links:
             if url_in(lnk, bypass_urls):
                 continue
-            _, _, sub_threads = bbstcon(lnk, trace-1, indent+1, bypass_urls=bypass_urls, url_cache=url_cache)
+            _, _, sub_threads = bbstcon(lnk, trace-1, indent+1, url_cache=url_cache, bypass_urls=bypass_urls)
             if not save_flag and len(sub_threads) > 0:
                 new_threads.append(new_thread)
                 save_article(new_thread, text)
@@ -217,9 +215,9 @@ def new_topic(urls, title, author, trace):
 
     new_threads = []
     url_cache = UrlCache()
-    entry_urls = urls.copy()
-    for url in entry_urls:
-        t, a, ts = bbstcon(url, trace, 0, bypass_urls=urls, url_cache=url_cache)
+    bypass_urls = urls.copy()
+    for url in urls:
+        t, a, ts = bbstcon(url, trace, 0, url_cache=url_cache, bypass_urls=bypass_urls)
         if title is None:
             title = t
         if author is None:
@@ -257,10 +255,16 @@ def new_topic(urls, title, author, trace):
 
     mtId, mt = meta_data.find_mt(superkeyword)
     if mt is None:
-        mt = {'id': mtId, 'siteId': 'cool18', 'entries': urls_to_entries(entry_urls), 'trace': trace, 'cache': url_cache.export()}
+        mt = {
+            'id': mtId,
+            'siteId': 'cool18',
+            'entries': urls_to_entries(urls),
+            'trace': trace,
+            'cache': url_cache.export(),
+        }
         meta_data.manual_topics[mtId] = mt
     else:
-        mt['entries'] = urls_to_entries(entry_urls)
+        mt['entries'] = urls_to_entries(urls)
         mt['cache'] = url_cache.export()
     print('manual_topic [%s] saved.' % mtId)
 
@@ -272,17 +276,17 @@ def show_list():
     for i, mt in mts:
         print(i, mt['id'], len(mt['entries']), mt['trace'])
 
-def refresh_topic(superkeywordId, force):
+def update_topic(superkeywordId, force):
     meta_data = MetaData(save_root_path)
     superkeyword = meta_data.superkeywords[superkeywordId]
     mtId, mt = meta_data.find_mt(superkeyword)
 
     new_threads = []
     entry_urls = entries_to_urls(mt['entries'])
+    bypass_urls = entry_urls.copy()
     url_cache = UrlCache(meta_data.last_threads, mt['cache'], force)
-    urls = entry_urls.copy()
     for url in entry_urls:
-        _, _, ts = bbstcon(url, mt['trace'], 0, bypass_urls=urls, url_cache=url_cache)
+        _, _, ts = bbstcon(url, mt['trace'], 0, url_cache=url_cache, bypass_urls=bypass_urls)
         new_threads += ts
     new_threads = list(reversed(new_threads))
 
@@ -300,11 +304,42 @@ def refresh_topic(superkeywordId, force):
 
     meta_data.save_meta_data()
 
-def update_topic(superKeywordId, title, author):
+def modify_topic(superKeywordId, title, author, trace):
     meta_data = MetaData(save_root_path)
     superkeyword = meta_data.superkeywords[superKeywordId]
     mtId, mt = meta_data.find_mt(superkeyword)
 
+    modified = False
+    if title is not None:
+        superkeyword['keyword'] = title
+        if mtId is not None:
+            del meta_data.manual_topics[mtId]
+        mtId, mt2 = meta_data.find_mt(superkeyword)
+        if mt2 is None:
+            mt['id'] = mtId
+            meta_data.manual_topics[mtId] = mt
+            modified = True
+    
+    if author is not None:
+        superkeyword['author'] = [author]
+        if mtId is not None:
+            del meta_data.manual_topics[mtId]
+        mtId, mt2 = meta_data.find_mt(superkeyword)
+        if mt2 is None:
+            mt['id'] = mtId
+            meta_data.manual_topics[mtId] = mt
+            modified = True
+
+    if trace > 0:
+        mt['trace'] = trace
+        modified = True
+
+    if modified:
+        print('superkeyword: [%s] update.' % keytext(superkeyword))
+        print('manual_topic: [%s] update, <trace: %d>.' % (mtId, trace))
+        meta_data.save_meta_data()
+    else:
+        print('manual_topic [%s] not modified.' % mtId)
 
 if __name__=='__main__':
     ### 参数
@@ -316,13 +351,14 @@ if __name__=='__main__':
     parser_new.add_argument('--author', nargs='?', type=str, help='manual set author')
     parser_new.add_argument('--trace', default=1, type=int, help='manual set trace step')
     parser_list = subparser.add_parser('list', help='list all articles')
-    parser_refresh = subparser.add_parser('refresh', help='refresh topic')
-    parser_refresh.add_argument('superKeywordId', type=int, help='<SuperKeywordId>')
-    parser_refresh.add_argument('--force', '-f', action='store_true', help='force refresh')
-    parser_update = subparser.add_parser('update', help='update topic info')
+    parser_update = subparser.add_parser('update', help='update topic')
     parser_update.add_argument('superKeywordId', type=int, help='<SuperKeywordId>')
-    parser_update.add_argument('--title', nargs='?', type=str, help='manual set title')
-    parser_update.add_argument('--author', nargs='?', type=str, help='manual set author')
+    parser_update.add_argument('--force', '-f', action='store_true', help='force update')
+    parser_modify = subparser.add_parser('modify', help='modify topic info')
+    parser_modify.add_argument('superKeywordId', type=int, help='<SuperKeywordId>')
+    parser_modify.add_argument('--title', nargs='?', type=str, help='manual set title')
+    parser_modify.add_argument('--author', nargs='?', type=str, help='manual set author')
+    parser_modify.add_argument('--trace', default=-1, type=int, help='manual set trace step')
     args = parser.parse_args()
 
     if args.subcmd == 'new':
@@ -337,7 +373,7 @@ if __name__=='__main__':
         new_topic(args.urls, args.title, args.author, args.trace)
     elif args.subcmd == 'list':
         show_list()
-    elif args.subcmd == 'refresh':
-        refresh_topic(args.superKeywordId, args.force)
     elif args.subcmd == 'update':
-        update_topic(args.superKeywordId, args.title, args.author)
+        update_topic(args.superKeywordId, args.force)
+    elif args.subcmd == 'modify':
+        modify_topic(args.superKeywordId, args.title, args.author, args.trace)
