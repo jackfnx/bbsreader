@@ -73,7 +73,7 @@ def do_grouping_func(threads, ids, groups, save_root_path):
                 pure_title1 = clean_punc(t1['title'])
                 pure_title2 = clean_punc(t2['title'])
                 tr = fuzz.ratio(pure_title1, pure_title2)
-                if tr < 90:
+                if tr < 90 and not (pure_title1 in pure_title2 or pure_title2 in pure_title1):
                     continue
                 ## 比较内容相似度
                 cr = fuzz.ratio(text1, text2)
