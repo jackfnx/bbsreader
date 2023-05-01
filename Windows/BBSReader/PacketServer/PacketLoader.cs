@@ -3,6 +3,7 @@ using Newtonsoft.Json;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Text;
 
 namespace BBSReader.PacketServer
@@ -51,7 +52,7 @@ namespace BBSReader.PacketServer
                     ch.timestamp = Utils.GetTimestamp(example.postTime);
                     packet.chapters.Add(ch);
                 }
-                packet.chapters.Sort((x1, x2) => x2.timestamp.CompareTo(x1.timestamp));
+                packet.chapters.OrderBy(x => x.timestamp).ThenBy(x => x.id);
                 packet.timestamp = packet.chapters[0].timestamp;
                 packet.key = Utils.CalcKey(packet.title, packet.author, sk.skType != SKType.Author);
                 packet.summary = Utils.CalcSumary(packet.title, packet.author, sk.skType != SKType.Author, packet.chapters, null);
