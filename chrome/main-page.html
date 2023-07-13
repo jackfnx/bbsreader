@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>小说列表</title>
+    <meta charset="utf-8" />
+    <style>
+        body {
+            display: flex;
+        }
+
+        .sidebar {
+            display: flex;
+            width: 400px;
+            margin: 10px;
+        }
+
+        .novel-list {
+            width: 200px;
+            background-color: #f0f0f0;
+            padding: 10px;
+        }
+
+        .novel-item {
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .novel-item .novel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        .novel-item .novel-title {
+            font-weight: normal;
+        }
+
+        .novel-item .novel-author {
+            color: gray;
+        }
+
+        .novel-item .chapter-list {
+            display: none;
+            margin-top: 10px;
+        }
+
+        .novel-item.expanded .chapter-list {
+            display: block;
+        }
+
+        .novel-item .chapter-list li {
+            list-style: none;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            padding: 10px;
+        }
+
+        .content {
+            flex-grow: 1;
+            padding: 10px;
+            background-color: #fff;
+            border-left: 1px solid #ccc;
+        }
+    </style>
+    <script src="main-page.js"></script>
+</head>
+
+<body>
+    <div class="sidebar">
+        <div id="novel-list">
+        </div>
+    </div>
+    <div class="content">
+        <div id="chapter-content"></div>
+    </div>
+</body>
+
+</html>
