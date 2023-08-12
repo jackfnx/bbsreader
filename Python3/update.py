@@ -58,7 +58,7 @@ def bbsdoc(html, siteId):
         title = t.select('th span[id^=thread_] a')[0].text
         link = t.select('th span[id^=thread_] a')[0]['href']
         threadId = link.split('-')[1]
-        author = t.select('td.author cite a')[0].text
+        author = t.select('td.author cite')[0].text.strip()
         postTime = t.select('td.author em')[0].text
         threads.append(MakeThread(siteId, threadId, title, author, postTime, link))
     return threads
