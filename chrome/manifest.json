@@ -1,0 +1,36 @@
+{
+  "name": "Pixiv Novel Exporter",
+  "version": "1.0",
+  "manifest_version": 3,
+  "description": "Export Novel from Pixiv to a local file",
+  "permissions": [
+    "storage",
+    "downloads",
+    "scripting",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "https://www.pixiv.net/"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://*.pixiv.net/*"
+      ],
+      "js": [
+        "content-script.js"
+      ]
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "icons": {
+    "16": "icon/icon-16.png",
+    "48": "icon/icon-48.png",
+    "128": "icon/icon-128.png"
+  }
+}
