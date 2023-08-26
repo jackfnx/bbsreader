@@ -22,4 +22,4 @@ profile
 DerivedData
 .idea/
 *.xcuserstate
-
+.vscode

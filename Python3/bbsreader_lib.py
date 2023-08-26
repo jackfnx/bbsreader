@@ -14,7 +14,7 @@ sysstr = platform.system()
 if sysstr == 'Windows':
     pass
 elif sysstr == 'Linux' or sysstr == 'Darwin':
-    save_root_path = '/Users/apple/Dropbox/BBSReader.Cache'
+    save_root_path = '/Users/apple/Library/CloudStorage/Dropbox/BBSReader.Cache'
 else:
     raise 'Unknown system <%s>.' % sysstr
 
@@ -330,7 +330,7 @@ class MetaData:
             for i in reversed(dup_ids):
                 del superkeyword['tids'][i]
                 del superkeyword['kws'][i]
-    
+
         ### 主题下，按照时间排序
         def getPostTime(x):
             timestr = threads[x]['postTime']
@@ -469,7 +469,7 @@ class MetaData:
                 if mt['siteId'] == siteId:
                     mts.append((i, mt))
         return mts
-    
+
     def find_mt(self, sk):
         if sk['skType'] == SK_Type.Manual and sk['keyword'] != '*':
             mtId = self.__manual_topic_id(sk)
