@@ -41,7 +41,7 @@ class SexInSex_Login:
             'username': self.name,
             'password': self.pw,
             'questionid': 0,
-            'anwser': '',
+            'answer': '',
             'cookietime': 315360000,
             'loginmode': 'normal',
             'styleid': 0,
@@ -268,9 +268,9 @@ class MetaData:
 
         def find_sub_keywords(title, sub_keywords):
             res = []
-            for j, skws in enumerate(sub_keywords):
-                for skw in skws:
-                    if skw in title:
+            for j, s_kws in enumerate(sub_keywords):
+                for s_kw in s_kws:
+                    if s_kw in title:
                         res.append(j)
                         break
             return tuple(res)

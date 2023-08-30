@@ -37,9 +37,9 @@ if pages is None:
         pages = 5
     else:
         pages = 30
-    tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(meta_data.last_timestamp))
+    timestr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(meta_data.last_timestamp))
     start = 0
-    print('] last update at [%s], this update will load <%d> pages' % (tmstr, pages))
+    print('] last update at [%s], this update will load <%d> pages' % (timestr, pages))
 else:
     if start is None:
         start = 0
