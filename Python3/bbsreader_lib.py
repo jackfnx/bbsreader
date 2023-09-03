@@ -7,6 +7,7 @@ import json
 import time
 import requests
 import pinyin
+from utils.tags import save_tags, load_tags
 
 
 save_root_path = "C:/Users/hpjing/Dropbox/BBSReader.Cache"
@@ -182,13 +183,7 @@ class MetaData:
                 with open(threads_json, encoding="utf-8") as f:
                     self.last_threads += json.load(f)
 
-            self.tags = {}
-            tags_dir = os.path.join(self.meta_data_path, "tags")
-            for tags_fname in os.listdir(tags_dir):
-                tags_json = os.path.join(tags_dir, tags_fname)
-                with open(tags_json, encoding="utf-8") as f:
-                    tags_segs = json.load(f)
-                self.tags.update(tags_segs)
+            self.tags = load_tags(self.meta_data_path)
 
             superkeywords_json = os.path.join(self.meta_data_path, "superkeywords.json")
             with open(superkeywords_json, encoding="utf-8") as f:
@@ -405,33 +400,14 @@ class MetaData:
         print("tags: %d" % len(tags))
 
     def save_meta_data(self):
-        def get_pinyin_first_alpha(name, n=1):
-            def Q2B(uchar):
-                inside_code = ord(uchar)
-                if inside_code == 12288:  # 全角空格直接转换
-                    inside_code = 32
-                elif inside_code >= 65281 and inside_code <= 65374:  # 全角字符（除空格）根据关系转化
-                    inside_code -= 65248
-                return chr(inside_code)
-
-            name = "".join(Q2B(e) for e in name if e.isalnum())
-            pre = pinyin.get_initial(name).replace(" ", "")
-            if len(pre) < n:
-                pre = "_"
-            else:
-                pre = pre[:n].upper()
-            return pre
-
-        if not os.path.exists(self.meta_data_path):
-            os.makedirs(self.meta_data_path)
+        os.makedirs(self.meta_data_path, exist_ok=True)
 
         timestamp_json = os.path.join(self.meta_data_path, "timestamp.json")
         with open(timestamp_json, "w", encoding="utf-8") as f:
             json.dump(self.last_timestamp, f)
 
         threads_dir = os.path.join(self.meta_data_path, "threads")
-        if not os.path.exists(threads_dir):
-            os.makedirs(threads_dir)
+        os.makedirs(threads_dir, exist_ok=True)
 
         threads = {}
         for i in range(0, len(self.last_threads), 1000):
@@ -458,34 +434,7 @@ class MetaData:
                 with open(threads_json, "w", encoding="utf-8") as f:
                     f.write(threads_json_s)
 
-        tags_dir = os.path.join(self.meta_data_path, "tags")
-        if not os.path.exists(tags_dir):
-            os.makedirs(tags_dir)
-
-        tags = {}
-        for t, tv in self.tags.items():
-            tags_fname = get_pinyin_first_alpha(t, n=1) + ".json"
-            if tags_fname not in tags:
-                tags[tags_fname] = {}
-            tags[tags_fname][t] = tv
-
-        tags_rm = [
-            os.path.join(tags_dir, x) for x in os.listdir(tags_dir) if x not in tags
-        ]
-        for t in tags_rm:
-            os.unlink(t)
-
-        for tags_fname in tags:
-            tags_json_s = json.dumps(tags[tags_fname], indent=2)
-            tags_json = os.path.join(tags_dir, tags_fname)
-            if os.path.exists(tags_json):
-                with open(tags_json, encoding="utf-8") as f:
-                    s = f.read()
-            else:
-                s = ""
-            if s != tags_json_s:
-                with open(tags_json, "w", encoding="utf-8") as f:
-                    f.write(tags_json_s)
+        tags = save_tags(self.tags, self.meta_data_path)
 
         superkeywords_json = os.path.join(self.meta_data_path, "superkeywords.json")
         with open(superkeywords_json, "w", encoding="utf-8") as f:
@@ -496,8 +445,7 @@ class MetaData:
             json.dump(self.blacklist, f)
 
         manual_topics_dir = os.path.join(self.meta_data_path, "manual_topics")
-        if not os.path.exists(manual_topics_dir):
-            os.makedirs(manual_topics_dir)
+        os.makedirs(manual_topics_dir, exist_ok=True)
 
         mts_rm = [
             os.path.join(manual_topics_dir, x)

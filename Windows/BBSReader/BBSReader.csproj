@@ -97,6 +97,7 @@
     <Compile Include="AuthorEditDialog.xaml.cs">
       <DependentUpon>AuthorEditDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="ConsoleManger.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="CoverDownloader.xaml.cs">
       <DependentUpon>CoverDownloader.xaml</DependentUpon>
@@ -110,6 +111,7 @@
     <Compile Include="Data\Packet.cs" />
     <Compile Include="Data\SKType.cs" />
     <Compile Include="Data\SuperKeyword.cs" />
+    <Compile Include="Data\TagDeserialized.cs" />
     <Compile Include="Grouper.cs" />
     <Compile Include="AliasEditDialog.xaml.cs">
       <DependentUpon>AliasEditDialog.xaml</DependentUpon>

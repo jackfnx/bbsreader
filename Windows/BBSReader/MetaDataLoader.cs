@@ -36,15 +36,17 @@ namespace BBSReader
             }
 
             string tagsDir = metaPath + "tags/";
-            var tagsFs = Directory.GetFiles(tagsDir, "*.json");
+            var tagsFs = Directory.GetFiles(tagsDir, "*.json", SearchOption.AllDirectories);
             metaData.tags = new Dictionary<string, List<int>>();
             foreach (string tagsPath in tagsFs)
             {
                 using (StreamReader sr = new StreamReader(tagsPath, Encoding.UTF8))
                 {
                     string json = sr.ReadToEnd();
-                    var dic = JsonConvert.DeserializeObject<Dictionary<string, List<int>>>(json);
-                    metaData.tags = metaData.tags.Concat(dic).ToDictionary(k => k.Key, v => v.Value);
+                    foreach (var tag in JsonConvert.DeserializeObject<List<TagDeserialized>>(json))
+                    {
+                        metaData.tags[tag.tag] = tag.tids;
+                    }
                 }
             }
 
