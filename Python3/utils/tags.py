@@ -7,6 +7,7 @@ import pinyin
 from tqdm import tqdm
 from pathlib import Path
 
+MODULE_TAG = "] tags/*.json I/O"
 
 def _get_pinyin(name: str) -> str:
     """转换成拼音（或日语罗马字），最终只会保留数字和大写字母
@@ -60,6 +61,7 @@ def _load_a_file(tag_path: str) -> str:
 
 
 def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
+    print(f"{MODULE_TAG}: save_tags()")
 
     tags_dir = os.path.join(meta_data_path, 'tags')
     os.makedirs(tags_dir, exist_ok=True)
@@ -74,12 +76,14 @@ def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
         v.sort(key=lambda x: x["tag"])
 
     tags_rm = [x for x in Path(tags_dir).glob("**/*.json") if x not in tags_queue]
-    for f in tqdm(tags_rm, desc="rm"):
-        f.unlink()
+    if tags_rm:
+        for f in tqdm(tags_rm, desc="rm"):
+            f.unlink()
 
     dirs_rm = [x for x in Path(tags_dir).glob("**") if x.is_dir and not list(x.iterdir())]
-    for d in tqdm(dirs_rm, desc="rmdir"):
-        d.rmdir()
+    if dirs_rm:
+        for d in tqdm(dirs_rm, desc="rmdir"):
+            d.rmdir()
 
     tags_path = sorted(list(tags_queue.keys()))
     count = 0
@@ -93,19 +97,22 @@ def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
             with open(tag_path, 'w', encoding='utf-8') as f:
                 f.write(tags_json_s)
         counts.append(len(s))
-    print(f"updated {count}")
+    print(f"{MODULE_TAG}: updated {count}")
 
 
 def load_tags(meta_data_path: str) -> dict[str, list[int]]:
+    print(f"{MODULE_TAG}: load_tags()")
     tags: dict[str, list[int]] = {}
     tags_dir = os.path.join(meta_data_path, 'tags')
-    for tag_path in Path(tags_dir).glob("**/*.json"):
+    tags_path = list(Path(tags_dir).glob("**/*.json"))
+    for tag_path in tqdm(tags_path):
         with open(tag_path, encoding='utf-8') as f:
             tags_segs = json.load(f)
         for tag_seg in tags_segs:
             k, v = tag_seg["tag"], tag_seg["tids"]
             tags[k] = v
 
+    print(f"{MODULE_TAG}: loaded {len(tags)}")
     return tags
 
 
@@ -116,4 +123,3 @@ if __name__=="__main__":
     meta_data_path = "/Users/apple/turboc"
     save_tags(meta_data.tags, meta_data_path)
     tags = load_tags(meta_data_path)
-    print(f"loaded {len(tags)}")
