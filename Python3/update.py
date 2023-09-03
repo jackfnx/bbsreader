@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
-import os
 import sys
+from pathlib import Path
 from bs4 import BeautifulSoup
 import argparse
 
@@ -37,9 +37,9 @@ if pages is None:
         pages = 5
     else:
         pages = 30
-    tmstr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(meta_data.last_timestamp))
+    timestr = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(meta_data.last_timestamp))
     start = 0
-    print('] last update at [%s], this update will load <%d> pages' % (tmstr, pages))
+    print('] last update at [%s], this update will load <%d> pages' % (timestr, pages))
 else:
     if start is None:
         start = 0
@@ -79,7 +79,7 @@ def bbscon(html):
         else:
             voteposts = soup.select('div.postmessage')
             if len(voteposts) > 0:
-                votepostobj = voteposts[0]                
+                votepostobj = voteposts[0]
                 [x.decompose() for x in votepostobj.select('strong')]
                 [x.decompose() for x in votepostobj.select('table')]
                 [x.decompose() for x in votepostobj.select('form#poll')]
@@ -116,16 +116,13 @@ meta_data.merge_threads(latest_threads)
 def download_article(t):
     crawler = Crawler.getCrawler(t['siteId'])
 
-    save_path = os.path.join(save_root_path, t['siteId'])
-
-    txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
-    if not os.path.exists(txtpath):
-        if not os.path.isdir(save_path):
-            os.makedirs(save_path)
+    txt_path = Path(save_root_path) / t['siteId'] / (t['threadId'] + '.txt')
+    if not txt_path.exists():
+        txt_path.parent.mkdir(parents=True, exist_ok=True)
         # try:
         if 1:
             chapter = bbscon(crawler.getUrl(t['link']))
-            with open(txtpath, 'w', encoding='utf-8') as f:
+            with open(txt_path, 'w', encoding='utf-8') as f:
                 f.write(chapter)
         # except Exception as e:
         #     print('Get [%s]: %s' % (t['link'], str(e)))

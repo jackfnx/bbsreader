@@ -13,8 +13,8 @@ save_root_path = "C:/Users/hpjing/Dropbox/BBSReader.Cache"
 sysstr = platform.system()
 if sysstr == "Windows":
     pass
-elif sysstr == "Linux" or sysstr == "Darwin":
-    save_root_path = "/Users/apple/Dropbox/BBSReader.Cache"
+elif sysstr == 'Linux' or sysstr == 'Darwin':
+    save_root_path = '/Users/apple/Library/CloudStorage/Dropbox/BBSReader.Cache'
 else:
     raise "Unknown system <%s>." % sysstr
 
@@ -37,17 +37,17 @@ class SexInSex_Login:
     def login(self, session, head, proxy):
         loginurl = "http://www.sexinsex.net/bbs/logging.php?action=login&"
         loginparams = {
-            "formhash": "f33adb50",
-            "referer": "http://www.sexinsex.net/bbs/forum-372-1.html",
-            "loginfield": "username",
-            "username": self.name,
-            "password": self.pw,
-            "questionid": 0,
-            "anwser": "",
-            "cookietime": 315360000,
-            "loginmode": "normal",
-            "styleid": 0,
-            "loginsubmit": True,
+            'formhash': 'f33adb50',
+            'referer': 'http://www.sexinsex.net/bbs/forum-372-1.html',
+            'loginfield': 'username',
+            'username': self.name,
+            'password': self.pw,
+            'questionid': 0,
+            'answer': '',
+            'cookietime': 315360000,
+            'loginmode': 'normal',
+            'styleid': 0,
+            'loginsubmit': True
         }
 
         resp = session.post(loginurl, data=loginparams, headers=head, proxies=proxy)
@@ -309,9 +309,9 @@ class MetaData:
 
         def find_sub_keywords(title, sub_keywords):
             res = []
-            for j, skws in enumerate(sub_keywords):
-                for skw in skws:
-                    if skw in title:
+            for j, s_kws in enumerate(sub_keywords):
+                for s_kw in s_kws:
+                    if s_kw in title:
                         res.append(j)
                         break
             return tuple(res)
@@ -374,8 +374,8 @@ class MetaData:
                     dup_ids.append(i)
 
             for i in reversed(dup_ids):
-                del superkeyword["tids"][i]
-                del superkeyword["kws"][i]
+                del superkeyword['tids'][i]
+                del superkeyword['kws'][i]
 
         ### 主题下，按照时间排序
         def getPostTime(x):

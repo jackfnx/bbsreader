@@ -1,0 +1,15 @@
+bbsid
+bbsreader
+hpjing
+KHTML
+mktime
+pycache
+pyplot
+questionid
+referer
+romkan
+sexinsex
+styleid
+tids
+tqdm
+turboc
