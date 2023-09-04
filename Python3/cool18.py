@@ -24,14 +24,14 @@ class UrlCache:
         else:
             tid = self.tkeys.index(('cool18', threadId))
             return True, self.threads[tid]
-    
+
     def append_url(self, new_url):
         if url_in(new_url, self.cached_urls):
             return
         if url_in(new_url, self.new_urls):
             return
         self.new_urls.append(new_url)
-    
+
     def export(self):
         return self.cached_urls + self.new_urls
 
@@ -53,7 +53,7 @@ class Crawler:
         }
         self.session = requests.session()
         self.siteId = 'cool18'
-    
+
     def get(self, url):
         response = self.session.get(url, headers=self.head, proxies=self.proxy)
         html = response.content.decode('utf-8', 'ignore')
@@ -147,7 +147,7 @@ def bbscon(url, fwd_link=False):
 
     if fwd_link:
         links = [x['href'] for x in pre.find_all('a')]
-        
+
         ul0 = soup.select('ul')[0]
         for x in ul0.select('li > a'):
             y = urllib.parse.urljoin(url, x['href'])
@@ -319,7 +319,7 @@ def modify_topic(superKeywordId, title, author, trace):
             mt['id'] = mtId
             meta_data.manual_topics[mtId] = mt
             modified = True
-    
+
     if author is not None:
         superkeyword['author'] = [author]
         if mtId is not None:

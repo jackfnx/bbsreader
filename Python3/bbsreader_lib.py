@@ -1,13 +1,11 @@
 import os
 import platform
-import enum
 import re
 import yaml
 import json
 import time
 import requests
-import pinyin
-from utils.tags import save_tags, load_tags
+from utils import SK_Type, save_tags, load_tags, save_threads, load_threads, save_manual_topcis, load_manual_topics, _load_mts, _find_mt
 
 
 save_root_path = "C:/Users/hpjing/Dropbox/BBSReader.Cache"
@@ -18,13 +16,6 @@ elif sysstr == 'Linux' or sysstr == 'Darwin':
     save_root_path = '/Users/apple/Library/CloudStorage/Dropbox/BBSReader.Cache'
 else:
     raise "Unknown system <%s>." % sysstr
-
-
-class SK_Type(str, enum.Enum):
-    Simple = "Simple"
-    Advanced = "Advanced"
-    Author = "Author"
-    Manual = "Manual"
 
 
 class SexInSex_Login:
@@ -173,15 +164,7 @@ class MetaData:
             with open(timestamp_json, encoding="utf-8") as f:
                 self.last_timestamp = json.load(f)
 
-            self.last_threads = []
-            threads_dir = os.path.join(self.meta_data_path, "threads")
-            threads_fs = sorted(
-                os.listdir(threads_dir), key=lambda x: int(x.split("-")[0])
-            )
-            for threads_fname in threads_fs:
-                threads_json = os.path.join(threads_dir, threads_fname)
-                with open(threads_json, encoding="utf-8") as f:
-                    self.last_threads += json.load(f)
+            self.last_threads = load_threads(self.meta_data_path)
 
             self.tags = load_tags(self.meta_data_path)
 
@@ -193,13 +176,7 @@ class MetaData:
             with open(blacklist_json, encoding="utf-8") as f:
                 self.blacklist = json.load(f)
 
-            self.manual_topics = {}
-            manual_topics_dir = os.path.join(self.meta_data_path, "manual_topics")
-            for manual_topic in os.listdir(manual_topics_dir):
-                mt_json = os.path.join(manual_topics_dir, manual_topic)
-                with open(mt_json, encoding="utf-8") as f:
-                    mt = json.load(f)
-                self.manual_topics[mt["id"]] = mt
+            self.manual_topics = load_manual_topics(self.meta_data_path)
 
         ### 如果不存在json，初始化空数据
         else:
@@ -406,35 +383,9 @@ class MetaData:
         with open(timestamp_json, "w", encoding="utf-8") as f:
             json.dump(self.last_timestamp, f)
 
-        threads_dir = os.path.join(self.meta_data_path, "threads")
-        os.makedirs(threads_dir, exist_ok=True)
+        save_threads(self.last_threads, self.meta_data_path)
 
-        threads = {}
-        for i in range(0, len(self.last_threads), 1000):
-            threads_fname = "%d-%s-x.json" % (i, self.last_threads[i]["threadId"])
-            threads[threads_fname] = self.last_threads[i : i + 1000]
-
-        threads_rm = [
-            os.path.join(threads_dir, x)
-            for x in os.listdir(threads_dir)
-            if x not in threads
-        ]
-        for t in threads_rm:
-            os.unlink(t)
-
-        for threads_fname in threads:
-            threads_json_s = json.dumps(threads[threads_fname], indent=2)
-            threads_json = os.path.join(threads_dir, threads_fname)
-            if os.path.exists(threads_json):
-                with open(threads_json, encoding="utf-8") as f:
-                    s = f.read()
-            else:
-                s = ""
-            if s != threads_json_s:
-                with open(threads_json, "w", encoding="utf-8") as f:
-                    f.write(threads_json_s)
-
-        tags = save_tags(self.tags, self.meta_data_path)
+        save_tags(self.tags, self.meta_data_path)
 
         superkeywords_json = os.path.join(self.meta_data_path, "superkeywords.json")
         with open(superkeywords_json, "w", encoding="utf-8") as f:
@@ -444,54 +395,13 @@ class MetaData:
         with open(blacklist_json, "w", encoding="utf-8") as f:
             json.dump(self.blacklist, f)
 
-        manual_topics_dir = os.path.join(self.meta_data_path, "manual_topics")
-        os.makedirs(manual_topics_dir, exist_ok=True)
-
-        mts_rm = [
-            os.path.join(manual_topics_dir, x)
-            for x in os.listdir(manual_topics_dir)
-            if x[: -len(".json")] not in self.manual_topics
-        ]
-        for t in mts_rm:
-            os.unlink(t)
-
-        for manual_topic in self.manual_topics.values():
-            mt_json_s = json.dumps(manual_topic, indent=2)
-            mt_json = os.path.join(manual_topics_dir, manual_topic["id"] + ".json")
-            if os.path.exists(mt_json):
-                with open(mt_json, encoding="utf-8") as f:
-                    s = f.read()
-            else:
-                s = ""
-            if s != mt_json_s:
-                with open(mt_json, "w", encoding="utf-8") as f:
-                    f.write(mt_json_s)
-
-    def __manual_topic_id(self, sk):
-        return (
-            "%s_%s" % (sk["author"][0], sk["keyword"])
-            if sk["author"][0] != "*"
-            else sk["keyword"]
-        )
+        save_manual_topcis(self.manual_topics, self.meta_data_path)
 
     def load_mts(self, siteId):
-        mts = []
-        for i, sk in enumerate(self.superkeywords):
-            if sk["skType"] == SK_Type.Manual and sk["keyword"] != "*":
-                mt = self.manual_topics[self.__manual_topic_id(sk)]
-                if mt["siteId"] == siteId:
-                    mts.append((i, mt))
-        return mts
+        return _load_mts(siteId, self.superkeywords, self.manual_topics)
 
     def find_mt(self, sk):
-        if sk["skType"] == SK_Type.Manual and sk["keyword"] != "*":
-            mtId = self.__manual_topic_id(sk)
-            if mtId in self.manual_topics:
-                return mtId, self.manual_topics[mtId]
-            else:
-                return mtId, None
-        else:
-            return None, None
+        return _find_mt(sk, self.manual_topics)
 
 
 def keytext(superkeyword):

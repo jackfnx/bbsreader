@@ -6,8 +6,11 @@ import romkan
 import pinyin
 from tqdm import tqdm
 from pathlib import Path
+from .misc import _load_a_file
+
 
 MODULE_TAG = "] tags/*.json I/O"
+
 
 def _get_pinyin(name: str) -> str:
     """转换成拼音（或日语罗马字），最终只会保留数字和大写字母
@@ -41,23 +44,6 @@ def _get_prefixes(name: str, n: int = 1) -> tuple[str, ...]:
     else:
         sub_pre = _get_prefixes(name[1:], n - 1)
         return tuple([pre] + [pre + x for x in sub_pre])
-
-
-def _load_a_file(tag_path: str) -> str:
-    """尝试读取一个文件，如果不存在就返回空字符串
-
-    Args:
-        tag_path (str): _description_
-
-    Returns:
-        str: _description_
-    """
-    if tag_path.exists():
-        with open(tag_path, encoding='utf-8') as f:
-            s = f.read()
-    else:
-        s = ''
-    return s
 
 
 def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
