@@ -11,6 +11,8 @@ from .misc import _load_a_file
 
 MODULE_TAG = "] tags/*.json I/O"
 
+WIN32_CLIENT_LAUNCH = ("WIN32_CLIENT_LAUNCH" in os.environ and os.environ["WIN32_CLIENT_LAUNCH"])
+
 
 def _get_pinyin(name: str) -> str:
     """转换成拼音（或日语罗马字），最终只会保留数字和大写字母
@@ -53,7 +55,7 @@ def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
     os.makedirs(tags_dir, exist_ok=True)
 
     tags_queue: dict[Path, list[dict[str, str | list[int]]]] = defaultdict(list)
-    for t, tv in tqdm(tags.items(), desc="prepare4save"):
+    for t, tv in tqdm(tags.items(), desc="prepare4save", disable=WIN32_CLIENT_LAUNCH):
         pre_s = _get_prefixes(_get_pinyin(t), n=3)
         tag_path = Path(os.path.join(tags_dir, pre_s[-1] + ".json"))
         tags_queue[tag_path].append({"tag": t, "tids": tv})
@@ -63,18 +65,18 @@ def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
 
     tags_rm = [x for x in Path(tags_dir).glob("**/*.json") if x not in tags_queue]
     if tags_rm:
-        for f in tqdm(tags_rm, desc="rm"):
+        for f in tqdm(tags_rm, desc="rm", disable=WIN32_CLIENT_LAUNCH):
             f.unlink()
 
     dirs_rm = [x for x in Path(tags_dir).glob("**") if x.is_dir and not list(x.iterdir())]
     if dirs_rm:
-        for d in tqdm(dirs_rm, desc="rmdir"):
+        for d in tqdm(dirs_rm, desc="rmdir", disable=WIN32_CLIENT_LAUNCH):
             d.rmdir()
 
     tags_path = sorted(list(tags_queue.keys()))
     count = 0
     counts = []
-    for tag_path in tqdm(tags_path, desc="updating"):
+    for tag_path in tqdm(tags_path, desc="updating", disable=WIN32_CLIENT_LAUNCH):
         tags_json_s = json.dumps(tags_queue[tag_path], indent=2)
         tag_path.parent.mkdir(parents=True, exist_ok=True)
         s = _load_a_file(tag_path)
@@ -91,7 +93,7 @@ def load_tags(meta_data_path: str) -> dict[str, list[int]]:
     tags: dict[str, list[int]] = {}
     tags_dir = os.path.join(meta_data_path, 'tags')
     tags_path = list(Path(tags_dir).glob("**/*.json"))
-    for tag_path in tqdm(tags_path):
+    for tag_path in tqdm(tags_path, disable=WIN32_CLIENT_LAUNCH):
         with open(tag_path, encoding='utf-8') as f:
             tags_segs = json.load(f)
         for tag_seg in tags_segs:

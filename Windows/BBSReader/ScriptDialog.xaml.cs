@@ -65,6 +65,7 @@ namespace BBSReader
                 proc.StartInfo.RedirectStandardInput = true;
                 proc.StartInfo.RedirectStandardError = true;
                 proc.StartInfo.CreateNoWindow = true;
+                proc.StartInfo.Environment.Add("WIN32_CLIENT_LAUNCH", "1");
                 proc.EnableRaisingEvents = true;
                 proc.OutputDataReceived += (s, ev) => this.Dispatcher.BeginInvoke(new Action<string>(dc.OutputLine), ev.Data);
                 proc.ErrorDataReceived += (s, ev) => this.Dispatcher.BeginInvoke(new Action<string>(dc.OutputLine), ev.Data);
