@@ -136,7 +136,8 @@ def bbscon(url, fwd_link=False):
     poster = tab2.select('td > a')[0].text
 
     line = tab2.text.strip()
-    postTime = line[line.index('] 于')+3: line.index('已读')].strip()
+    mr = re.search(r"]\s+于\s+(\d{4}-\d{1,2}-\d{1,2}\s+\d{1,2}:\d{1,2})\s+已读", line)
+    postTime = mr.group(1)
     postTime = time.strftime('%Y-%m-%d', time.strptime(postTime, '%Y-%m-%d %H:%M'))
 
     pre = soup.select('td.show_content > pre')[0]
