@@ -1,0 +1,23 @@
+[tool.poetry]
+name = "bbsreader"
+version = "0.0.1"
+description = ""
+authors = ["newx"]
+
+[tool.poetry.dependencies]
+python = "^3.12"
+bs4 = "^0.0.2"
+zhon = "^2.0.2"
+pyyaml = "^6.0.2"
+requests = "^2.32.3"
+python-romkan-ng = "^0.3.0"
+pinyin = "^0.4.0"
+fuzzywuzzy = "^0.18.0"
+tqdm = "^4.66.5"
+dataclasses-json = "^0.6.7"
+html5lib = "^1.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
