@@ -49,7 +49,7 @@ class Crawler:
 
         self.proxy = {
             "http": "http://127.0.0.1:1081",
-            "https": "https://127.0.0.1:1081"
+            "https": "http://127.0.0.1:1081"
         }
         self.session = requests.session()
         self.siteId = 'cool18'
