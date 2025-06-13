@@ -109,8 +109,8 @@ class Crawler:
         }
 
         self.proxy = {
-            "http": "http://127.0.0.1:1081",
-            "https": "https://127.0.0.1:1081",
+            "http": "socks5://127.0.0.1:1080",
+            "https": "socks5://127.0.0.1:1080",
         }
 
         self.delay = delay
