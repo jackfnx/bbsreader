@@ -10,7 +10,7 @@ from bbsreader_lib import *
 class UrlCache:
     def __init__(self, threads=[], cached_urls=[], force=False):
         self.threads = threads
-        self.tkeys = [(t['siteId'], t['threadId']) for t in threads]
+        self.th_keys = [(t['siteId'], t['threadId']) for t in threads]
         self.cached_urls = [] if force else cached_urls
         self.new_urls = []
 
@@ -19,10 +19,10 @@ class UrlCache:
             return False, None
 
         _, threadId = parse_url(url)
-        if ('cool18', threadId) not in self.tkeys:
+        if ('cool18', threadId) not in self.th_keys:
             return True, None
         else:
-            tid = self.tkeys.index(('cool18', threadId))
+            tid = self.th_keys.index(('cool18', threadId))
             return True, self.threads[tid]
 
     def append_url(self, new_url):
@@ -104,8 +104,8 @@ def save_article(t, text):
     save_path = os.path.join(save_root_path, t['siteId'])
     if not os.path.isdir(save_path):
         os.makedirs(save_path)
-    txtpath = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
-    with open(txtpath, 'w', encoding='utf-8') as f:
+    txt_path = os.path.join(save_root_path, t['siteId'], t['threadId'] + '.txt')
+    with open(txt_path, 'w', encoding='utf-8') as f:
         f.write(text)
 
 def verify_url(url):
@@ -129,18 +129,18 @@ def bbscon(url, fwd_link=False):
     html = crawler.get(url)
     soup = BeautifulSoup(html, 'html5lib')
 
-    title_str = soup.select('td.show_content > center')[0].text
+    title_str = soup.select('h1.main-title')[0].text
     title, author = parse_title_str(title_str)
 
-    tab2 = soup.select('table')[1]
-    poster = tab2.select('td > a')[0].text
+    tab2 = soup.select('.subtitle-line > .sender')[0]
+    poster = tab2.select('a')[0].text
 
     line = tab2.text.strip()
-    mr = re.search(r"]\s+于\s+(\d{4}-\d{1,2}-\d{1,2}\s+\d{1,2}:\d{1,2})\s+已读", line)
+    mr = re.search(r"]\s+于\s+(\d{4}-\d{1,2}-\d{1,2}\s+\d{1,2}:\d{1,2})", line)
     postTime = mr.group(1)
     postTime = time.strftime('%Y-%m-%d', time.strptime(postTime, '%Y-%m-%d %H:%M'))
 
-    pre = soup.select('td.show_content > pre')[0]
+    pre = soup.select('#content-section > pre')[0]
     [x.decompose() for x in pre.select('font[color="#E6E6DD"]')]
     [x.decompose() for x in pre.select('font[color="E6E6DD"]')]
     [x.replace_with(x.text + '\n') for x in pre.find_all(['br', 'p'])]

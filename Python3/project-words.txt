@@ -1,5 +1,6 @@
 bbsid
 bbsreader
+bbstcon
 hpjing
 KHTML
 mktime
