@@ -9,13 +9,13 @@ from bbsreader_lib import *
 
 
 def show_site_list():
-    print("%s\n" % "\n".join([str(x) for x in bbsdef]))
+    print("%s\n" % "\n".join([str(x) for x in BBSDef]))
     sys.exit(0)
 
 
 def main(pages, start, bbsId, boardId):
     if bbsId is None:
-        for i, _ in enumerate(bbsdef):
+        for i, _ in enumerate(BBSDef):
             main(pages, start, i, boardId)
         return
 

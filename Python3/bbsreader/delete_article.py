@@ -13,7 +13,7 @@ def main():
     args = parser.parse_args()
 
     threadIds = [str(x) for x in args.threadids]
-    bbsInfo = bbsdef[args.bbsid]
+    bbsInfo = BBSDef[args.bbsid]
     print(bbsInfo)
     bbsId = bbsInfo[1]
     printOnly = args.print_only

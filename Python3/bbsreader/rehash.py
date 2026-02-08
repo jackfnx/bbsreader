@@ -49,7 +49,7 @@ def main():
         for tid in sk["tids"]:
             t = meta_data.last_threads[tid]
             if "【" not in t["title"] and "】" not in t["title"]:
-                bbsId = bbsdef_ids.index(t["siteId"])
+                bbsId = BBSDef_ids.index(t["siteId"])
                 threadId = t["threadId"]
                 postUrl = "thread-%s-%d-1.html" % (threadId, 1)
                 ts.append((bbsId, threadId, postUrl))

@@ -57,7 +57,7 @@ class SexInSex_Login:
 
 
 ### BBS列表
-bbsdef = [
+BBSDef = [
     [
         "第一会所",
         "sis001",
@@ -79,7 +79,7 @@ bbsdef = [
         True,
     ],
 ]
-bbsdef_ids = [x[1] for x in bbsdef]
+BBSDef_ids = [x[1] for x in BBSDef]
 
 
 ### 获取html的爬虫类
@@ -96,9 +96,9 @@ class Crawler:
             cls.crawlers = {}
 
         if isinstance(bbsId, int):
-            bbsinfo = bbsdef[bbsId]
+            bbsinfo = BBSDef[bbsId]
         elif isinstance(bbsId, str):
-            for s in bbsdef:
+            for s in BBSDef:
                 if s[1] == bbsId:
                     bbsinfo = s
                     break
@@ -321,7 +321,7 @@ class MetaData:
 
         tags = {}
         for i, t in enumerate(threads):
-            if t["siteId"] not in bbsdef_ids:
+            if t["siteId"] not in BBSDef_ids:
                 continue
             title = t["title"]
             author = t["author"]
