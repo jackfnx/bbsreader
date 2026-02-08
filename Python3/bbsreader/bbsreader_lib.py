@@ -56,6 +56,7 @@ bbsdef = [
         None,
         "utf-8",
         [383, 322],
+        False,
     ],
     [
         "色中色",
@@ -65,6 +66,7 @@ bbsdef = [
         SexInSex_Login(save_root_path),
         "gbk",
         [383, 322, 359, 390],
+        True,
     ],
 ]
 bbsdef_ids = [x[1] for x in bbsdef]
@@ -72,6 +74,12 @@ bbsdef_ids = [x[1] for x in bbsdef]
 
 ### 获取html的爬虫类
 class Crawler:
+    @classmethod
+    def logOnce(cls, msg):
+        if not hasattr(cls, "logged"):
+            cls.logged = True
+            print(msg)
+
     @classmethod
     def getCrawler(cls, bbsId):
         if not hasattr(cls, "crawlers"):
@@ -85,7 +93,11 @@ class Crawler:
                     bbsinfo = s
                     break
         if not bbsinfo:
-            raise "There is UNKNOWN bbsinfo."
+            cls.logOnce("There is UNKNOWN bbsinfo.")
+            return None
+        if not bbsinfo[7]:
+            cls.logOnce("This site[%s] is disabled." % bbsinfo[0])
+            return None
 
         siteId = bbsinfo[1]
         if not siteId in cls.crawlers:
@@ -99,6 +111,7 @@ class Crawler:
                 _,
                 obj.encoding,
                 obj.boardIds,
+                _,
             ) = bbsinfo
             cls.crawlers[siteId] = obj
         return cls.crawlers[siteId]

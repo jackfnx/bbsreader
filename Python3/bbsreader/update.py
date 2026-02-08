@@ -26,6 +26,11 @@ if args.list:
     print('%s\n' % '\n'.join([str(x) for x in bbsdef]))
     sys.exit(0)
 
+crawler = Crawler.getCrawler(bbsId)
+if not crawler:
+    print("get crawler failed.")
+    sys.exit(1)
+
 meta_data = MetaData(save_root_path)
 
 ### 根据上次更新时间，确定这次读取几页
@@ -44,9 +49,6 @@ else:
     if start is None:
         start = 0
     print('] manual set, update <%d> pages, from <%d>.' % (pages, start))
-
-crawler = Crawler.getCrawler(bbsId)
-
 
 ### 读取版面
 def bbsdoc(html, siteId):
@@ -115,6 +117,8 @@ meta_data.merge_threads(latest_threads)
 ### 根据收藏夹，扫描所有文章，是否存在本地数据，如果不存在则下载
 def download_article(t):
     crawler = Crawler.getCrawler(t['siteId'])
+    if not crawler:
+        return
 
     txt_path = Path(save_root_path) / t['siteId'] / (t['threadId'] + '.txt')
     if not txt_path.exists():
