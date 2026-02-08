@@ -1,5 +1,4 @@
 import os
-import sys
 import argparse
 
 from bbsreader_lib import *
@@ -15,7 +14,7 @@ def main():
     threadIds = [str(x) for x in args.threadids]
     bbsInfo = BBSDef[args.bbsid]
     print(bbsInfo)
-    bbsId = bbsInfo[1]
+    siteId = bbsInfo.siteId
     printOnly = args.print_only
 
     meta_data = MetaData(save_root_path)
@@ -23,7 +22,7 @@ def main():
     objects = {
         i: x
         for (i, x) in enumerate(meta_data.last_threads)
-        if x["siteId"] == bbsId and x["threadId"] in threadIds
+        if x["siteId"] == siteId and x["threadId"] in threadIds
     }
     for i, obj in objects.items():
         print(obj)
@@ -50,7 +49,7 @@ def main():
     meta_data.merge_threads([])
 
     for i, obj in objects.items():
-        txtpath = os.path.join(save_root_path, bbsId, "%s.txt" % obj["threadId"])
+        txtpath = os.path.join(save_root_path, siteId, "%s.txt" % obj["threadId"])
         if os.path.exists(txtpath):
             os.remove(txtpath)
             print("%s deleted." % txtpath)

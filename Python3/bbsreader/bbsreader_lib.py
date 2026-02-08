@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 import os
 import platform
 import re
@@ -56,9 +57,21 @@ class SexInSex_Login:
         print("[色中色] 登陆: %s" % (resp))
 
 
+@dataclass
+class BBS:
+    bbsname: str
+    siteId: str
+    base: str
+    index_page: str
+    login: SexInSex_Login | None
+    encoding: str
+    boardIds: list[int]
+    enable: bool
+
+
 ### BBS列表
 BBSDef = [
-    [
+    BBS(
         "第一会所",
         "sis001",
         "http://www.sis001.com/forum/",
@@ -67,8 +80,8 @@ BBSDef = [
         "utf-8",
         [383, 322],
         False,
-    ],
-    [
+    ),
+    BBS(
         "色中色",
         "sexinsex",
         "http://www.sexinsex.net/bbs/",
@@ -77,9 +90,10 @@ BBSDef = [
         "gbk",
         [383, 322, 359, 390],
         True,
-    ],
+    ),
 ]
-BBSDef_ids = [x[1] for x in BBSDef]
+
+BBSDef_ids = [x.siteId for x in BBSDef]
 
 
 ### 获取html的爬虫类
@@ -99,32 +113,27 @@ class Crawler:
             bbsinfo = BBSDef[bbsId]
         elif isinstance(bbsId, str):
             for s in BBSDef:
-                if s[1] == bbsId:
+                if s.siteId == bbsId:
                     bbsinfo = s
                     break
         if not bbsinfo:
             cls.logOnce("There is UNKNOWN bbsinfo.")
             return None
-        if not bbsinfo[7]:
-            cls.logOnce("This site [%s] was disabled." % bbsinfo[0])
+        if not bbsinfo.enable:
+            cls.logOnce("This site [%s] was disabled." % bbsinfo.bbsname)
             return None
 
-        siteId = bbsinfo[1]
-        if not siteId in cls.crawlers:
-            login = bbsinfo[4]
+        if not bbsinfo.siteId in cls.crawlers:
+            login = bbsinfo.login
             obj = cls(1, login)
-            (
-                obj.bbsname,
-                obj.siteId,
-                obj.base,
-                obj.index_page,
-                _,
-                obj.encoding,
-                obj.boardIds,
-                _,
-            ) = bbsinfo
-            cls.crawlers[siteId] = obj
-        return cls.crawlers[siteId]
+            obj.bbsname = bbsinfo.bbsname
+            obj.siteId = bbsinfo.siteId
+            obj.base = bbsinfo.base
+            obj.index_page = bbsinfo.index_page
+            obj.encoding = bbsinfo.encoding
+            obj.boardIds = bbsinfo.boardIds
+            cls.crawlers[bbsinfo.siteId] = obj
+        return cls.crawlers[bbsinfo.siteId]
 
     def __init__(self, delay, login):
         self.head = {

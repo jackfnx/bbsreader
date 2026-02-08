@@ -2,7 +2,6 @@
 import os
 import sys
 import time
-import json
 import argparse
 import re
 from zhon.hanzi import punctuation as cn_punctuation
