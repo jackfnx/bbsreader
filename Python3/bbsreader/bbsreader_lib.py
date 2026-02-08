@@ -88,7 +88,7 @@ class Crawler:
     def logOnce(cls, msg):
         if not hasattr(cls, "logged"):
             cls.logged = True
-            print(msg)
+            print("] " + msg)
 
     @classmethod
     def getCrawler(cls, bbsId):
@@ -106,7 +106,7 @@ class Crawler:
             cls.logOnce("There is UNKNOWN bbsinfo.")
             return None
         if not bbsinfo[7]:
-            cls.logOnce("This site[%s] is disabled." % bbsinfo[0])
+            cls.logOnce("This site [%s] was disabled." % bbsinfo[0])
             return None
 
         siteId = bbsinfo[1]
