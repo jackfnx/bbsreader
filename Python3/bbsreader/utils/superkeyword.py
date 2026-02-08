@@ -40,7 +40,6 @@ class Superkeyword(DataClassJsonMixin):
                     break
         return tuple(res)
 
-
     def update(self, t: dict[str, str], tid: int, keywords: list[str]) -> None:
         title = t["title"]
         author = t["author"]

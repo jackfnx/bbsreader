@@ -33,9 +33,7 @@ def save_threads(last_threads: list[dict[str, str]], meta_data_path: str) -> Non
 def load_threads(meta_data_path: list) -> list[dict[str, str]]:
     last_threads = []
     threads_dir = os.path.join(meta_data_path, "threads")
-    threads_fs = sorted(
-        os.listdir(threads_dir), key=lambda x: int(x.split("-")[0])
-    )
+    threads_fs = sorted(os.listdir(threads_dir), key=lambda x: int(x.split("-")[0]))
     for threads_fname in threads_fs:
         threads_json = os.path.join(threads_dir, threads_fname)
         with open(threads_json, encoding="utf-8") as f:

@@ -43,7 +43,11 @@ def __manual_topic_id(sk: dict[str, str]) -> str:
     )
 
 
-def _load_mts(siteId: str, superkeywords: list[dict[str, str]], manual_topics: dict[str, dict[str, str]]) -> None:
+def _load_mts(
+    siteId: str,
+    superkeywords: list[dict[str, str]],
+    manual_topics: dict[str, dict[str, str]],
+) -> None:
     mts = []
     for i, sk in enumerate(superkeywords):
         if sk["skType"] == SK_Type.Manual and sk["keyword"] != "*":
@@ -53,7 +57,9 @@ def _load_mts(siteId: str, superkeywords: list[dict[str, str]], manual_topics: d
     return mts
 
 
-def _find_mt(sk: dict[str, str], manual_topics: dict[str, dict[str, str]]) -> tuple[str, str]:
+def _find_mt(
+    sk: dict[str, str], manual_topics: dict[str, dict[str, str]]
+) -> tuple[str, str]:
     if sk["skType"] == SK_Type.Manual and sk["keyword"] != "*":
         mtId = __manual_topic_id(sk)
         if mtId in manual_topics:
@@ -62,4 +68,3 @@ def _find_mt(sk: dict[str, str], manual_topics: dict[str, dict[str, str]]) -> tu
             return mtId, None
     else:
         return None, None
-

@@ -21,8 +21,8 @@ def _load_a_file(path: os.PathLike | Path) -> str:
     """
     path = Path(path)
     if path.exists():
-        with open(path, encoding='utf-8') as f:
+        with open(path, encoding="utf-8") as f:
             s = f.read()
     else:
-        s = ''
+        s = ""
     return s

@@ -5,15 +5,25 @@ import yaml
 import json
 import time
 import requests
-from utils import SK_Type, save_tags, load_tags, save_threads, load_threads, save_manual_topcis, load_manual_topics, _load_mts, _find_mt
+from utils import (
+    SK_Type,
+    save_tags,
+    load_tags,
+    save_threads,
+    load_threads,
+    save_manual_topcis,
+    load_manual_topics,
+    _load_mts,
+    _find_mt,
+)
 
 
 save_root_path = "C:/Users/hpjing/Dropbox/BBSReader.Cache"
 sysstr = platform.system()
 if sysstr == "Windows":
     pass
-elif sysstr == 'Linux' or sysstr == 'Darwin':
-    save_root_path = '/Users/apple/Library/CloudStorage/Dropbox/BBSReader.Cache'
+elif sysstr == "Linux" or sysstr == "Darwin":
+    save_root_path = "/Users/apple/Library/CloudStorage/Dropbox/BBSReader.Cache"
 else:
     raise "Unknown system <%s>." % sysstr
 
@@ -29,17 +39,17 @@ class SexInSex_Login:
     def login(self, session, head, proxy):
         loginurl = "http://www.sexinsex.net/bbs/logging.php?action=login&"
         loginparams = {
-            'formhash': 'f33adb50',
-            'referer': 'http://www.sexinsex.net/bbs/forum-372-1.html',
-            'loginfield': 'username',
-            'username': self.name,
-            'password': self.pw,
-            'questionid': 0,
-            'answer': '',
-            'cookietime': 315360000,
-            'loginmode': 'normal',
-            'styleid': 0,
-            'loginsubmit': True
+            "formhash": "f33adb50",
+            "referer": "http://www.sexinsex.net/bbs/forum-372-1.html",
+            "loginfield": "username",
+            "username": self.name,
+            "password": self.pw,
+            "questionid": 0,
+            "answer": "",
+            "cookietime": 315360000,
+            "loginmode": "normal",
+            "styleid": 0,
+            "loginsubmit": True,
         }
 
         resp = session.post(loginurl, data=loginparams, headers=head, proxies=proxy)
@@ -255,7 +265,9 @@ class MetaData:
             keywords += re.findall("【(.*?)番外篇.*?】", title)
             keywords += re.findall("【(.*?)第?[ 0-9\\-]+[部章卷篇].*?】", title)
             keywords += re.findall("【(.*?)第?[ 0-9\\-]+[部章卷篇].*?】", title)
-            keywords += re.findall("【(.*?)第?[零一二三四五六七八九十百千万]+[部章卷篇].*?】", title)
+            keywords += re.findall(
+                "【(.*?)第?[零一二三四五六七八九十百千万]+[部章卷篇].*?】", title
+            )
             keywords_no_kh = [
                 re.sub("(?:（|\\()(.*?)(?:\\)|）)", "", x)
                 for x in keywords
@@ -276,12 +288,18 @@ class MetaData:
             keywords = [x for x in keywords if not re.match("^（.*?）$", x)]
             keywords = list(set(keywords))
             keywords = [x for x in keywords if not re.match("^[ 　]+$", x)]
-            keywords = [x for x in keywords if not re.match("^第?[ 0-9\\-]+[部章卷篇]?$", x)]
             keywords = [
-                x for x in keywords if not re.match("^第?[ ０１２３４５６７８９]+[部章卷篇]?$", x)
+                x for x in keywords if not re.match("^第?[ 0-9\\-]+[部章卷篇]?$", x)
             ]
             keywords = [
-                x for x in keywords if not re.match("^第?[零一二三四五六七八九十百千万]+[部章卷篇]?$", x)
+                x
+                for x in keywords
+                if not re.match("^第?[ ０１２３４５６７８９]+[部章卷篇]?$", x)
+            ]
+            keywords = [
+                x
+                for x in keywords
+                if not re.match("^第?[零一二三四五六七八九十百千万]+[部章卷篇]?$", x)
             ]
             keywords = [x for x in keywords if not re.match("^[上中下终][章卷篇]?$", x)]
             keywords = [x for x in keywords if not re.match("^[续完]$", x)]
@@ -359,8 +377,8 @@ class MetaData:
                     dup_ids.append(i)
 
             for i in reversed(dup_ids):
-                del superkeyword['tids'][i]
-                del superkeyword['kws'][i]
+                del superkeyword["tids"][i]
+                del superkeyword["kws"][i]
 
         ### 主题下，按照时间排序
         def getPostTime(x):

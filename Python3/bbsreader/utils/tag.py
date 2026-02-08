@@ -11,7 +11,9 @@ from .misc import _load_a_file
 
 MODULE_TAG = "] tags/*.json I/O"
 
-WIN32_CLIENT_LAUNCH = ("WIN32_CLIENT_LAUNCH" in os.environ and os.environ["WIN32_CLIENT_LAUNCH"])
+WIN32_CLIENT_LAUNCH = (
+    "WIN32_CLIENT_LAUNCH" in os.environ and os.environ["WIN32_CLIENT_LAUNCH"]
+)
 
 
 def _get_pinyin(name: str) -> str:
@@ -25,7 +27,7 @@ def _get_pinyin(name: str) -> str:
     """
     name = pinyin.get_initial(name)
     name = romkan.to_roma(name)
-    name = re.sub(u"([^\u0030-\u0039\u0041-\u005a\u0061-\u007a])", "", name)
+    name = re.sub("([^\u0030-\u0039\u0041-\u005a\u0061-\u007a])", "", name)
     name = name.upper()
     return name
 
@@ -51,7 +53,7 @@ def _get_prefixes(name: str, n: int = 1) -> tuple[str, ...]:
 def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
     print(f"{MODULE_TAG}: save_tags()")
 
-    tags_dir = os.path.join(meta_data_path, 'tags')
+    tags_dir = os.path.join(meta_data_path, "tags")
     os.makedirs(tags_dir, exist_ok=True)
 
     tags_queue: dict[Path, list[dict[str, str | list[int]]]] = defaultdict(list)
@@ -68,7 +70,9 @@ def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
         for f in tqdm(tags_rm, desc="rm", disable=WIN32_CLIENT_LAUNCH):
             f.unlink()
 
-    dirs_rm = [x for x in Path(tags_dir).glob("**") if x.is_dir and not list(x.iterdir())]
+    dirs_rm = [
+        x for x in Path(tags_dir).glob("**") if x.is_dir and not list(x.iterdir())
+    ]
     if dirs_rm:
         for d in tqdm(dirs_rm, desc="rmdir", disable=WIN32_CLIENT_LAUNCH):
             d.rmdir()
@@ -82,7 +86,7 @@ def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
         s = _load_a_file(tag_path)
         if s != tags_json_s:
             count += 1
-            with open(tag_path, 'w', encoding='utf-8') as f:
+            with open(tag_path, "w", encoding="utf-8") as f:
                 f.write(tags_json_s)
         counts.append(len(s))
     print(f"{MODULE_TAG}: updated {count}")
@@ -91,10 +95,10 @@ def save_tags(tags: dict[str, list[int]], meta_data_path: str) -> None:
 def load_tags(meta_data_path: str) -> dict[str, list[int]]:
     print(f"{MODULE_TAG}: load_tags()")
     tags: dict[str, list[int]] = {}
-    tags_dir = os.path.join(meta_data_path, 'tags')
+    tags_dir = os.path.join(meta_data_path, "tags")
     tags_path = list(Path(tags_dir).glob("**/*.json"))
     for tag_path in tqdm(tags_path, disable=WIN32_CLIENT_LAUNCH):
-        with open(tag_path, encoding='utf-8') as f:
+        with open(tag_path, encoding="utf-8") as f:
             tags_segs = json.load(f)
         for tag_seg in tags_segs:
             k, v = tag_seg["tag"], tag_seg["tids"]
@@ -104,7 +108,7 @@ def load_tags(meta_data_path: str) -> dict[str, list[int]]:
     return tags
 
 
-if __name__=="__main__":
+if __name__ == "__main__":
     from bbsreader_lib import MetaData, save_root_path
 
     meta_data = MetaData(save_root_path)
