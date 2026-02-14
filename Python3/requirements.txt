@@ -2,7 +2,7 @@ beautifulsoup4==4.11.1
 fuzzywuzzy==0.18.0
 pinyin==0.4.0
 PyYAML==6.0
-requests==2.28.1
+requests==2.31.0
 zhon==1.1.5
 urllib3==1.23
 html5lib==1.1
