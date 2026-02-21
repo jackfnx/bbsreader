@@ -17,7 +17,7 @@ namespace BBSReader
 
         private enum RunningStatus { RUNNING, COMPLETE };
 
-        private readonly string[] scripts_0 = { "-u C:/turboc/bbsreader/Python3/bbsreader/update.py --bbsid 0", "-u C:/turboc/bbsreader/Python3/bbsreader/update.py --bbsid 1", "-u C:/turboc/bbsreader/Python3/bbsreader/group.py" };
+        private readonly string[] scripts_0 = { "-u C:/turboc/bbsreader/Python3/bbsreader/update.py" };
         private readonly string[] scripts_1 = { "-u C:/turboc/bbsreader/Python3/bbsreader/download_detail.py {0} {1} {2} {3}" };
         private readonly ConsoleContent dc = new ConsoleContent();
 

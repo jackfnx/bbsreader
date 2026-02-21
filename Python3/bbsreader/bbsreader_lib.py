@@ -185,7 +185,8 @@ def MakeThread(siteId, threadId, title, author, postTime, link):
 class MetaData:
     """docstring for MetaData"""
 
-    def __init__(self, save_root_path):
+    def __init__(self, save_root_path, update_time=False):
+        self.update_time = update_time
         self.meta_data_path = os.path.join(save_root_path, "meta")
         self._load_meta_data()
 
@@ -442,6 +443,14 @@ class MetaData:
 
     def find_mt(self, sk):
         return _find_mt(sk, self.manual_topics)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        if self.update_time:
+            self.last_timestamp = time.time()
+        self.save_meta_data()
 
 
 def keytext(superkeyword):

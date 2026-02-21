@@ -111,7 +111,7 @@ def print_groups(groups):
     print("[" + "\n".join([str(x) for x in groups]) + "]")
 
 
-def do_grouping(threads, superkeyword, save_root_path, silence=True):
+def do_grouping_thread(threads, superkeyword, save_root_path, silence=True):
     tids = superkeyword["tids"]
     print("superkeyword [%s]: grouping..." % (keytext(superkeyword)))
     if not silence:
@@ -127,6 +127,20 @@ def do_grouping(threads, superkeyword, save_root_path, silence=True):
     if not silence:
         print("The result:")
         print_groups(superkeyword["groups"])
+
+
+def do_grouping(threads, superkeywords, save_root_path, keywordId=-1):
+    if keywordId < 0:
+        for superkeyword in superkeywords:
+            if superkeyword["skType"] != SK_Type.Manual:
+                do_grouping_thread(threads, superkeyword, save_root_path, silence=True)
+    elif keywordId > len(superkeywords):
+        sys.stderr.write("ERROR: The keywordId is NOT FOUND.\n")
+        sys.exit(0)
+    else:
+        superkeyword = superkeywords[keywordId]
+        do_grouping_thread(threads, superkeyword, save_root_path, silence=False)
+    return superkeywords
 
 
 def main():
@@ -171,16 +185,7 @@ def main():
     keywordId = args.kid
     printOnly = args.printonly
 
-    if keywordId < 0:
-        for superkeyword in superkeywords:
-            if superkeyword["skType"] != SK_Type.Manual:
-                do_grouping(threads, superkeyword, save_root_path, silence=True)
-    elif keywordId > len(superkeywords):
-        sys.stderr.write("ERROR: The keywordId is NOT FOUND.\n")
-        sys.exit(0)
-    else:
-        superkeyword = superkeywords[keywordId]
-        do_grouping(threads, superkeyword, save_root_path, silence=False)
+    superkeywords = do_grouping(threads, superkeywords, save_root_path, keywordId)
 
     if not printOnly:
         meta_data.superkeywords = superkeywords

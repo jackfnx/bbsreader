@@ -4,8 +4,10 @@ import sys
 from pathlib import Path
 from bs4 import BeautifulSoup
 import argparse
+from contextlib import nullcontext
 
 from bbsreader_lib import *
+from group import do_grouping
 
 
 def show_site_list():
@@ -13,60 +15,65 @@ def show_site_list():
     sys.exit(0)
 
 
-def main(pages, start, bbsId, boardId):
-    if bbsId is None:
-        for i, _ in enumerate(BBSDef):
-            main(pages, start, i, boardId)
-        return
+def main(pages, start, bbsId, boardId, meta_data=None):
+    meta_data_cm = nullcontext(meta_data) if meta_data else MetaData(save_root_path)
 
-    crawler = Crawler.getCrawler(bbsId)
-    if not crawler:
-        print("] The site crawler disabled, abandon it.")
-        return
+    with meta_data_cm as meta_data:
+        if bbsId is None:
+            for i, _ in enumerate(BBSDef):
+                main(pages, start, i, boardId, meta_data)
+            return
 
-    meta_data = MetaData(save_root_path)
+        crawler = Crawler.getCrawler(bbsId)
+        if not crawler:
+            print("] The site crawler disabled, abandon it.")
+            return
 
-    ### 根据上次更新时间，确定这次读取几页
-    if pages is None:
-        now = time.time()
-        if meta_data.last_timestamp == 0:
-            pages = 100
-        elif now - meta_data.last_timestamp < 60 * 60 * 24 * 10:  # 没超过10天，查看5页
-            pages = 5
-        else:
-            pages = 30
-        timestr = time.strftime(
-            "%Y-%m-%d %H:%M:%S", time.localtime(meta_data.last_timestamp)
-        )
-        start = 0
-        print(
-            "] last update at [%s], this update will load <%d> pages" % (timestr, pages)
-        )
-    else:
-        if start is None:
+        ### 根据上次更新时间，确定这次读取几页
+        if pages is None:
+            now = time.time()
+            if meta_data.last_timestamp == 0:
+                pages = 100
+            elif (
+                now - meta_data.last_timestamp < 60 * 60 * 24 * 10
+            ):  # 没超过10天，查看5页
+                pages = 5
+            else:
+                pages = 30
+            timestr = time.strftime(
+                "%Y-%m-%d %H:%M:%S", time.localtime(meta_data.last_timestamp)
+            )
             start = 0
-        print("] manual set, update <%d> pages, from <%d>." % (pages, start))
+            print(
+                "] last update at [%s], this update will load <%d> pages"
+                % (timestr, pages)
+            )
+        else:
+            if start is None:
+                start = 0
+            print("] manual set, update <%d> pages, from <%d>." % (pages, start))
 
-    latest_threads = []
-    if boardId is None:
-        for curr_board in crawler.boardIds:
+        latest_threads = []
+        if boardId is None:
+            for curr_board in crawler.boardIds:
+                update_threads(crawler, curr_board, latest_threads, start, pages)
+        else:
+            curr_board = crawler.boardIds[boardId]
             update_threads(crawler, curr_board, latest_threads, start, pages)
-    else:
-        curr_board = crawler.boardIds[boardId]
-        update_threads(crawler, curr_board, latest_threads, start, pages)
 
-    meta_data.merge_threads(latest_threads)
+        meta_data.merge_threads(latest_threads)
 
-    for superkeyword in meta_data.superkeywords:
-        if superkeyword["skType"] != SK_Type.Manual:
-            for i in superkeyword["tids"]:
-                t = meta_data.last_threads[i]
-                if t["siteId"] == crawler.siteId:
-                    download_article(crawler, t)
-            print("superkeyword [%s] saved." % keytext(superkeyword))
+        for superkeyword in meta_data.superkeywords:
+            if superkeyword["skType"] != SK_Type.Manual:
+                for i in superkeyword["tids"]:
+                    t = meta_data.last_threads[i]
+                    if t["siteId"] == crawler.siteId:
+                        download_article(crawler, t)
+                print("superkeyword [%s] saved." % keytext(superkeyword))
 
-    meta_data.last_timestamp = time.time()
-    meta_data.save_meta_data()
+        meta_data.superkeywords = do_grouping(
+            meta_data.last_threads, meta_data.superkeywords, save_root_path
+        )
 
 
 ### 读取版面
