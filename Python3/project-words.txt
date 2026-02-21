@@ -1,12 +1,14 @@
 bbsid
 bbsreader
 bbstcon
+fuzzywuzzy
 hanzi
 hpjing
 KHTML
 mktime
 pycache
 pyplot
+pyyaml
 questionid
 referer
 romkan
