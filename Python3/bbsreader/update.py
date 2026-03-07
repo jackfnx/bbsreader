@@ -16,7 +16,9 @@ def show_site_list():
 
 
 def main(pages, start, bbsId, boardId, meta_data=None):
-    meta_data_cm = nullcontext(meta_data) if meta_data else MetaData(save_root_path)
+    meta_data_cm = (
+        nullcontext(meta_data) if meta_data else MetaData(save_root_path, True)
+    )
 
     with meta_data_cm as meta_data:
         if bbsId is None:
