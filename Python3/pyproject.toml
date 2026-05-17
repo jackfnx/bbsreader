@@ -9,7 +9,7 @@ python = "^3.12"
 bs4 = "^0.0.2"
 zhon = "^2.0.2"
 pyyaml = "^6.0.2"
-requests = {extras = ["socks"], version = "^2.32.4"}
+requests = {extras = ["socks"], version = "^2.34.2"}
 python-romkan-ng = "^0.3.0"
 pinyin = "^0.4.0"
 fuzzywuzzy = "^0.18.0"
